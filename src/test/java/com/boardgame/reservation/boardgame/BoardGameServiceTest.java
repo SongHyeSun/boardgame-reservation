@@ -8,6 +8,7 @@ import com.boardgame.reservation.boardgame.repository.BoardGameRepository;
 import com.boardgame.reservation.boardgame.service.BoardGameService;
 import com.boardgame.reservation.global.exception.BusinessException;
 import com.boardgame.reservation.global.exception.ErrorCode;
+import com.boardgame.reservation.party.repository.PartyRepository;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -31,6 +32,9 @@ class BoardGameServiceTest {
 
     @Mock
     BoardGameRepository boardGameRepository;
+
+    @Mock
+    PartyRepository partyRepository;
 
     @InjectMocks
     BoardGameService boardGameService;
@@ -153,6 +157,20 @@ class BoardGameServiceTest {
                 .isInstanceOf(BusinessException.class)
                 .extracting(e -> ((BusinessException) e).getErrorCode())
                 .isEqualTo(ErrorCode.BOARDGAME_NOT_FOUND);
+
+        verify(boardGameRepository, never()).delete(any(BoardGame.class));
+    }
+
+    @Test
+    @DisplayName("파티가 있는 보드게임 삭제 시 BOARDGAME_IN_USE, delete 호출 안 함")
+    void delete_inUse_throws() {
+        given(boardGameRepository.findById(1L)).willReturn(Optional.of(existing()));
+        given(partyRepository.existsByBoardGameId(1L)).willReturn(true);
+
+        assertThatThrownBy(() -> boardGameService.delete(1L))
+                .isInstanceOf(BusinessException.class)
+                .extracting(e -> ((BusinessException) e).getErrorCode())
+                .isEqualTo(ErrorCode.BOARDGAME_IN_USE);
 
         verify(boardGameRepository, never()).delete(any(BoardGame.class));
     }

@@ -25,7 +25,18 @@ public enum ErrorCode {
 
     // 보드게임
     BOARDGAME_NOT_FOUND(HttpStatus.NOT_FOUND, "보드게임을 찾을 수 없습니다."),
-    INVALID_PLAYER_RANGE(HttpStatus.BAD_REQUEST, "최소 인원은 최대 인원보다 클 수 없습니다.");
+    INVALID_PLAYER_RANGE(HttpStatus.BAD_REQUEST, "최소 인원은 최대 인원보다 클 수 없습니다."),
+    BOARDGAME_IN_USE(HttpStatus.CONFLICT, "파티가 있는 보드게임은 삭제할 수 없습니다."),
+
+    // 파티
+    PARTY_NOT_FOUND(HttpStatus.NOT_FOUND, "파티를 찾을 수 없습니다."),
+    INVALID_CAPACITY(HttpStatus.BAD_REQUEST, "모집 인원이 보드게임 인원 범위를 벗어났습니다."),
+    PARTY_NOT_RECRUITING(HttpStatus.CONFLICT, "모집 중인 파티가 아닙니다."),
+    PARTY_FULL(HttpStatus.CONFLICT, "정원이 마감되었습니다"),
+    ALREADY_JOINED(HttpStatus.CONFLICT, "이미 참여한 파티입니다"),
+    NOT_JOINED(HttpStatus.BAD_REQUEST, "참여하지 않은 파티입니다."),
+    HOST_CANNOT_LEAVE(HttpStatus.BAD_REQUEST, "호스트는 파티를 탈퇴할 수 없습니다."),
+    NOT_PARTY_HOST(HttpStatus.FORBIDDEN, "파티 호스트만 할 수 있습니다.");
 
     private final HttpStatus status;
     private final String message;

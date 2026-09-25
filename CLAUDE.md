@@ -5,7 +5,7 @@
   - 2장 ERD / 3장 API 명세 / 4장 동시성 / 5장 패키지 구조 / 6장 구현 순서
 
 ## 스택
-Java 17, Spring Boot 3.x, Gradle, Spring Security(세션 기반), Spring Data JPA, PostgreSQL, Redis, Lombok
+Java 17, Spring Boot 4.x, Gradle, Spring Security(세션 기반), Spring Data JPA, PostgreSQL, Redis, Lombok
 
 ## 코드 규칙
 - 패키지: com.boardgame.reservation / 도메인형 (global, member, boardgame, party, chat)

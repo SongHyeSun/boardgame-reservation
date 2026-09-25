@@ -115,15 +115,30 @@ join 응답
 
 ## 4. 동시성 제어 (Redis DECR)
 
+capacity 는 호스트 포함 인원. 호스트는 개설과 동시에 PARTY_MEMBER 의 첫 참여자.
+확정 인원의 기준은 항상 DB(PARTY_MEMBER COUNT), Redis 는 선착순 게이트.
+
 ```
-파티 개설 시: SET party:{id}:remaining = capacity
+파티 개설 (DB 커밋 이후 afterCommit):
+  SADD party:{id}:members {hostId}
+  SET  party:{id}:remaining = capacity - 1        # 호스트 제외 남은 자리
 참여 시:
-  remaining = DECR party:{id}:remaining
-  if remaining >= 0 → PARTY_MEMBER INSERT (실패 시 INCR 롤백) → 200
-  else → INCR 원복 → 409 정원 마감
+  1. 파티 조회, RECRUITING 확인 (아니면 409 PARTY_NOT_RECRUITING)
+  2. remaining 키가 없으면 DB 기준으로 복구 (members 먼저, remaining 은 SET NX)
+       remaining = capacity - COUNT(PARTY_MEMBER)
+  3. SADD party:{id}:members {memberId} → 0 이면 409 이미 참여한 파티입니다
+  4. remaining = DECR party:{id}:remaining
+       < 0 → INCR 원복 + SREM → 409 정원 마감
+  5. PARTY_MEMBER INSERT (별도 트랜잭션, PartyMemberWriter)
+       실패 시 INCR + SREM 보상 후 예외
+       UNIQUE 위반(이미 실제 참여자)은 INCR 만 하고 SREM 은 하지 않음 → 409 이미 참여
+  6. 200 { remaining }
+탈퇴: DB DELETE 성공 후 INCR remaining(키가 있을 때) + SREM members
+마감: status = CLOSED, Redis 키 2개 삭제
 ```
 - 중복 참여 최종 방어: PARTY_MEMBER UNIQUE(party_id, member_id)
-- (선택) 참여 전 SADD party:{id}:members {memberId} 로 선필터
+- 정원이 다 차도 status 는 RECRUITING 유지 (마감은 호스트가 명시적으로 close)
+- Redis 연산과 DB 트랜잭션은 한 @Transactional 에 섞지 않는다 (보상 로직이 확실히 실행되도록 서비스/Writer 빈 분리)
 
 비교(README용): 비관적 락(단순/락경합) vs 낙관적 락(재시도 필요) vs Redis DECR(채택: 빠름·원자적, 정합성 관리 필요)
 

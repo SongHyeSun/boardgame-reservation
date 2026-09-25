@@ -7,6 +7,11 @@ spring:
     username: ${DB_USERNAME:boardgame}
     password: ${DB_PASSWORD:boardgame}
 
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+
   jpa:
     open-in-view: false          # 트랜잭션 밖(컨트롤러/뷰)에서 지연로딩 금지 → 커넥션 오래 잡는 문제 방지
     hibernate:

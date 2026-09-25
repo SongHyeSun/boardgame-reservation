@@ -8,6 +8,7 @@ import com.boardgame.reservation.boardgame.repository.BoardGameRepository;
 import com.boardgame.reservation.boardgame.repository.BoardGameSpecification;
 import com.boardgame.reservation.global.exception.BusinessException;
 import com.boardgame.reservation.global.exception.ErrorCode;
+import com.boardgame.reservation.party.repository.PartyRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
@@ -21,6 +22,7 @@ import java.util.List;
 public class BoardGameService {
 
     private final BoardGameRepository boardGameRepository;
+    private final PartyRepository partyRepository;
 
     public List<BoardGameResponse> search(Integer players, Difficulty difficulty, String keyword) {
         return boardGameRepository
@@ -66,7 +68,11 @@ public class BoardGameService {
 
     @Transactional
     public void delete(Long id) {
-        boardGameRepository.delete(findOrThrow(id));
+        BoardGame boardGame = findOrThrow(id);
+        if (partyRepository.existsByBoardGameId(id)) {
+            throw new BusinessException(ErrorCode.BOARDGAME_IN_USE);
+        }
+        boardGameRepository.delete(boardGame);
     }
 
     private BoardGame findOrThrow(Long id) {
