@@ -1,5 +1,6 @@
 import { createBrowserRouter, Navigate } from 'react-router'
 import AdminRoute from './components/AdminRoute.tsx'
+import GuestRoute from './components/GuestRoute.tsx'
 import Layout from './components/Layout.tsx'
 import ProtectedRoute from './components/ProtectedRoute.tsx'
 import NotFoundPage from './pages/NotFoundPage.tsx'
@@ -17,8 +18,14 @@ export const router = createBrowserRouter([
     element: <Layout />,
     children: [
       { index: true, element: <Navigate to="/parties" replace /> },
-      { path: 'login', element: <LoginPage /> },
-      { path: 'signup', element: <SignupPage /> },
+      {
+        // 비로그인 전용
+        element: <GuestRoute />,
+        children: [
+          { path: 'login', element: <LoginPage /> },
+          { path: 'signup', element: <SignupPage /> },
+        ],
+      },
       { path: 'boardgames', element: <BoardGameListPage /> },
       { path: 'boardgames/:id', element: <BoardGameDetailPage /> },
       { path: 'parties', element: <PartyListPage /> },

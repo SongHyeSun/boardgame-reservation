@@ -60,7 +60,8 @@ src/api/parties.ts    getParties(params), getParty(id), createParty, joinParty, 
 - 각 도메인에 TanStack Query 훅: `useMe`, `useBoardGames(filter)`, `useParty(id)`, `useJoinParty()` …
 - 쿼리 키 규칙: `['me']`, `['boardgames', filter]`, `['boardgame', id]`, `['parties', filter]`, `['party', id]`
 - mutation 성공 시 invalidate
-  - login/logout → `['me']` (logout은 `queryClient.clear()`)
+  - login → invalidate 대신 응답(`MemberResponse`, /me와 동일 형태)을 `setQueryData(['me'], member)`로 바로 반영. invalidate만 하면 재조회 전 캐시가 `null`이라 이동한 보호 페이지에서 `/login?redirect=`로 되돌아가는 경합이 생김
+  - logout → 성공 시 `/parties`로 이동(replace) 후 `setQueryData(['me'], null)` + `me` 외 캐시 `removeQueries`. `queryClient.clear()`는 마운트된 `useMe` 옵저버(Header)를 갱신하지 않아 사용하지 않음. 로그아웃 요청이 401(세션 만료)이면 성공으로 간주해 동일하게 처리(`api/auth.ts`의 `logout()`이 401을 흡수)
   - join/leave/close → `['party', id]`, `['parties']`
   - 게임 등록/수정/삭제 → `['boardgames']`, `['boardgame', id]`
 

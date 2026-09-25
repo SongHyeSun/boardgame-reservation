@@ -1,4 +1,5 @@
 import { Link, NavLink } from 'react-router'
+import { useLogout } from '../hooks/useAuth.ts'
 import { useMe } from '../hooks/useMe.ts'
 import ErrorMessage from './ErrorMessage.tsx'
 
@@ -7,6 +8,7 @@ const navLinkClass = ({ isActive }: { isActive: boolean }) =>
 
 function AuthMenu() {
   const { data: me, isPending, isError, error } = useMe()
+  const logout = useLogout()
 
   // 로딩 중엔 비워 둔다 (로그인/회원가입 → 닉네임 깜빡임 방지)
   if (isPending) {
@@ -38,6 +40,15 @@ function AuthMenu() {
         </NavLink>
       )}
       <span className="text-gray-900">{me.nickname}님</span>
+      <button
+        type="button"
+        onClick={() => logout.mutate()}
+        disabled={logout.isPending}
+        className="text-gray-700 hover:text-indigo-600 disabled:opacity-50"
+      >
+        {logout.isPending ? '로그아웃 중…' : '로그아웃'}
+      </button>
+      {logout.isError && <ErrorMessage message={logout.error.message} />}
     </>
   )
 }
