@@ -1,0 +1,62 @@
+### IntelliJ HTTP Client — 파일 열고 각 요청 옆 ▶ 클릭
+### 등록/수정/삭제는 ADMIN 전용. 서버 실행 시 환경변수 ADMIN_EMAIL / ADMIN_PASSWORD 로 만든 계정으로 먼저 로그인하세요.
+### (아래 1번의 email/password 를 본인 값으로 바꿔서 사용)
+
+### 1. 관리자 로그인 (세션 생성)
+POST http://localhost:8080/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "admin@test.com",
+  "password": "admin-password"
+}
+
+### 2. 보드게임 등록 (ADMIN)
+POST http://localhost:8080/api/boardgames
+Content-Type: application/json
+
+{
+  "name": "카탄",
+  "minPlayers": 3,
+  "maxPlayers": 4,
+  "playTime": 60,
+  "difficulty": "NORMAL",
+  "description": "자원을 교환하며 섬을 개척하는 게임"
+}
+
+### 3. 목록 (필터 없음, 로그인 불필요)
+GET http://localhost:8080/api/boardgames
+
+### 4. 목록 — 4명이 할 수 있는 게임
+GET http://localhost:8080/api/boardgames?players=4
+
+### 5. 목록 — 난이도 필터
+GET http://localhost:8080/api/boardgames?difficulty=NORMAL
+
+### 6. 목록 — 이름 검색 + 조합
+GET http://localhost:8080/api/boardgames?players=3&difficulty=NORMAL&keyword=카탄
+
+### 7. 목록 — 잘못된 난이도 → 400
+GET http://localhost:8080/api/boardgames?difficulty=FOO
+
+### 8. 상세
+GET http://localhost:8080/api/boardgames/1
+
+### 9. 수정 (ADMIN, 전체 교체)
+PUT http://localhost:8080/api/boardgames/1
+Content-Type: application/json
+
+{
+  "name": "카탄 확장판",
+  "minPlayers": 3,
+  "maxPlayers": 6,
+  "playTime": 90,
+  "difficulty": "HARD",
+  "description": "5~6인 확장"
+}
+
+### 10. 삭제 (ADMIN)
+DELETE http://localhost:8080/api/boardgames/1
+
+### 11. 삭제 후 상세 → 404 확인
+GET http://localhost:8080/api/boardgames/1
