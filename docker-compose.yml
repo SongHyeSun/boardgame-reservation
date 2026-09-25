@@ -1,3 +1,5 @@
+# 로컬 개발용 DB/Redis. 앱은 IntelliJ에서 실행.
+#   docker compose up -d
 services:
   postgres:
     image: postgres:16
@@ -5,20 +7,18 @@ services:
     environment:
       POSTGRES_DB: boardgame
       POSTGRES_USER: boardgame
-      POSTGRES_PASSWORD: boardgame1234
+      POSTGRES_PASSWORD: boardgame
+      TZ: Asia/Seoul
     ports:
       - "5432:5432"
     volumes:
-      - postgres-data:/var/lib/postgresql/data
+      - pgdata:/var/lib/postgresql/data
 
   redis:
     image: redis:7
     container_name: boardgame-redis
     ports:
       - "6379:6379"
-    volumes:
-      - redis-data:/data
 
 volumes:
-  postgres-data:
-  redis-data:
+  pgdata:

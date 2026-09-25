@@ -1,20 +1,34 @@
 spring:
+  application:
+    name: boardgame-reservation
+
   datasource:
-    url: jdbc:postgresql://localhost:5432/boardgame
-    username: boardgame
-    password: boardgame1234
-    driver-class-name: org.postgresql.Driver
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/boardgame}
+    username: ${DB_USERNAME:boardgame}
+    password: ${DB_PASSWORD:boardgame}
+
   jpa:
+    open-in-view: false          # 트랜잭션 밖(컨트롤러/뷰)에서 지연로딩 금지 → 커넥션 오래 잡는 문제 방지
     hibernate:
-      ddl-auto: update
-    show-sql: true
+      ddl-auto: update           # 개발 중에만. 배포 전에는 validate + 스키마 스크립트로 전환
     properties:
       hibernate:
         format_sql: true
-  data:
-    redis:
-      host: localhost
-      port: 6379
+    show-sql: false
 
 server:
-  port: 8080
+  servlet:
+    session:
+      timeout: 30m
+      cookie:
+        http-only: true          # JS에서 세션 쿠키 접근 불가 (XSS 탈취 방지)
+        same-site: lax           # 교차 사이트 POST에 쿠키 안 붙음 (CSRF 완화)
+
+app:
+  admin:
+    email: ${ADMIN_EMAIL:}
+    password: ${ADMIN_PASSWORD:}
+
+logging:
+  level:
+    org.hibernate.SQL: debug
