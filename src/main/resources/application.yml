@@ -23,9 +23,11 @@ spring:
 
 server:
   servlet:
+    # 세션 저장소는 Spring Session(Redis). 아래 timeout/cookie 설정이 그대로 Redis 세션 TTL·쿠키에 적용된다.
     session:
       timeout: 30m
       cookie:
+        name: JSESSIONID         # Spring Session 기본값(SESSION) 대신 기존 쿠키명 유지 (SecurityConfig 로그아웃 deleteCookies 와 일치)
         http-only: true          # JS에서 세션 쿠키 접근 불가 (XSS 탈취 방지)
         same-site: lax           # 교차 사이트 POST에 쿠키 안 붙음 (CSRF 완화)
 

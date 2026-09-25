@@ -4,16 +4,22 @@ import com.boardgame.reservation.boardgame.domain.BoardGame;
 import com.boardgame.reservation.global.security.MemberPrincipal;
 import com.boardgame.reservation.member.domain.Member;
 import com.jayway.jsonpath.JsonPath;
+import jakarta.servlet.http.Cookie;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.session.web.http.SessionRepositoryFilter;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.request.RequestPostProcessor;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
+
+import java.nio.charset.StandardCharsets;
+import java.util.Base64;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.authentication;
@@ -34,6 +40,8 @@ class PartyApiIntegrationTest extends PartyRedisTestSupport {
 
     @Autowired
     WebApplicationContext context;
+    @Autowired
+    SessionRepositoryFilter<?> sessionRepositoryFilter;
 
     MockMvc mockMvc;
     Member host;
@@ -280,6 +288,53 @@ class PartyApiIntegrationTest extends PartyRedisTestSupport {
                 .andExpect(jsonPath("$.data.length()").value(2));
         mockMvc.perform(get("/api/parties").param("boardGameId", "999999"))
                 .andExpect(jsonPath("$.data.length()").value(0));
+    }
+
+    // ───────────── 세션 (Spring Session + Redis) ─────────────
+
+    @Test
+    @DisplayName("로그인 세션은 Redis 에 저장되고, 세션 쿠키만으로 인증이 복원된다 (Redis 키를 지우면 401)")
+    void login_sessionStoredInRedis() throws Exception {
+        // 기존 mockMvc 에는 세션 필터가 없다 → SessionRepositoryFilter 를 Security 필터보다 앞에 둔다
+        MockMvc sessionMockMvc = MockMvcBuilders.webAppContextSetup(context)
+                .addFilters(sessionRepositoryFilter)
+                .apply(springSecurity())
+                .build();
+        sessionMockMvc.perform(post("/api/auth/signup")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"email":"session@test.com","password":"password123","nickname":"세션"}
+                                """))
+                .andExpect(status().isCreated());
+        assertThat(redisTemplate.keys("spring:session:*")).isEmpty();
+
+        MvcResult login = sessionMockMvc.perform(post("/api/auth/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"email":"session@test.com","password":"password123"}
+                                """))
+                .andExpect(status().isOk())
+                .andReturn();
+
+        Cookie[] cookies = login.getResponse().getCookies();
+        assertThat(cookies).hasSize(1);
+        Cookie sessionCookie = cookies[0];
+        // Spring Session 쿠키 값은 세션 ID 를 Base64 로 인코딩한 것
+        String sessionId = new String(Base64.getDecoder().decode(sessionCookie.getValue()), StandardCharsets.UTF_8);
+        String redisKey = "spring:session:sessions:" + sessionId;
+
+        assertThat(redisTemplate.keys("spring:session:*")).containsExactly(redisKey);
+        assertThat(redisTemplate.opsForHash().keys(redisKey)).contains("sessionAttr:SPRING_SECURITY_CONTEXT");
+
+        // 새 요청은 쿠키만 가지고 있다 → Redis 에서 역직렬화된 SecurityContext 로 인증
+        sessionMockMvc.perform(get("/api/members/me").cookie(sessionCookie))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.email").value("session@test.com"));
+
+        // 세션의 원본이 Redis 임을 확인: 키를 지우면 같은 쿠키로도 인증되지 않는다
+        redisTemplate.delete(redisKey);
+        sessionMockMvc.perform(get("/api/members/me").cookie(sessionCookie))
+                .andExpect(status().isUnauthorized());
     }
 
     // ───────────── 보드게임 삭제 ─────────────

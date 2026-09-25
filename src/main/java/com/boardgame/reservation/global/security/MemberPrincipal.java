@@ -22,6 +22,8 @@ import java.util.List;
 @Getter
 public class MemberPrincipal implements UserDetails, CredentialsContainer {
 
+    private static final long serialVersionUID = 1L;
+
     private final Long id;
     private final String email;
     private final String nickname;
