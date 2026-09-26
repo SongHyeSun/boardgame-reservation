@@ -49,6 +49,15 @@ export interface PartyCreateRequest {
   playAt?: string | null
 }
 
+/** 개설 폼의 입력 상태 (프론트 전용). 숫자·선택 값은 문자열로 들고 있다가 제출 시 변환한다. */
+export interface PartyFormValues {
+  boardGameId: string // 미선택은 ''
+  title: string
+  description: string
+  capacity: string
+  playAt: string // datetime-local 값 (`YYYY-MM-DDTHH:mm`), 미입력은 ''
+}
+
 export interface JoinResponse {
   remaining: number
 }

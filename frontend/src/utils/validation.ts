@@ -1,9 +1,10 @@
-// 클라이언트 1차 검증. 규칙·메시지는 백엔드 member/dto (SignupRequest, LoginRequest), boardgame/dto (BoardGameRequest) 그대로. 최종 판정은 서버.
+// 클라이언트 1차 검증. 규칙·메시지는 백엔드 member/dto (SignupRequest, LoginRequest), boardgame/dto (BoardGameRequest), party/dto (PartyCreateRequest) 그대로. 최종 판정은 서버.
 // 값은 호출 전에 email·nickname 을 trim 해서 넘긴다. (서버가 이메일을 trim, 닉네임은 검증 후 trim 함. 비밀번호는 trim 안 함)
 // 길이는 자바 String.length() 와 같은 UTF-16 단위인 .length 로 잰다.
 
 import type { LoginRequest, SignupRequest } from '../types/auth.ts'
-import type { BoardGameFormValues } from '../types/boardgame.ts'
+import type { BoardGameFormValues, BoardGameResponse } from '../types/boardgame.ts'
+import type { PartyFormValues } from '../types/party.ts'
 
 export type FieldErrors<T> = Partial<Record<keyof T, string>>
 
@@ -115,6 +116,52 @@ export function validateBoardGame(values: BoardGameFormValues): FieldErrors<Boar
 
   if (values.description.trim().length > BOARDGAME_DESCRIPTION_MAX) {
     errors.description = `설명은 ${BOARDGAME_DESCRIPTION_MAX}자 이하여야 합니다.`
+  }
+
+  return errors
+}
+
+const PARTY_TITLE_MAX = 100
+const PARTY_DESCRIPTION_MAX = 2000
+
+/**
+ * 파티 개설 폼 검증 (party/dto PartyCreateRequest). 제목·설명은 trim 한 값을 전송하므로 trim 기준으로 잰다.
+ * 정원은 호스트 포함 인원이며 선택한 게임의 minPlayers~maxPlayers 안이어야 한다. (서버는 서비스에서 400 INVALID_CAPACITY)
+ * playAt 은 선택 값이라 검사하지 않는다.
+ */
+export function validateParty(
+  values: PartyFormValues,
+  boardGame: BoardGameResponse | undefined,
+): FieldErrors<PartyFormValues> {
+  const errors: FieldErrors<PartyFormValues> = {}
+
+  if (boardGame === undefined) {
+    errors.boardGameId = '보드게임을 선택해 주세요.'
+  }
+
+  const title = values.title.trim()
+  if (title === '') {
+    errors.title = '제목은 필수입니다.'
+  } else if (title.length > PARTY_TITLE_MAX) {
+    errors.title = `제목은 ${PARTY_TITLE_MAX}자 이하여야 합니다.`
+  }
+
+  if (values.description.trim().length > PARTY_DESCRIPTION_MAX) {
+    errors.description = `설명은 ${PARTY_DESCRIPTION_MAX}자 이하여야 합니다.`
+  }
+
+  const capacityError = validatePositiveInteger(
+    values.capacity,
+    '모집 인원은 필수입니다.',
+    '모집 인원은 1명 이상이어야 합니다.',
+  )
+  if (capacityError) {
+    errors.capacity = capacityError
+  } else if (boardGame !== undefined) {
+    const capacity = parsePositiveInteger(values.capacity)
+    if (capacity !== null && (capacity < boardGame.minPlayers || capacity > boardGame.maxPlayers)) {
+      errors.capacity = `모집 인원은 ${boardGame.minPlayers}~${boardGame.maxPlayers}명이어야 합니다.`
+    }
   }
 
   return errors
