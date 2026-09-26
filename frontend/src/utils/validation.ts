@@ -8,7 +8,7 @@ import type {
   ProfileFormValues,
   SignupFormValues,
 } from '../types/auth.ts'
-import type { BoardGameFormValues, BoardGameResponse } from '../types/boardgame.ts'
+import type { BoardGameFormValues } from '../types/boardgame.ts'
 import type { PartyFormValues } from '../types/party.ts'
 import {
   AVATAR_IMAGE_INVALID_MESSAGE,
@@ -18,6 +18,7 @@ import {
   AVATAR_IMAGE_TYPES,
   type AvatarFormState,
 } from './avatar.ts'
+import { capacityRange, CUSTOM_GAME_NAME_MAX, supportedPlayModes } from './partyForm.ts'
 import { parseYoutubeUrl, YOUTUBE_URL_INVALID_MESSAGE, YOUTUBE_URL_MAX } from './youtube.ts'
 
 export type FieldErrors<T> = Partial<Record<keyof T, string>>
@@ -276,20 +277,35 @@ export function validateBoardGame(values: BoardGameFormValues): FieldErrors<Boar
 
 const PARTY_TITLE_MAX = 100
 const PARTY_DESCRIPTION_MAX = 2000
+const ONLINE_PLATFORM_MAX = 30
+const ONLINE_LINK_MAX = 300
+const LOCATION_MAX = 100
+
+/** 서버 Party.HTTP_LINK 와 같은 규칙: 공백 없는 http:// / https:// 링크 (대소문자 무시) */
+const HTTP_LINK_PATTERN = /^https?:\/\/\S+$/i
+
+/** 서버 ErrorCode.INVALID_GAME_SELECTION 과 같은 문구 */
+const GAME_SELECTION_MESSAGE = '보드게임을 선택하거나 게임 이름을 입력해주세요.'
 
 /**
- * 파티 개설 폼 검증 (party/dto PartyCreateRequest). 제목·설명은 trim 한 값을 전송하므로 trim 기준으로 잰다.
- * 정원은 호스트 포함 인원이며 선택한 게임의 minPlayers~maxPlayers 안이어야 한다. (서버는 서비스에서 400 INVALID_CAPACITY)
- * playAt 은 선택 값이라 검사하지 않는다.
+ * 파티 개설 폼 검증 (party/dto PartyCreateRequest). 문자열은 trim 한 값을 전송하므로 trim 기준으로 잰다.
+ * 게임은 보드게임 선택 또는 기타 게임 이름 중 하나. 정원은 호스트 포함 인원이며 게임 종류별 범위(capacityRange) 안이어야 한다.
+ * (서버는 서비스에서 400 INVALID_CAPACITY) 진행 방식은 필수이고 보드게임은 게임이 지원하는 방식만 가능하다.
+ * 플랫폼·접속 링크는 ONLINE, 장소는 OFFLINE 일 때만 검사한다. playAt 은 선택 값이라 검사하지 않는다.
  */
-export function validateParty(
-  values: PartyFormValues,
-  boardGame: BoardGameResponse | undefined,
-): FieldErrors<PartyFormValues> {
+export function validateParty(values: PartyFormValues): FieldErrors<PartyFormValues> {
   const errors: FieldErrors<PartyFormValues> = {}
+  const { game } = values
 
-  if (boardGame === undefined) {
-    errors.boardGameId = '보드게임을 선택해 주세요.'
+  if (game.kind === 'NONE') {
+    errors.game = GAME_SELECTION_MESSAGE
+  } else if (game.kind === 'CUSTOM') {
+    const customGameName = values.customGameName.trim()
+    if (customGameName === '') {
+      errors.customGameName = '게임 이름은 필수입니다.'
+    } else if (customGameName.length > CUSTOM_GAME_NAME_MAX) {
+      errors.customGameName = `게임 이름은 ${CUSTOM_GAME_NAME_MAX}자 이하여야 합니다.`
+    }
   }
 
   const title = values.title.trim()
@@ -310,10 +326,32 @@ export function validateParty(
   )
   if (capacityError) {
     errors.capacity = capacityError
-  } else if (boardGame !== undefined) {
+  } else {
+    const range = capacityRange(game)
     const capacity = parsePositiveInteger(values.capacity)
-    if (capacity !== null && (capacity < boardGame.minPlayers || capacity > boardGame.maxPlayers)) {
-      errors.capacity = `모집 인원은 ${boardGame.minPlayers}~${boardGame.maxPlayers}명이어야 합니다.`
+    if (range !== null && capacity !== null && (capacity < range.min || capacity > range.max)) {
+      errors.capacity = `모집 인원은 ${range.min}~${range.max}명이어야 합니다.`
+    }
+  }
+
+  if (values.playMode === '') {
+    errors.playMode = '진행 방식을 선택해 주세요.'
+  } else {
+    const supported = supportedPlayModes(game)
+    if (supported !== null && !supported.includes(values.playMode)) {
+      errors.playMode = '이 게임은 해당 방식으로 진행할 수 없습니다.'
+    } else if (values.playMode === 'ONLINE') {
+      if (values.onlinePlatform.trim().length > ONLINE_PLATFORM_MAX) {
+        errors.onlinePlatform = `플랫폼은 ${ONLINE_PLATFORM_MAX}자 이하여야 합니다.`
+      }
+      const onlineLink = values.onlineLink.trim()
+      if (onlineLink.length > ONLINE_LINK_MAX) {
+        errors.onlineLink = `접속 링크는 ${ONLINE_LINK_MAX}자 이하여야 합니다.`
+      } else if (onlineLink !== '' && !HTTP_LINK_PATTERN.test(onlineLink)) {
+        errors.onlineLink = 'http:// 또는 https:// 링크만 입력할 수 있습니다.'
+      }
+    } else if (values.location.trim().length > LOCATION_MAX) {
+      errors.location = `장소는 ${LOCATION_MAX}자 이하여야 합니다.`
     }
   }
 

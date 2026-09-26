@@ -1,4 +1,4 @@
-import { useState, type ChangeEvent, type FormEvent } from 'react'
+import { useEffect, useRef, useState, type ChangeEvent, type FormEvent } from 'react'
 import { Link, useNavigate, useParams } from 'react-router'
 import BackLink from '../../components/BackLink.tsx'
 import ErrorMessage from '../../components/ErrorMessage.tsx'
@@ -115,6 +115,14 @@ function BoardGameFormView({
   // 새 파일과 삭제 표시는 함께 쓸 수 없다(서버 400). 삭제를 체크하면 ImageInput 을 내려 파일을 비우고, 그동안엔 파일을 고를 수 없다.
   const [image, setImage] = useState<File | null>(null)
   const [removeImage, setRemoveImage] = useState(false)
+  // 서버 오류(예: 모집 중인 파티가 있는 방식을 끄면 409)는 폼 맨 위에 뜨는데 제출 버튼은 맨 아래라, 오류가 생기면 화면에 보이게 스크롤한다
+  const errorRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    if (errorMessage) {
+      errorRef.current?.scrollIntoView({ block: 'center', behavior: 'smooth' })
+    }
+  }, [errorMessage])
 
   const youtube = parseYoutubeUrl(values.youtubeUrl)
   const youtubeError = errors.youtubeUrl ?? (youtube.kind === 'invalid' ? YOUTUBE_URL_INVALID_MESSAGE : undefined)
@@ -165,7 +173,11 @@ function BoardGameFormView({
       <h1 className="text-2xl font-bold">{title}</h1>
 
       <form onSubmit={handleSubmit} noValidate className="mt-6 space-y-4">
-        {errorMessage && <ErrorMessage message={errorMessage} />}
+        {errorMessage && (
+          <div ref={errorRef}>
+            <ErrorMessage message={errorMessage} />
+          </div>
+        )}
 
         <FormField
           id="name"

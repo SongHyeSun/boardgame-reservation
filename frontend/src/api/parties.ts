@@ -32,3 +32,8 @@ export async function leaveParty(id: number): Promise<void> {
 export async function closeParty(id: number): Promise<void> {
   await request<null>({ method: 'PATCH', url: `/parties/${id}/close` })
 }
+
+/** 호스트 전용. 모집 중일 때만 가능하고, 내보낸 회원은 그 파티에 다시 참여할 수 없다 */
+export async function kickPartyMember(partyId: number, memberId: number): Promise<void> {
+  await request<null>({ method: 'DELETE', url: `/parties/${partyId}/members/${memberId}` })
+}

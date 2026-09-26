@@ -1,4 +1,4 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import {
   changeBoardGameVisibility,
   createBoardGame,
@@ -15,10 +15,16 @@ interface BoardGameSubmission {
   image: File | null
 }
 
-export function useBoardGames(filter: BoardGameFilter = {}) {
+interface BoardGamesOptions {
+  /** 필터가 바뀌어 다시 조회하는 동안 이전 결과를 계속 보여 준다. (검색어 입력 중 로딩 깜빡임 방지) */
+  keepPreviousData?: boolean
+}
+
+export function useBoardGames(filter: BoardGameFilter = {}, options: BoardGamesOptions = {}) {
   return useQuery({
     queryKey: ['boardgames', filter],
     queryFn: () => getBoardGames(filter),
+    placeholderData: options.keepPreviousData ? keepPreviousData : undefined,
   })
 }
 

@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient, type QueryClient } from '@tanstack/react-query'
-import { closeParty, createParty, getParties, getParty, joinParty, leaveParty } from '../api/parties.ts'
+import { closeParty, createParty, getParties, getParty, joinParty, kickPartyMember, leaveParty } from '../api/parties.ts'
 import { ApiError } from '../types/api.ts'
 import type { PartyCreateRequest, PartyDetailResponse, PartyFilter } from '../types/party.ts'
 import { meQueryKey } from './useMe.ts'
@@ -86,5 +86,19 @@ export function useCloseParty(id: number) {
     mutationFn: () => closeParty(id),
     onSuccess: () => invalidateParty(queryClient, id),
     onError: (error) => refetchAfterError(queryClient, error, id),
+  })
+}
+
+/**
+ * 호스트 전용 참여자 내보내기. mutate 인자 = 내보낼 회원의 memberId.
+ * 성공하면 상세(참여자 목록·남은 자리)와 목록(currentCount)을 다시 조회하고,
+ * 이미 나간 회원(400)·모집 종료(409) 같은 실패도 화면이 어긋났을 수 있으므로 같은 재조회를 한다.
+ */
+export function useKickPartyMember(partyId: number) {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (memberId: number) => kickPartyMember(partyId, memberId),
+    onSuccess: () => invalidateParty(queryClient, partyId),
+    onError: (error) => refetchAfterError(queryClient, error, partyId),
   })
 }

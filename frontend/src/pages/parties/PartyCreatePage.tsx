@@ -1,53 +1,109 @@
-import { useState, type ChangeEvent, type FormEvent } from 'react'
+import { useState, type FormEvent } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router'
-import BackLink from '../../components/BackLink.tsx'
-import EmptyMessage from '../../components/EmptyMessage.tsx'
+import BoardGameSelectModal from '../../components/BoardGameSelectModal.tsx'
 import ErrorMessage from '../../components/ErrorMessage.tsx'
 import FormField from '../../components/FormField.tsx'
 import Loading from '../../components/Loading.tsx'
-import SelectField from '../../components/SelectField.tsx'
 import TextAreaField from '../../components/TextAreaField.tsx'
-import { useBoardGames } from '../../hooks/useBoardGames.ts'
+import { useBoardGame } from '../../hooks/useBoardGames.ts'
 import { useCreateParty } from '../../hooks/useParties.ts'
-import type { BoardGameResponse } from '../../types/boardgame.ts'
-import type { PartyFormValues } from '../../types/party.ts'
-import { formatPlayers, toPlayAtRequest } from '../../utils/format.ts'
+import type { BoardGameResponse, PlayMode } from '../../types/boardgame.ts'
+import type { PartyCreateRequest, PartyFormValues, PartyGameChoice } from '../../types/party.ts'
+import { blankToNull, formatPlayers, toPlayAtRequest } from '../../utils/format.ts'
+import { capacityRange, playModeAfterGameChange, supportedPlayModes } from '../../utils/partyForm.ts'
 import { parsePositiveInteger, validateParty, type FieldErrors } from '../../utils/validation.ts'
+import PartyGameField from './PartyGameField.tsx'
+import PlayModeField from './PlayModeField.tsx'
 
 const DESCRIPTION_MAX = 2000
 
-type TextField = Exclude<keyof PartyFormValues, 'boardGameId'>
+type TextField = Exclude<keyof PartyFormValues, 'game' | 'playMode'>
 
-interface PartyFormViewProps {
-  boardGames: BoardGameResponse[]
-  /** ?boardGameId= 로 넘어온 값. 목록에 있는 게임일 때만 미리 선택한다. */
-  initialBoardGameId: number | null
-}
-
-/** 초기 선택은 첫 렌더에만 쓰인다. (게임 목록이 다시 조회되어도 입력 중인 내용을 덮어쓰지 않는다) */
-function PartyFormView({ boardGames, initialBoardGameId }: PartyFormViewProps) {
-  const navigate = useNavigate()
-  const create = useCreateParty()
-  const [values, setValues] = useState<PartyFormValues>(() => ({
-    boardGameId: boardGames.some((boardGame) => boardGame.id === initialBoardGameId) ? String(initialBoardGameId) : '',
+function initialValues(initialBoardGame: BoardGameResponse | null): PartyFormValues {
+  const game: PartyGameChoice =
+    initialBoardGame === null ? { kind: 'NONE' } : { kind: 'BOARDGAME', boardGame: initialBoardGame }
+  return {
+    game,
+    customGameName: '',
     title: '',
     description: '',
     capacity: '',
     playAt: '',
-  }))
-  const [errors, setErrors] = useState<FieldErrors<PartyFormValues>>({})
+    // 한 방식만 지원하는 게임이 미리 선택돼 있으면 그 방식으로 시작한다
+    playMode: playModeAfterGameChange('', game),
+    onlinePlatform: '',
+    onlineLink: '',
+    location: '',
+  }
+}
 
-  const selected = boardGames.find((boardGame) => String(boardGame.id) === values.boardGameId)
+/**
+ * 검증을 통과한 폼 값 → 요청 본문. 문자열은 trim 하고 빈 선택 값은 null.
+ * 진행 방식과 맞는 필드만 보낸다: ONLINE = 플랫폼·접속 링크, OFFLINE = 장소.
+ */
+function toRequest(values: PartyFormValues): PartyCreateRequest | null {
+  const capacity = parsePositiveInteger(values.capacity)
+  const { game, playMode } = values
+  if (capacity === null || playMode === '' || game.kind === 'NONE') {
+    return null
+  }
+  const base = {
+    title: values.title.trim(),
+    description: blankToNull(values.description),
+    capacity,
+    playAt: toPlayAtRequest(values.playAt),
+    playMode,
+  }
+  const play =
+    playMode === 'ONLINE'
+      ? { onlinePlatform: blankToNull(values.onlinePlatform), onlineLink: blankToNull(values.onlineLink) }
+      : { location: blankToNull(values.location) }
+  return game.kind === 'BOARDGAME'
+    ? { ...base, ...play, boardGameId: game.boardGame.id }
+    : { ...base, ...play, customGameName: values.customGameName.trim() }
+}
+
+interface PartyFormViewProps {
+  /** ?boardGameId= 로 넘어온 게임. 첫 렌더에만 쓰인다. (다시 조회돼도 입력 중인 내용을 덮어쓰지 않는다) */
+  initialBoardGame: BoardGameResponse | null
+}
+
+function PartyFormView({ initialBoardGame }: PartyFormViewProps) {
+  const navigate = useNavigate()
+  const create = useCreateParty()
+  const [values, setValues] = useState<PartyFormValues>(() => initialValues(initialBoardGame))
+  const [errors, setErrors] = useState<FieldErrors<PartyFormValues>>({})
+  const [modalOpen, setModalOpen] = useState(false)
+
+  const range = capacityRange(values.game)
 
   function handleChange(field: TextField, value: string) {
     setValues((prev) => ({ ...prev, [field]: value }))
     setErrors((prev) => ({ ...prev, [field]: undefined }))
   }
 
-  // 게임이 바뀌면 정원 허용 범위도 바뀌므로 정원 오류는 지운다
-  function handleBoardGameChange(event: ChangeEvent<HTMLSelectElement>) {
-    setValues((prev) => ({ ...prev, boardGameId: event.target.value }))
-    setErrors((prev) => ({ ...prev, boardGameId: undefined, capacity: undefined }))
+  // 게임이 바뀌면 정원 허용 범위·지원하는 방식도 바뀌므로 그 오류는 지우고, 방식은 새 게임에 맞게 다시 정한다
+  function changeGame(game: PartyGameChoice) {
+    setValues((prev) => ({ ...prev, game, playMode: playModeAfterGameChange(prev.playMode, game) }))
+    setErrors((prev) => ({
+      ...prev,
+      game: undefined,
+      customGameName: undefined,
+      playMode: undefined,
+      capacity: undefined,
+    }))
+    setModalOpen(false)
+  }
+
+  function handlePlayModeChange(playMode: PlayMode) {
+    setValues((prev) => ({ ...prev, playMode }))
+    setErrors((prev) => ({
+      ...prev,
+      playMode: undefined,
+      onlinePlatform: undefined,
+      onlineLink: undefined,
+      location: undefined,
+    }))
   }
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
@@ -55,130 +111,163 @@ function PartyFormView({ boardGames, initialBoardGameId }: PartyFormViewProps) {
     if (create.isPending) {
       return
     }
-    const fieldErrors = validateParty(values, selected)
+    const fieldErrors = validateParty(values)
     setErrors(fieldErrors)
     if (Object.keys(fieldErrors).length > 0) {
       return
     }
-    const capacity = parsePositiveInteger(values.capacity)
-    if (selected === undefined || capacity === null) {
+    const body = toRequest(values)
+    if (body === null) {
       return
     }
-    const description = values.description.trim()
-    create.mutate(
-      {
-        boardGameId: selected.id,
-        title: values.title.trim(),
-        description: description === '' ? null : description,
-        capacity,
-        playAt: toPlayAtRequest(values.playAt),
-      },
-      { onSuccess: (created) => navigate(`/parties/${created.id}`, { replace: true }) },
-    )
+    create.mutate(body, { onSuccess: (created) => navigate(`/parties/${created.id}`, { replace: true }) })
   }
 
   return (
-    <section className="mx-auto max-w-xl rounded border border-gray-200 bg-white p-6">
-      <h1 className="text-2xl font-bold">파티 만들기</h1>
+    <>
+      <section className="mx-auto max-w-xl rounded border border-gray-200 bg-white p-6">
+        <h1 className="text-2xl font-bold">파티 만들기</h1>
 
-      <form onSubmit={handleSubmit} noValidate className="mt-6 space-y-4">
-        {create.isError && <ErrorMessage message={create.error.message} />}
+        <form onSubmit={handleSubmit} noValidate className="mt-6 space-y-4">
+          {create.isError && <ErrorMessage message={create.error.message} />}
 
-        <SelectField
-          id="boardGameId"
-          label="보드게임"
-          value={values.boardGameId}
-          onChange={handleBoardGameChange}
-          error={errors.boardGameId}
-        >
-          <option value="">게임을 선택하세요</option>
-          {boardGames.map((boardGame) => (
-            <option key={boardGame.id} value={boardGame.id}>
-              {boardGame.name} ({formatPlayers(boardGame.minPlayers, boardGame.maxPlayers)})
-            </option>
-          ))}
-        </SelectField>
-        <FormField
-          id="title"
-          label="제목"
-          value={values.title}
-          onChange={(event) => handleChange('title', event.target.value)}
-          error={errors.title}
-        />
-        <TextAreaField
-          id="description"
-          label="설명 (선택)"
-          rows={4}
-          value={values.description}
-          onChange={(event) => handleChange('description', event.target.value)}
-          hint={`${values.description.length} / ${DESCRIPTION_MAX}자`}
-          error={errors.description}
-        />
-        <FormField
-          id="capacity"
-          label="모집 인원"
-          type="number"
-          inputMode="numeric"
-          min={selected?.minPlayers ?? 1}
-          max={selected?.maxPlayers}
-          placeholder={selected ? `${selected.minPlayers}~${selected.maxPlayers}` : undefined}
-          value={values.capacity}
-          onChange={(event) => handleChange('capacity', event.target.value)}
-          hint={
-            selected
-              ? `호스트 포함 인원 (${formatPlayers(selected.minPlayers, selected.maxPlayers)})`
-              : '호스트 포함 인원. 보드게임을 먼저 선택하세요.'
-          }
-          error={errors.capacity}
-        />
-        <FormField
-          id="playAt"
-          label="플레이 일시 (선택)"
-          type="datetime-local"
-          value={values.playAt}
-          onChange={(event) => handleChange('playAt', event.target.value)}
-        />
+          <PartyGameField
+            game={values.game}
+            customGameName={values.customGameName}
+            onCustomGameNameChange={(value) => handleChange('customGameName', value)}
+            onOpenModal={() => setModalOpen(true)}
+            gameError={errors.game}
+            customGameNameError={errors.customGameName}
+          />
 
-        <div className="flex gap-2">
-          <button
-            type="submit"
-            disabled={create.isPending}
-            className="rounded bg-indigo-600 px-4 py-2 font-medium text-white hover:bg-indigo-700 disabled:opacity-50"
-          >
-            {create.isPending ? '개설 중…' : '파티 개설'}
-          </button>
-          <Link to="/parties" className="rounded border border-gray-300 bg-white px-4 py-2 text-gray-700 hover:bg-gray-50">
-            취소
-          </Link>
-        </div>
-      </form>
-    </section>
+          <PlayModeField
+            value={values.playMode}
+            onChange={handlePlayModeChange}
+            supported={supportedPlayModes(values.game)}
+            error={errors.playMode}
+          />
+          {values.playMode === 'ONLINE' && (
+            <div className="space-y-4">
+              <FormField
+                id="onlinePlatform"
+                label="플랫폼 (선택)"
+                placeholder="예: 보드게임아레나, 디스코드"
+                value={values.onlinePlatform}
+                onChange={(event) => handleChange('onlinePlatform', event.target.value)}
+                error={errors.onlinePlatform}
+              />
+              <FormField
+                id="onlineLink"
+                label="접속 링크 (선택)"
+                type="text"
+                inputMode="url"
+                placeholder="https://…"
+                hint="파티장과 참여자에게만 공개됩니다."
+                value={values.onlineLink}
+                onChange={(event) => handleChange('onlineLink', event.target.value)}
+                error={errors.onlineLink}
+              />
+            </div>
+          )}
+          {values.playMode === 'OFFLINE' && (
+            <FormField
+              id="location"
+              label="장소 (선택)"
+              placeholder="예: 동아리방, OO역 보드게임카페"
+              value={values.location}
+              onChange={(event) => handleChange('location', event.target.value)}
+              error={errors.location}
+            />
+          )}
+
+          <FormField
+            id="title"
+            label="제목"
+            value={values.title}
+            onChange={(event) => handleChange('title', event.target.value)}
+            error={errors.title}
+          />
+          <TextAreaField
+            id="description"
+            label="설명 (선택)"
+            rows={4}
+            value={values.description}
+            onChange={(event) => handleChange('description', event.target.value)}
+            hint={`${values.description.length} / ${DESCRIPTION_MAX}자`}
+            error={errors.description}
+          />
+          <FormField
+            id="capacity"
+            label="모집 인원"
+            type="number"
+            inputMode="numeric"
+            min={range?.min ?? 1}
+            max={range?.max}
+            placeholder={range ? `${range.min}~${range.max}` : undefined}
+            value={values.capacity}
+            onChange={(event) => handleChange('capacity', event.target.value)}
+            hint={
+              range
+                ? `호스트 포함 인원 (${formatPlayers(range.min, range.max)})`
+                : '호스트 포함 인원. 게임을 먼저 선택하세요.'
+            }
+            error={errors.capacity}
+          />
+          <FormField
+            id="playAt"
+            label="플레이 일시 (선택)"
+            type="datetime-local"
+            value={values.playAt}
+            onChange={(event) => handleChange('playAt', event.target.value)}
+          />
+
+          <div className="flex gap-2">
+            <button
+              type="submit"
+              disabled={create.isPending}
+              className="rounded bg-indigo-600 px-4 py-2 font-medium text-white hover:bg-indigo-700 disabled:opacity-50"
+            >
+              {create.isPending ? '개설 중…' : '파티 개설'}
+            </button>
+            <Link to="/parties" className="rounded border border-gray-300 bg-white px-4 py-2 text-gray-700 hover:bg-gray-50">
+              취소
+            </Link>
+          </div>
+        </form>
+      </section>
+
+      {/* 모달은 form 바깥에 둔다. (안에 두면 검색창의 Enter 가 폼을 제출한다) */}
+      {modalOpen && (
+        <BoardGameSelectModal
+          onSelect={(boardGame) => changeGame({ kind: 'BOARDGAME', boardGame })}
+          onCustom={() => changeGame({ kind: 'CUSTOM' })}
+          onClose={() => setModalOpen(false)}
+        />
+      )}
+    </>
   )
 }
 
-/** 로그인 필요 (ProtectedRoute). 게임 목록을 먼저 불러온 뒤 폼을 띄워 ?boardGameId= 미리 선택을 첫 렌더에 반영한다. */
-export default function PartyCreatePage() {
-  const [searchParams] = useSearchParams()
-  const { data: boardGames, isPending, isError, error } = useBoardGames()
+/**
+ * ?boardGameId= 로 들어오면 그 게임만 조회해 미리 선택한다. 숨긴(운영 중지) 게임이거나 조회에 실패하면 조용히 미선택으로 시작한다.
+ * 조회를 기다리는 동안만 폼을 띄우지 않아, 초기 선택이 첫 렌더에 반영된다.
+ */
+function PrefilledPartyForm({ boardGameId }: { boardGameId: number }) {
+  const { data: boardGame, isPending } = useBoardGame(boardGameId)
 
   if (isPending) {
     return <Loading />
   }
-  if (isError) {
-    return <ErrorMessage message={error.message} />
+  return <PartyFormView initialBoardGame={boardGame?.visible ? boardGame : null} />
+}
+
+/** 로그인 필요 (ProtectedRoute). 기타 게임은 등록된 게임이 없어도 개설할 수 있다. */
+export default function PartyCreatePage() {
+  const [searchParams] = useSearchParams()
+  const boardGameId = parsePositiveInteger(searchParams.get('boardGameId') ?? '')
+
+  if (boardGameId === null) {
+    return <PartyFormView initialBoardGame={null} />
   }
-  if (boardGames.length === 0) {
-    return (
-      <div className="space-y-4">
-        <EmptyMessage message="등록된 게임이 없어 파티를 만들 수 없습니다." />
-        <BackLink to="/boardgames">← 게임 목록</BackLink>
-      </div>
-    )
-  }
-  return (
-    <PartyFormView
-      boardGames={boardGames}
-      initialBoardGameId={parsePositiveInteger(searchParams.get('boardGameId') ?? '')}
-    />
-  )
+  return <PrefilledPartyForm boardGameId={boardGameId} />
 }

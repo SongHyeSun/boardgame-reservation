@@ -1,6 +1,14 @@
 import type { MemberResponse } from '../types/auth.ts'
 import type { PartyDetailResponse } from '../types/party.ts'
 
+/** 호스트이거나 참여 중(JOINED)인 회원인가. 내보내진 회원은 상세 members 에 없으므로 false */
+export function isPartyMember(party: PartyDetailResponse, me: MemberResponse | null): boolean {
+  if (me === null) {
+    return false
+  }
+  return party.hostId === me.id || party.members.some((member) => member.memberId === me.id)
+}
+
 /**
  * 파티 상세에 보여 줄 버튼 (docs/frontend-plan.md 4장).
  * NONE = 버튼 없음(마감/취소된 파티는 비로그인 포함 상태 배지만), FULL = 비활성 "정원 마감".
@@ -18,7 +26,7 @@ export function getPartyAction(party: PartyDetailResponse, me: MemberResponse | 
   if (party.hostId === me.id) {
     return 'CLOSE'
   }
-  if (party.members.some((member) => member.memberId === me.id)) {
+  if (isPartyMember(party, me)) {
     return 'LEAVE'
   }
   return party.remaining > 0 ? 'JOIN' : 'FULL'

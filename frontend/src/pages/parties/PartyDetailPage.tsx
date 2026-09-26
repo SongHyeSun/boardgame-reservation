@@ -1,21 +1,28 @@
 import { Link, useLocation, useParams } from 'react-router'
 import Avatar from '../../components/Avatar.tsx'
 import BackLink from '../../components/BackLink.tsx'
+import CustomGameBadge from '../../components/CustomGameBadge.tsx'
 import ErrorMessage from '../../components/ErrorMessage.tsx'
 import GameStatusBadge from '../../components/GameStatusBadge.tsx'
 import Loading from '../../components/Loading.tsx'
 import PartyStatusBadge from '../../components/PartyStatusBadge.tsx'
-import { useCloseParty, useJoinParty, useLeaveParty, useParty } from '../../hooks/useParties.ts'
+import PlayModeBadge from '../../components/PlayModeBadge.tsx'
+import { useCloseParty, useJoinParty, useKickPartyMember, useLeaveParty, useParty } from '../../hooks/useParties.ts'
 import { useMe } from '../../hooks/useMe.ts'
-import type { PartyDetailResponse } from '../../types/party.ts'
+import type { PartyDetailResponse, PartyMemberInfo } from '../../types/party.ts'
 import { formatDateTime, formatPlayAt } from '../../utils/format.ts'
-import { getPartyAction } from '../../utils/partyAction.ts'
+import { getPartyAction, isPartyMember } from '../../utils/partyAction.ts'
 import { parsePositiveInteger } from '../../utils/validation.ts'
 
 const PRIMARY_BUTTON = 'rounded bg-indigo-600 px-4 py-2 font-medium text-white hover:bg-indigo-700 disabled:opacity-50'
 const SECONDARY_BUTTON =
   'rounded border border-gray-300 bg-white px-4 py-2 text-gray-700 hover:bg-gray-50 disabled:opacity-50'
 const DANGER_BUTTON = 'rounded border border-red-300 bg-white px-4 py-2 text-red-600 hover:bg-red-50 disabled:opacity-50'
+const SMALL_DANGER_BUTTON =
+  'rounded border border-red-300 bg-white px-2 py-1 text-xs text-red-600 hover:bg-red-50 disabled:opacity-50'
+
+/** 서버가 http/https 만 저장하지만, 화면에서도 그 밖의 스킴(javascript: 등)은 링크로 만들지 않는다. */
+const HTTP_URL_PATTERN = /^https?:\/\//i
 
 interface PartyProps {
   party: PartyDetailResponse
@@ -115,6 +122,76 @@ function PartyActions({ party }: PartyProps) {
   )
 }
 
+/**
+ * 접속 링크. 서버는 링크가 없는 파티와 조회자에게 비공개인 파티를 똑같이 null 로 주므로,
+ * 조회자가 호스트·참여자인지(me + members)로 안내 문구를 고른다. me 를 기다리는 동안엔 문구를 그리지 않는다.
+ */
+function OnlineLink({ party }: PartyProps) {
+  const { data: me, isPending } = useMe()
+
+  if (party.onlineLink !== null) {
+    return HTTP_URL_PATTERN.test(party.onlineLink) ? (
+      <a
+        href={party.onlineLink}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="break-all font-medium text-indigo-600 hover:underline"
+      >
+        {party.onlineLink}
+      </a>
+    ) : (
+      <span className="break-all font-medium">{party.onlineLink}</span>
+    )
+  }
+  if (isPending) {
+    return null
+  }
+  let hint: string
+  if (isPartyMember(party, me ?? null)) {
+    hint = '등록된 접속 링크가 없습니다.'
+  } else if (party.status === 'RECRUITING') {
+    hint = '참여하면 접속 링크가 공개됩니다.'
+  } else {
+    hint = '접속 링크는 참여자에게만 공개됩니다.'
+  }
+  return <span className="text-gray-500">{hint}</span>
+}
+
+/** 진행 방식과 그에 따른 정보: 온라인 = 플랫폼·접속 링크(참여자에게만), 오프라인 = 장소 */
+function PartyPlayInfo({ party }: PartyProps) {
+  return (
+    <dl className="mt-4 grid grid-cols-2 gap-4 text-sm sm:grid-cols-4">
+      <div>
+        <dt className="text-gray-500">진행 방식</dt>
+        <dd className="mt-0.5">
+          <PlayModeBadge mode={party.playMode} />
+        </dd>
+      </div>
+      {party.playMode === 'ONLINE' ? (
+        <>
+          {party.onlinePlatform && (
+            <div>
+              <dt className="text-gray-500">플랫폼</dt>
+              <dd className="font-medium">{party.onlinePlatform}</dd>
+            </div>
+          )}
+          <div className="col-span-2">
+            <dt className="text-gray-500">접속 링크</dt>
+            <dd>
+              <OnlineLink party={party} />
+            </dd>
+          </div>
+        </>
+      ) : (
+        <div className="col-span-2">
+          <dt className="text-gray-500">장소</dt>
+          <dd className="font-medium">{party.location ?? '장소 미정'}</dd>
+        </div>
+      )}
+    </dl>
+  )
+}
+
 function PartyInfo({ party }: PartyProps) {
   return (
     <div className="rounded border border-gray-200 bg-white p-6">
@@ -131,11 +208,16 @@ function PartyInfo({ party }: PartyProps) {
 
       <dl className="mt-4 grid grid-cols-2 gap-4 text-sm sm:grid-cols-4">
         <div>
-          <dt className="text-gray-500">보드게임</dt>
+          <dt className="text-gray-500">게임</dt>
           <dd className="flex flex-wrap items-center gap-1.5 font-medium">
-            <Link to={`/boardgames/${party.boardGameId}`} className="text-indigo-600 hover:underline">
-              {party.boardGameName}
-            </Link>
+            {party.boardGameId === null ? (
+              party.gameName
+            ) : (
+              <Link to={`/boardgames/${party.boardGameId}`} className="text-indigo-600 hover:underline">
+                {party.gameName}
+              </Link>
+            )}
+            <CustomGameBadge customGame={party.customGame} />
             <GameStatusBadge visible={party.boardGameVisible} />
           </dd>
         </div>
@@ -158,6 +240,8 @@ function PartyInfo({ party }: PartyProps) {
         </div>
       </dl>
 
+      <PartyPlayInfo party={party} />
+
       {party.description && <p className="mt-4 whitespace-pre-wrap text-gray-700">{party.description}</p>}
 
       <PartyActions party={party} />
@@ -165,10 +249,34 @@ function PartyInfo({ party }: PartyProps) {
   )
 }
 
+/**
+ * 참여자 목록. 호스트에게는 (모집 중일 때) 호스트 외 참여자마다 "내보내기"가 보인다. 최종 검사는 서버(403/409/400).
+ * 내보낸 회원은 그 파티에 다시 참여할 수 없으므로 confirm 으로 한 번 더 확인한다.
+ */
 function PartyMembers({ party }: PartyProps) {
+  const { data: me } = useMe()
+  const kick = useKickPartyMember(party.id)
+  const canKick = me != null && me.id === party.hostId && party.status === 'RECRUITING'
+
+  function handleKick(member: PartyMemberInfo) {
+    if (
+      kick.isPending ||
+      !window.confirm(`${member.nickname}님을 내보낼까요? 내보낸 회원은 이 파티에 다시 참여할 수 없습니다.`)
+    ) {
+      return
+    }
+    kick.reset()
+    kick.mutate(member.memberId)
+  }
+
   return (
     <section className="mt-8">
       <h2 className="text-lg font-semibold">참여자 ({party.members.length}명)</h2>
+      {kick.isError && (
+        <div className="mt-3">
+          <ErrorMessage message={kick.error.message} />
+        </div>
+      )}
       <ul className="mt-3 space-y-2">
         {party.members.map((member) => (
           <li
@@ -186,7 +294,19 @@ function PartyMembers({ party }: PartyProps) {
                 )}
               </span>
             </span>
-            <span className="text-sm text-gray-500">{formatDateTime(member.joinedAt)} 참여</span>
+            <span className="flex items-center gap-3 text-sm text-gray-500">
+              {formatDateTime(member.joinedAt)} 참여
+              {canKick && member.memberId !== party.hostId && (
+                <button
+                  type="button"
+                  onClick={() => handleKick(member)}
+                  disabled={kick.isPending}
+                  className={SMALL_DANGER_BUTTON}
+                >
+                  {kick.isPending && kick.variables === member.memberId ? '내보내는 중…' : '내보내기'}
+                </button>
+              )}
+            </span>
           </li>
         ))}
       </ul>
