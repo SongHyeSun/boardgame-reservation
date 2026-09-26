@@ -1,4 +1,4 @@
-// 표시용 포맷. (F5에서 파티 상태 등 나머지 표시를 여기에 이어서 정리)
+// 표시용 포맷. 난이도·파티 상태 라벨과 날짜 표기는 화면에서 직접 만들지 말고 여기 것을 쓴다.
 
 import type { Difficulty } from '../types/boardgame.ts'
 import type { PartyStatus } from '../types/party.ts'
@@ -32,14 +32,11 @@ export function formatPlayers(minPlayers: number, maxPlayers: number): string {
   return minPlayers === maxPlayers ? `${minPlayers}명` : `${minPlayers}~${maxPlayers}명`
 }
 
-/** LocalDateTime 문자열(`2026-10-01T19:00:00`, 타임존 없음) → `2026. 10. 1. 오후 7:00`. 없으면 일정 미정 */
-export function formatPlayAt(playAt: string | null): string {
-  if (!playAt) {
-    return '일정 미정'
-  }
-  const date = new Date(playAt)
+/** LocalDateTime 문자열(`2026-10-01T19:00:00`, 타임존 없음) → `2026. 10. 1. 오후 7:00`. 파싱이 안 되면 원문 */
+export function formatDateTime(value: string): string {
+  const date = new Date(value)
   if (Number.isNaN(date.getTime())) {
-    return playAt
+    return value
   }
   return date.toLocaleString('ko-KR', {
     year: 'numeric',
@@ -48,6 +45,11 @@ export function formatPlayAt(playAt: string | null): string {
     hour: 'numeric',
     minute: '2-digit',
   })
+}
+
+/** 플레이 일시는 선택 입력이라 없으면 일정 미정 */
+export function formatPlayAt(playAt: string | null): string {
+  return playAt ? formatDateTime(playAt) : '일정 미정'
 }
 
 /**

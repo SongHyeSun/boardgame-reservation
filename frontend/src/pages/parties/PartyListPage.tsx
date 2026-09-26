@@ -1,4 +1,5 @@
 import { Link, useSearchParams } from 'react-router'
+import EmptyMessage from '../../components/EmptyMessage.tsx'
 import ErrorMessage from '../../components/ErrorMessage.tsx'
 import Loading from '../../components/Loading.tsx'
 import PartyStatusBadge from '../../components/PartyStatusBadge.tsx'
@@ -75,7 +76,7 @@ function PartyResults({ tab }: { tab: StatusTab }) {
     return <ErrorMessage message={error.message} />
   }
   if (parties.length === 0) {
-    return <p className="py-8 text-center text-gray-500">{EMPTY_MESSAGE[tab]}</p>
+    return <EmptyMessage message={EMPTY_MESSAGE[tab]} />
   }
   return (
     <ul className="space-y-3">

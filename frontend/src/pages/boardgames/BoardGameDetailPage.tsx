@@ -1,5 +1,7 @@
 import { Link, useParams } from 'react-router'
+import BackLink from '../../components/BackLink.tsx'
 import DifficultyBadge from '../../components/DifficultyBadge.tsx'
+import EmptyMessage from '../../components/EmptyMessage.tsx'
 import ErrorMessage from '../../components/ErrorMessage.tsx'
 import Loading from '../../components/Loading.tsx'
 import { useBoardGame, useDeleteBoardGame } from '../../hooks/useBoardGames.ts'
@@ -8,14 +10,6 @@ import { useParties } from '../../hooks/useParties.ts'
 import type { BoardGameResponse } from '../../types/boardgame.ts'
 import { formatPlayAt, formatPlayers } from '../../utils/format.ts'
 import { parsePositiveInteger } from '../../utils/validation.ts'
-
-function BackToList() {
-  return (
-    <Link to="/boardgames" className="text-sm text-indigo-600 hover:underline">
-      ← 게임 목록
-    </Link>
-  )
-}
 
 interface BoardGameProps {
   boardGame: BoardGameResponse
@@ -99,9 +93,7 @@ function RecruitingParties({ boardGameId }: { boardGameId: number }) {
       <div className="mt-3">
         {isPending && <Loading />}
         {isError && <ErrorMessage message={error.message} />}
-        {parties && parties.length === 0 && (
-          <p className="py-6 text-center text-gray-500">모집 중인 파티가 없습니다.</p>
-        )}
+        {parties && parties.length === 0 && <EmptyMessage message="모집 중인 파티가 없습니다." />}
         {parties && parties.length > 0 && (
           <ul className="space-y-2">
             {parties.map((party) => (
@@ -155,13 +147,13 @@ export default function BoardGameDetailPage() {
     return (
       <div className="space-y-4">
         <ErrorMessage message="잘못된 게임 번호입니다." />
-        <BackToList />
+        <BackLink to="/boardgames">← 게임 목록</BackLink>
       </div>
     )
   }
   return (
     <div className="space-y-4">
-      <BackToList />
+      <BackLink to="/boardgames">← 게임 목록</BackLink>
       <BoardGameDetail id={id} />
     </div>
   )

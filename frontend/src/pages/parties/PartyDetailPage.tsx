@@ -1,11 +1,12 @@
 import { Link, useLocation, useParams } from 'react-router'
+import BackLink from '../../components/BackLink.tsx'
 import ErrorMessage from '../../components/ErrorMessage.tsx'
 import Loading from '../../components/Loading.tsx'
 import PartyStatusBadge from '../../components/PartyStatusBadge.tsx'
 import { useCloseParty, useJoinParty, useLeaveParty, useParty } from '../../hooks/useParties.ts'
 import { useMe } from '../../hooks/useMe.ts'
 import type { PartyDetailResponse } from '../../types/party.ts'
-import { formatPlayAt } from '../../utils/format.ts'
+import { formatDateTime, formatPlayAt } from '../../utils/format.ts'
 import { getPartyAction } from '../../utils/partyAction.ts'
 import { parsePositiveInteger } from '../../utils/validation.ts'
 
@@ -13,14 +14,6 @@ const PRIMARY_BUTTON = 'rounded bg-indigo-600 px-4 py-2 font-medium text-white h
 const SECONDARY_BUTTON =
   'rounded border border-gray-300 bg-white px-4 py-2 text-gray-700 hover:bg-gray-50 disabled:opacity-50'
 const DANGER_BUTTON = 'rounded border border-red-300 bg-white px-4 py-2 text-red-600 hover:bg-red-50 disabled:opacity-50'
-
-function BackToList() {
-  return (
-    <Link to="/parties" className="text-sm text-indigo-600 hover:underline">
-      ← 파티 목록
-    </Link>
-  )
-}
 
 interface PartyProps {
   party: PartyDetailResponse
@@ -178,7 +171,7 @@ function PartyMembers({ party }: PartyProps) {
                 </span>
               )}
             </span>
-            <span className="text-sm text-gray-500">{formatPlayAt(member.joinedAt)} 참여</span>
+            <span className="text-sm text-gray-500">{formatDateTime(member.joinedAt)} 참여</span>
           </li>
         ))}
       </ul>
@@ -210,13 +203,13 @@ export default function PartyDetailPage() {
     return (
       <div className="space-y-4">
         <ErrorMessage message="잘못된 파티 번호입니다." />
-        <BackToList />
+        <BackLink to="/parties">← 파티 목록</BackLink>
       </div>
     )
   }
   return (
     <div className="space-y-4">
-      <BackToList />
+      <BackLink to="/parties">← 파티 목록</BackLink>
       {/* 다른 파티로 이동하면 mutation 오류 상태도 새로 시작한다 */}
       <PartyDetail key={id} id={id} />
     </div>

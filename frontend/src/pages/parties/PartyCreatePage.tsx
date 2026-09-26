@@ -1,5 +1,7 @@
 import { useState, type ChangeEvent, type FormEvent } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router'
+import BackLink from '../../components/BackLink.tsx'
+import EmptyMessage from '../../components/EmptyMessage.tsx'
 import ErrorMessage from '../../components/ErrorMessage.tsx'
 import FormField from '../../components/FormField.tsx'
 import Loading from '../../components/Loading.tsx'
@@ -168,10 +170,8 @@ export default function PartyCreatePage() {
   if (boardGames.length === 0) {
     return (
       <div className="space-y-4">
-        <p className="py-8 text-center text-gray-500">등록된 게임이 없어 파티를 만들 수 없습니다.</p>
-        <Link to="/boardgames" className="text-sm text-indigo-600 hover:underline">
-          ← 게임 목록
-        </Link>
+        <EmptyMessage message="등록된 게임이 없어 파티를 만들 수 없습니다." />
+        <BackLink to="/boardgames">← 게임 목록</BackLink>
       </div>
     )
   }

@@ -1,6 +1,7 @@
 import { useState, type ChangeEvent, type FormEvent } from 'react'
 import { Link, useLocation, useSearchParams } from 'react-router'
 import DifficultyBadge from '../../components/DifficultyBadge.tsx'
+import EmptyMessage from '../../components/EmptyMessage.tsx'
 import ErrorMessage from '../../components/ErrorMessage.tsx'
 import FormField from '../../components/FormField.tsx'
 import Loading from '../../components/Loading.tsx'
@@ -146,7 +147,7 @@ function BoardGameResults({ filter }: BoardGameResultsProps) {
     return <ErrorMessage message={error.message} />
   }
   if (boardGames.length === 0) {
-    return <p className="py-8 text-center text-gray-500">조건에 맞는 게임이 없습니다.</p>
+    return <EmptyMessage message="조건에 맞는 게임이 없습니다." />
   }
   return (
     <ul className="grid gap-3 sm:grid-cols-2">

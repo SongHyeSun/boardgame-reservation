@@ -1,5 +1,6 @@
 import { useState, type ChangeEvent, type FormEvent } from 'react'
 import { Link, useNavigate, useParams } from 'react-router'
+import BackLink from '../../components/BackLink.tsx'
 import ErrorMessage from '../../components/ErrorMessage.tsx'
 import FormField from '../../components/FormField.tsx'
 import Loading from '../../components/Loading.tsx'
@@ -242,9 +243,7 @@ function EditBoardGame({ id }: { id: number }) {
     return (
       <div className="space-y-4">
         <ErrorMessage message={error.message} />
-        <Link to="/boardgames" className="text-sm text-indigo-600 hover:underline">
-          ← 게임 목록
-        </Link>
+        <BackLink to="/boardgames">← 게임 목록</BackLink>
       </div>
     )
   }
@@ -260,7 +259,12 @@ export default function BoardGameFormPage() {
   }
   const id = parsePositiveInteger(rawId)
   if (id === null) {
-    return <ErrorMessage message="잘못된 게임 번호입니다." />
+    return (
+      <div className="space-y-4">
+        <ErrorMessage message="잘못된 게임 번호입니다." />
+        <BackLink to="/boardgames">← 게임 목록</BackLink>
+      </div>
+    )
   }
   return <EditBoardGame id={id} />
 }
