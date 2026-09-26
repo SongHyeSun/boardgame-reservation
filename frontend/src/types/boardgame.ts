@@ -23,6 +23,16 @@ export interface BoardGameRequest {
   description?: string | null // 최대 2000자
 }
 
+/** 등록/수정 폼의 입력 상태 (프론트 전용). 숫자 입력은 문자열로 들고 있다가 제출 시 변환한다. */
+export interface BoardGameFormValues {
+  name: string
+  minPlayers: string
+  maxPlayers: string
+  playTime: string
+  difficulty: Difficulty
+  description: string
+}
+
 /** GET /api/boardgames 쿼리 파라미터 (전부 선택) */
 export interface BoardGameFilter {
   players?: number
