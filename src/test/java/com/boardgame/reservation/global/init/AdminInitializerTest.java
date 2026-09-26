@@ -1,5 +1,6 @@
 package com.boardgame.reservation.global.init;
 
+import com.boardgame.reservation.boardgame.repository.BoardGameRepository;
 import com.boardgame.reservation.global.security.MemberSessionInvalidator;
 import com.boardgame.reservation.member.domain.AdminRequestStatus;
 import com.boardgame.reservation.member.domain.Member;
@@ -31,6 +32,8 @@ class AdminInitializerTest {
     @Mock
     MemberRepository memberRepository;
     @Mock
+    BoardGameRepository boardGameRepository;
+    @Mock
     PasswordEncoder passwordEncoder;
     @Mock
     MemberSessionInvalidator sessionInvalidator;
@@ -39,7 +42,7 @@ class AdminInitializerTest {
 
     @BeforeEach
     void setUp() {
-        initializer = new AdminInitializer(memberRepository, passwordEncoder, sessionInvalidator);
+        initializer = new AdminInitializer(memberRepository, boardGameRepository, passwordEncoder, sessionInvalidator);
     }
 
     private void configure(String email, String password) {
@@ -55,7 +58,7 @@ class AdminInitializerTest {
         configure("root@test.com", " ");
         initializer.run(null);
 
-        verifyNoInteractions(memberRepository, passwordEncoder, sessionInvalidator);
+        verifyNoInteractions(memberRepository, boardGameRepository, passwordEncoder, sessionInvalidator);
     }
 
     @Test
@@ -64,6 +67,7 @@ class AdminInitializerTest {
         configure(" Root@Test.com ", "secret-pw");
         given(memberRepository.findByEmail("root@test.com")).willReturn(Optional.empty());
         given(passwordEncoder.encode("secret-pw")).willReturn("encoded");
+        given(memberRepository.save(any(Member.class))).willAnswer(inv -> inv.getArgument(0));
 
         initializer.run(null);
 
@@ -75,6 +79,8 @@ class AdminInitializerTest {
         assertThat(saved.getRole()).isEqualTo(Role.SUPER_ADMIN);
         assertThat(saved.getAdminRequestStatus()).isEqualTo(AdminRequestStatus.NONE);
         verifyNoInteractions(sessionInvalidator);
+        // 새로 만든 SUPER_ADMIN 도 등록 관리자가 없는 기존 게임을 가져간다
+        verify(boardGameRepository).assignOwnerIfMissing(saved);
     }
 
     @Test
@@ -91,6 +97,7 @@ class AdminInitializerTest {
         verify(memberRepository, never()).save(any());
         verify(passwordEncoder, never()).encode(any());
         verify(sessionInvalidator).invalidateAll("root@test.com");
+        verify(boardGameRepository).assignOwnerIfMissing(existing);
     }
 
     @Test
@@ -104,10 +111,11 @@ class AdminInitializerTest {
 
         assertThat(existing.getRole()).isEqualTo(Role.SUPER_ADMIN);
         verify(sessionInvalidator).invalidateAll("root@test.com");
+        verify(boardGameRepository).assignOwnerIfMissing(existing);
     }
 
     @Test
-    @DisplayName("이미 SUPER_ADMIN 이면 아무 것도 바꾸지 않는다 (재기동해도 세션을 끊지 않음)")
+    @DisplayName("이미 SUPER_ADMIN 이면 계정은 바꾸지 않는다 (재기동해도 세션을 끊지 않음). 게임 소유자 백필만 매번 시도")
     void unchangedWhenAlreadySuperAdmin() {
         configure("root@test.com", "secret-pw");
         Member existing = Member.createSuperAdmin("root@test.com", "encoded", "관리자");
@@ -118,5 +126,6 @@ class AdminInitializerTest {
         assertThat(existing.getRole()).isEqualTo(Role.SUPER_ADMIN);
         verify(memberRepository, never()).save(any());
         verifyNoInteractions(sessionInvalidator, passwordEncoder);
+        verify(boardGameRepository).assignOwnerIfMissing(existing);
     }
 }

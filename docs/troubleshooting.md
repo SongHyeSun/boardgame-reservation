@@ -77,3 +77,9 @@
 
 - **증상**: 프론트 리팩터링 후 import 누락으로 런타임 에러.
 - **해결/재발 방지**: 리팩터링 뒤에는 화면을 한 바퀴 직접 확인한다.
+
+---
+
+## 6. 게임 숨기기로 CANCELLED 파티가 생기면서 `close()` 가 이를 CLOSED 로 덮어쓸 수 있던 문제 (B-1)
+
+- 원인: `PartyService.close()` 가 상태 검사 없이 `party.close()` 를 호출해, 호스트가 취소된 파티를 닫으면 CANCELLED 가 CLOSED 로 바뀔 수 있었다 → `!isRecruiting` 이면 `PARTY_NOT_RECRUITING`(409) 으로 막음.

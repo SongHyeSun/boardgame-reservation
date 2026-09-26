@@ -80,6 +80,9 @@ public class PartyService {
     public PartyResponse create(Long hostId, PartyCreateRequest request) {
         BoardGame boardGame = boardGameRepository.findById(request.boardGameId())
                 .orElseThrow(() -> new BusinessException(ErrorCode.BOARDGAME_NOT_FOUND));
+        if (!boardGame.isVisible()) {
+            throw new BusinessException(ErrorCode.BOARDGAME_NOT_AVAILABLE);
+        }
         Member host = memberRepository.findById(hostId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.MEMBER_NOT_FOUND));
 
@@ -102,6 +105,10 @@ public class PartyService {
         Party party = findWithDetailsOrThrow(partyId);
         if (!party.isHost(memberId)) {
             throw new BusinessException(ErrorCode.NOT_PARTY_HOST);
+        }
+        // 게임 운영 중지로 CANCELLED 가 된 파티를 CLOSED 로 덮어쓰지 않도록 (docs/troubleshooting.md 6번)
+        if (!party.isRecruiting()) {
+            throw new BusinessException(ErrorCode.PARTY_NOT_RECRUITING);
         }
         party.close();
         runAfterCommit(() -> partyRedisRepository.delete(partyId));

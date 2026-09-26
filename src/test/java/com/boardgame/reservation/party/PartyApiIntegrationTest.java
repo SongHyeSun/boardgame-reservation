@@ -1,7 +1,6 @@
 package com.boardgame.reservation.party;
 
 import com.boardgame.reservation.boardgame.domain.BoardGame;
-import com.boardgame.reservation.global.security.MemberPrincipal;
 import com.boardgame.reservation.member.domain.Member;
 import com.jayway.jsonpath.JsonPath;
 import jakarta.servlet.http.Cookie;
@@ -10,11 +9,9 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.session.web.http.SessionRepositoryFilter;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
-import org.springframework.test.web.servlet.request.RequestPostProcessor;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
 
@@ -23,9 +20,8 @@ import java.util.Base64;
 import java.util.Set;
 
 import static com.boardgame.reservation.support.MultipartTestUtils.signup;
+import static com.boardgame.reservation.support.SecurityTestUtils.loginAs;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.authentication;
-import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -62,13 +58,6 @@ class PartyApiIntegrationTest extends PartyRedisTestSupport {
         boardGame = saveBoardGame(2, 4);
     }
 
-    /** 컨트롤러가 @AuthenticationPrincipal MemberPrincipal 을 쓰므로 실제 주체 타입으로 로그인 상태를 만든다 */
-    private static RequestPostProcessor loginAs(Member member) {
-        MemberPrincipal principal = MemberPrincipal.from(member);
-        return authentication(new UsernamePasswordAuthenticationToken(
-                principal, null, principal.getAuthorities()));
-    }
-
     private String body(int capacity) {
         return """
                 {"boardGameId":%d,"title":"같이 해요","description":"초보 환영","capacity":%d}
@@ -98,6 +87,7 @@ class PartyApiIntegrationTest extends PartyRedisTestSupport {
                 .andExpect(jsonPath("$.data.capacity").value(4))
                 .andExpect(jsonPath("$.data.remaining").value(3))
                 .andExpect(jsonPath("$.data.hostNickname").value("host"))
+                .andExpect(jsonPath("$.data.boardGameVisible").value(true))
                 .andExpect(jsonPath("$.data.members.length()").value(1))
                 .andExpect(jsonPath("$.data.members[0].nickname").value("host"));
 
@@ -283,6 +273,7 @@ class PartyApiIntegrationTest extends PartyRedisTestSupport {
                 .andExpect(jsonPath("$.data.length()").value(1))
                 .andExpect(jsonPath("$.data[0].id").value(recruiting))
                 .andExpect(jsonPath("$.data[0].boardGameName").value("Catan"))
+                .andExpect(jsonPath("$.data[0].boardGameVisible").value(true))
                 .andExpect(jsonPath("$.data[0].hostNickname").value("host"))
                 .andExpect(jsonPath("$.data[0].currentCount").value(2));
 
@@ -379,19 +370,5 @@ class PartyApiIntegrationTest extends PartyRedisTestSupport {
         redisTemplate.delete(redisKey);
         sessionMockMvc.perform(get("/api/members/me").cookie(sessionCookie))
                 .andExpect(status().isUnauthorized());
-    }
-
-    // ───────────── 보드게임 삭제 ─────────────
-
-    @Test
-    @DisplayName("파티가 있는 보드게임을 삭제하면 409 BOARDGAME_IN_USE")
-    void deleteBoardGame_inUse() throws Exception {
-        createParty(4);
-
-        mockMvc.perform(delete("/api/boardgames/{id}", boardGame.getId())
-                        .with(user("admin").roles("ADMIN")))
-                .andExpect(status().isConflict());
-
-        assertThat(boardGameRepository.existsById(boardGame.getId())).isTrue();
     }
 }

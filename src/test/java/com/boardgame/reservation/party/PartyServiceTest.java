@@ -9,6 +9,7 @@ import com.boardgame.reservation.member.domain.Member;
 import com.boardgame.reservation.member.repository.MemberRepository;
 import com.boardgame.reservation.party.domain.Party;
 import com.boardgame.reservation.party.domain.PartyMember;
+import com.boardgame.reservation.party.domain.PartyStatus;
 import com.boardgame.reservation.party.dto.PartyCreateRequest;
 import com.boardgame.reservation.party.repository.PartyMemberRepository;
 import com.boardgame.reservation.party.repository.PartyRedisRepository;
@@ -35,6 +36,7 @@ import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 
 /** DB/Redis/스프링 없이 서비스 규칙만 검증하는 단위 테스트 */
 @ExtendWith(MockitoExtension.class)
@@ -114,6 +116,23 @@ class PartyServiceTest {
         verify(partyMemberRepository).save(any(PartyMember.class));
         // 트랜잭션이 없는 단위 테스트에서는 afterCommit 대신 즉시 실행된다
         verify(partyRedisRepository).init(PARTY_ID, 3L, List.of(HOST_ID));
+    }
+
+    @Test
+    @DisplayName("운영이 중지된(숨긴) 게임으로는 파티를 개설할 수 없다 (BOARDGAME_NOT_AVAILABLE)")
+    void create_hiddenGame_throws() {
+        BoardGame boardGame = BoardGame.create("Catan", 2, 4, 60, Difficulty.NORMAL, "설명");
+        boardGame.hide();
+        given(boardGameRepository.findById(1L)).willReturn(Optional.of(boardGame));
+
+        assertThatThrownBy(() -> partyService.create(HOST_ID,
+                new PartyCreateRequest(1L, "제목", null, 4, null)))
+                .isInstanceOf(BusinessException.class)
+                .extracting(PartyServiceTest::codeOf)
+                .isEqualTo(ErrorCode.BOARDGAME_NOT_AVAILABLE);
+
+        verify(partyRepository, never()).save(any(Party.class));
+        verifyNoInteractions(partyRedisRepository);
     }
 
     // ───────────── 참여 ─────────────
@@ -304,5 +323,27 @@ class PartyServiceTest {
 
         assertThat(party.isRecruiting()).isFalse();
         verify(partyRedisRepository).delete(PARTY_ID);
+    }
+
+    @Test
+    @DisplayName("이미 취소(CANCELLED)·마감(CLOSED)된 파티는 close 할 수 없고 상태가 덮어써지지 않는다 (PARTY_NOT_RECRUITING)")
+    void close_notRecruiting_throws() {
+        Party cancelled = party(member(HOST_ID), 4);
+        cancelled.cancel();
+        Party closed = party(member(HOST_ID), 4);
+        closed.close();
+
+        for (Party party : List.of(cancelled, closed)) {
+            PartyStatus before = party.getStatus();
+            given(partyRepository.findWithDetailsById(PARTY_ID)).willReturn(Optional.of(party));
+
+            assertThatThrownBy(() -> partyService.close(PARTY_ID, HOST_ID))
+                    .isInstanceOf(BusinessException.class)
+                    .extracting(PartyServiceTest::codeOf)
+                    .isEqualTo(ErrorCode.PARTY_NOT_RECRUITING);
+
+            assertThat(party.getStatus()).isEqualTo(before);
+        }
+        verify(partyRedisRepository, never()).delete(anyLong());
     }
 }

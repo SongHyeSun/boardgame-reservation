@@ -1,5 +1,6 @@
 package com.boardgame.reservation.global.init;
 
+import com.boardgame.reservation.boardgame.repository.BoardGameRepository;
 import com.boardgame.reservation.global.common.TransactionCallbacks;
 import com.boardgame.reservation.global.security.MemberSessionInvalidator;
 import com.boardgame.reservation.member.domain.Member;
@@ -25,6 +26,7 @@ import java.util.Optional;
  *   - 계정이 없으면 SUPER_ADMIN 으로 생성
  *   - 이미 있으면(예전에 ADMIN 으로 만들어진 계정 등) role 을 SUPER_ADMIN 으로 갱신하고, 비밀번호는 건드리지 않는다
  *     → 기존 세션에는 예전 권한만 들어 있으므로 그 계정의 세션도 무효화(재로그인)
+ *   - 어느 경우든 등록 관리자가 없는 기존 보드게임(B단계 이전 데이터)은 이 계정 소유로 채운다
  */
 @Slf4j
 @Component
@@ -32,6 +34,7 @@ import java.util.Optional;
 public class AdminInitializer implements ApplicationRunner {
 
     private final MemberRepository memberRepository;
+    private final BoardGameRepository boardGameRepository;
     private final PasswordEncoder passwordEncoder;
     private final MemberSessionInvalidator sessionInvalidator;
 
@@ -50,17 +53,23 @@ public class AdminInitializer implements ApplicationRunner {
         String email = MemberService.normalizeEmail(adminEmail);
         Optional<Member> existing = memberRepository.findByEmail(email);
 
+        Member superAdmin;
         if (existing.isEmpty()) {
-            memberRepository.save(Member.createSuperAdmin(email, passwordEncoder.encode(adminPassword), "관리자"));
+            superAdmin = memberRepository.save(Member.createSuperAdmin(email, passwordEncoder.encode(adminPassword), "관리자"));
             log.info("Super admin account created: {}", email);
-            return;
+        } else {
+            superAdmin = existing.get();
+            if (superAdmin.getRole() != Role.SUPER_ADMIN) {
+                superAdmin.promoteToSuperAdmin();
+                TransactionCallbacks.afterCommit(() -> sessionInvalidator.invalidateAll(email));
+                log.info("Existing account promoted to super admin: {}", email);
+            }
         }
 
-        Member member = existing.get();
-        if (member.getRole() != Role.SUPER_ADMIN) {
-            member.promoteToSuperAdmin();
-            TransactionCallbacks.afterCommit(() -> sessionInvalidator.invalidateAll(email));
-            log.info("Existing account promoted to super admin: {}", email);
+        // 등록 관리자가 없는 기존 게임(B단계 이전 데이터)은 SUPER_ADMIN 소유로 이관
+        int assigned = boardGameRepository.assignOwnerIfMissing(superAdmin);
+        if (assigned > 0) {
+            log.info("Assigned {} existing board game(s) to super admin: {}", assigned, email);
         }
     }
 }

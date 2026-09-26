@@ -1,6 +1,7 @@
 package com.boardgame.reservation.support;
 
 import com.boardgame.reservation.boardgame.repository.BoardGameRepository;
+import com.boardgame.reservation.member.domain.Member;
 import com.boardgame.reservation.member.repository.MemberRepository;
 import com.boardgame.reservation.party.repository.PartyMemberRepository;
 import com.boardgame.reservation.party.repository.PartyRepository;
@@ -47,6 +48,14 @@ public abstract class RedisIntegrationTestSupport {
     protected BoardGameRepository boardGameRepository;
     @Autowired
     protected MemberRepository memberRepository;
+
+    protected Member saveMember(String name) {
+        return memberRepository.save(Member.createUser(name + "@test.com", "pw", name));
+    }
+
+    protected Member saveAdmin(String name) {
+        return memberRepository.save(Member.createAdmin(name + "@test.com", "pw", name));
+    }
 
     @AfterEach
     protected void cleanUp() {

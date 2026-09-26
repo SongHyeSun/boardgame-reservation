@@ -32,6 +32,17 @@ public final class MultipartTestUtils {
         return withFiles(multipart(HttpMethod.PUT, "/api/members/me"), dataJson, files);
     }
 
+    /** POST /api/boardgames : data(JSON) + 선택 파일 파트(image) */
+    public static MockMultipartHttpServletRequestBuilder createBoardGame(String dataJson, MockMultipartFile... files) {
+        return withFiles(multipart("/api/boardgames"), dataJson, files);
+    }
+
+    /** PUT /api/boardgames/{id} : data(JSON) + 선택 파일 파트(image) */
+    public static MockMultipartHttpServletRequestBuilder updateBoardGame(
+            long id, String dataJson, MockMultipartFile... files) {
+        return withFiles(multipart(HttpMethod.PUT, "/api/boardgames/{id}", id), dataJson, files);
+    }
+
     private static MockMultipartHttpServletRequestBuilder withFiles(
             MockMultipartHttpServletRequestBuilder builder, String dataJson, MockMultipartFile... files) {
         builder.file(jsonPart("data", dataJson));

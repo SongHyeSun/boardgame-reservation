@@ -3,7 +3,6 @@ package com.boardgame.reservation.boardgame;
 import com.boardgame.reservation.boardgame.domain.BoardGame;
 import com.boardgame.reservation.boardgame.domain.Difficulty;
 import com.boardgame.reservation.boardgame.repository.BoardGameRepository;
-import com.jayway.jsonpath.JsonPath;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -12,29 +11,28 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.request.RequestPostProcessor;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
 
-import java.nio.charset.StandardCharsets;
-
+import static com.boardgame.reservation.support.MultipartTestUtils.createBoardGame;
+import static com.boardgame.reservation.support.MultipartTestUtils.updateBoardGame;
 import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.empty;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
- * 보드게임 CRUD + 목록 필터를 실제 Security 필터 체인까지 태워서 검증.
- * DB는 src/test/resources/application.yml 의 H2 사용.
+ * 보드게임 읽기 API(목록 필터·상세)와 쓰기 API의 권한(401/403)을 실제 Security 필터 체인까지 태워서 검증.
+ * DB는 src/test/resources/application.yml 의 H2 사용, 회원·Redis 없이 돈다.
+ * 등록·수정·숨기기의 실제 동작(소유자 검사, 이미지, 파티 취소)은 로그인 회원이 필요해서
+ * BoardGameManageIntegrationTest / BoardGameVisibilityIntegrationTest 에서 검증한다.
  *
- * 시드 (id 오름차순):
+ * 시드 (id 오름차순, 모두 오프라인 전용·등록 관리자 없음):
  *   Catan     3~4명 NORMAL
  *   Pandemic  2~4명 NORMAL
  *   Splendor  2~4명 EASY
@@ -43,13 +41,15 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest
 class BoardGameApiIntegrationTest {
 
-    private static final RequestPostProcessor ADMIN = user("admin").roles("ADMIN");
     private static final RequestPostProcessor USER = user("user").roles("USER");
 
-    private static final String VALID_BODY = """
+    private static final String VALID_DATA = """
             {"name":"Carcassonne","minPlayers":2,"maxPlayers":5,"playTime":45,
-             "difficulty":"EASY","description":"타일 배치 게임"}
+             "difficulty":"EASY","description":"타일 배치 게임",
+             "offlineAvailable":true,"onlineAvailable":false,"stock":2}
             """;
+
+    private static final String VISIBILITY_HIDE = "{\"visible\":false}";
 
     @Autowired
     WebApplicationContext context;
@@ -76,6 +76,11 @@ class BoardGameApiIntegrationTest {
         boardGameRepository.deleteAll();
     }
 
+    private BoardGame saveGame(String name, boolean offline, boolean online, int stock) {
+        return boardGameRepository.save(BoardGame.create(
+                new BoardGame.Details(name, 2, 4, 30, Difficulty.EASY, "설명", offline, online, stock), null));
+    }
+
     // ───────────── 권한 ─────────────
 
     @Test
@@ -94,138 +99,119 @@ class BoardGameApiIntegrationTest {
     }
 
     @Test
-    @DisplayName("비로그인은 등록/수정/삭제 시 401")
+    @DisplayName("비로그인은 등록/수정/숨기기 시 401")
     void anonymous_cannotWrite() throws Exception {
         Long id = boardGameRepository.findAll().get(0).getId();
 
-        mockMvc.perform(post("/api/boardgames").contentType(MediaType.APPLICATION_JSON).content(VALID_BODY))
+        mockMvc.perform(createBoardGame(VALID_DATA))
                 .andExpect(status().isUnauthorized());
-        mockMvc.perform(put("/api/boardgames/{id}", id).contentType(MediaType.APPLICATION_JSON).content(VALID_BODY))
+        mockMvc.perform(updateBoardGame(id, VALID_DATA))
                 .andExpect(status().isUnauthorized());
-        mockMvc.perform(delete("/api/boardgames/{id}", id))
+        mockMvc.perform(patch("/api/boardgames/{id}/visibility", id)
+                        .contentType(MediaType.APPLICATION_JSON).content(VISIBILITY_HIDE))
                 .andExpect(status().isUnauthorized());
     }
 
     @Test
-    @DisplayName("일반 회원(USER)은 등록/수정/삭제 시 403, 데이터는 그대로")
+    @DisplayName("일반 회원(USER)은 등록/수정/숨기기 시 403, 데이터는 그대로")
     void user_cannotWrite() throws Exception {
         Long id = boardGameRepository.findAll().get(0).getId();
 
-        mockMvc.perform(post("/api/boardgames").with(USER)
-                        .contentType(MediaType.APPLICATION_JSON).content(VALID_BODY))
+        mockMvc.perform(createBoardGame(VALID_DATA).with(USER))
                 .andExpect(status().isForbidden());
-        mockMvc.perform(put("/api/boardgames/{id}", id).with(USER)
-                        .contentType(MediaType.APPLICATION_JSON).content(VALID_BODY))
+        mockMvc.perform(updateBoardGame(id, VALID_DATA).with(USER))
                 .andExpect(status().isForbidden());
-        mockMvc.perform(delete("/api/boardgames/{id}", id).with(USER))
+        mockMvc.perform(patch("/api/boardgames/{id}/visibility", id).with(USER)
+                        .contentType(MediaType.APPLICATION_JSON).content(VISIBILITY_HIDE))
                 .andExpect(status().isForbidden());
 
         mockMvc.perform(get("/api/boardgames"))
                 .andExpect(jsonPath("$.data.length()").value(4));
+        mockMvc.perform(get("/api/boardgames/{id}", id))
+                .andExpect(jsonPath("$.data.name").value("Catan"))
+                .andExpect(jsonPath("$.data.visible").value(true));
     }
 
-    // ───────────── ADMIN CRUD ─────────────
+    @Test
+    @DisplayName("mine=true 는 로그인이 필요하다 (비로그인 401)")
+    void list_mine_requiresLogin() throws Exception {
+        mockMvc.perform(get("/api/boardgames").param("mine", "true"))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.message").value("로그인이 필요합니다."));
+    }
+
+    // ───────────── 상세 응답 ─────────────
 
     @Test
-    @DisplayName("ADMIN: 등록(201) → 상세 → 수정 → 삭제 → 삭제 후 404")
-    void admin_crudFlow() throws Exception {
-        MvcResult created = mockMvc.perform(post("/api/boardgames").with(ADMIN)
-                        .contentType(MediaType.APPLICATION_JSON).content(VALID_BODY))
-                .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.success").value(true))
-                .andExpect(jsonPath("$.data.name").value("Carcassonne"))
-                .andExpect(jsonPath("$.data.difficulty").value("EASY"))
-                .andExpect(jsonPath("$.data.createdAt").exists())
-                .andReturn();
-        long id = ((Number) JsonPath.read(
-                created.getResponse().getContentAsString(StandardCharsets.UTF_8), "$.data.id")).longValue();
+    @DisplayName("상세 응답에 진행 방식·재고·노출 여부·이미지·영상·등록 관리자 필드가 있다 (기존 게임은 오프라인 전용, owner 없음)")
+    void detail_hasExtendedFields() throws Exception {
+        Long id = boardGameRepository.findAll().get(0).getId();
 
         mockMvc.perform(get("/api/boardgames/{id}", id))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.data.minPlayers").value(2))
-                .andExpect(jsonPath("$.data.maxPlayers").value(5))
-                .andExpect(jsonPath("$.data.playTime").value(45));
-
-        mockMvc.perform(put("/api/boardgames/{id}", id).with(ADMIN)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("""
-                                {"name":"Carcassonne 2","minPlayers":1,"maxPlayers":6,"playTime":60,
-                                 "difficulty":"NORMAL","description":"수정됨"}
-                                """))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.data.name").value("Carcassonne 2"))
-                .andExpect(jsonPath("$.data.maxPlayers").value(6))
-                .andExpect(jsonPath("$.data.difficulty").value("NORMAL"));
-
-        mockMvc.perform(delete("/api/boardgames/{id}", id).with(ADMIN))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.success").value(true));
-
-        mockMvc.perform(get("/api/boardgames/{id}", id))
-                .andExpect(status().isNotFound())
-                .andExpect(jsonPath("$.success").value(false));
+                .andExpect(jsonPath("$.data.offlineAvailable").value(true))
+                .andExpect(jsonPath("$.data.onlineAvailable").value(false))
+                .andExpect(jsonPath("$.data.stock").value(1))
+                .andExpect(jsonPath("$.data.visible").value(true))
+                .andExpect(jsonPath("$.data.imageUrl").isEmpty())
+                .andExpect(jsonPath("$.data.youtubeVideoId").isEmpty())
+                .andExpect(jsonPath("$.data.owner").isEmpty());
     }
 
     @Test
-    @DisplayName("없는 id 상세/수정/삭제는 404")
-    void notFound() throws Exception {
-        mockMvc.perform(get("/api/boardgames/{id}", 999999L))
-                .andExpect(status().isNotFound());
-        mockMvc.perform(put("/api/boardgames/{id}", 999999L).with(ADMIN)
-                        .contentType(MediaType.APPLICATION_JSON).content(VALID_BODY))
-                .andExpect(status().isNotFound());
-        mockMvc.perform(delete("/api/boardgames/{id}", 999999L).with(ADMIN))
-                .andExpect(status().isNotFound());
-    }
+    @DisplayName("숨긴 게임도 상세는 조회된다 (visible:false)")
+    void detail_hiddenGame_stillReadable() throws Exception {
+        BoardGame hidden = saveGame("Hidden", true, false, 1);
+        hidden.hide();
+        boardGameRepository.save(hidden);
 
-    @Test
-    @DisplayName("등록 시 필수값 누락 / 인원 범위 오류 / 잘못된 난이도는 400")
-    void create_invalidInput() throws Exception {
-        // 이름 누락
-        mockMvc.perform(post("/api/boardgames").with(ADMIN)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("""
-                                {"minPlayers":2,"maxPlayers":4,"playTime":30,"difficulty":"EASY"}
-                                """))
-                .andExpect(status().isBadRequest());
-
-        // 최소 인원 0
-        mockMvc.perform(post("/api/boardgames").with(ADMIN)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("""
-                                {"name":"X","minPlayers":0,"maxPlayers":4,"playTime":30,"difficulty":"EASY"}
-                                """))
-                .andExpect(status().isBadRequest());
-
-        // min > max
-        mockMvc.perform(post("/api/boardgames").with(ADMIN)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("""
-                                {"name":"X","minPlayers":5,"maxPlayers":2,"playTime":30,"difficulty":"EASY"}
-                                """))
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.message").value("최소 인원은 최대 인원보다 클 수 없습니다."));
-
-        // enum 오타
-        mockMvc.perform(post("/api/boardgames").with(ADMIN)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("""
-                                {"name":"X","minPlayers":2,"maxPlayers":4,"playTime":30,"difficulty":"VERY_HARD"}
-                                """))
-                .andExpect(status().isBadRequest());
-
-        mockMvc.perform(get("/api/boardgames"))
-                .andExpect(jsonPath("$.data.length()").value(4));
+        mockMvc.perform(get("/api/boardgames/{id}", hidden.getId()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.name").value("Hidden"))
+                .andExpect(jsonPath("$.data.visible").value(false));
     }
 
     // ───────────── 목록 필터 ─────────────
 
     @Test
-    @DisplayName("필터 없으면 전체를 id 오름차순으로 반환")
+    @DisplayName("필터 없으면 숨기지 않은 전체를 id 오름차순으로 반환")
     void list_noFilter() throws Exception {
         mockMvc.perform(get("/api/boardgames"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data[*].name").value(contains("Catan", "Pandemic", "Splendor", "Agricola")));
+    }
+
+    @Test
+    @DisplayName("숨긴 게임은 기본 목록에서 빠진다")
+    void list_excludesHidden() throws Exception {
+        BoardGame hidden = saveGame("Hidden", true, false, 1);
+        hidden.hide();
+        boardGameRepository.save(hidden);
+
+        mockMvc.perform(get("/api/boardgames"))
+                .andExpect(jsonPath("$.data.length()").value(4))
+                .andExpect(jsonPath("$.data[*].name").value(contains("Catan", "Pandemic", "Splendor", "Agricola")));
+        // 이름 검색에도 나오지 않는다 (게임 선택 모달이 이 목록을 재사용)
+        mockMvc.perform(get("/api/boardgames").param("keyword", "hidden"))
+                .andExpect(jsonPath("$.data").value(empty()));
+    }
+
+    @Test
+    @DisplayName("playMode: 그 진행 방식이 가능한 게임만 (둘 다 가능한 게임은 양쪽에 나온다)")
+    void list_playModeFilter() throws Exception {
+        saveGame("OnlineOnly", false, true, 0);
+        saveGame("Both", true, true, 2);
+
+        mockMvc.perform(get("/api/boardgames").param("playMode", "ONLINE"))
+                .andExpect(jsonPath("$.data[*].name").value(contains("OnlineOnly", "Both")));
+
+        mockMvc.perform(get("/api/boardgames").param("playMode", "OFFLINE"))
+                .andExpect(jsonPath("$.data[*].name")
+                        .value(contains("Catan", "Pandemic", "Splendor", "Agricola", "Both")));
+
+        // 다른 필터와 AND
+        mockMvc.perform(get("/api/boardgames").param("playMode", "ONLINE").param("keyword", "both"))
+                .andExpect(jsonPath("$.data[*].name").value(contains("Both")));
     }
 
     @Test
@@ -306,7 +292,7 @@ class BoardGameApiIntegrationTest {
     }
 
     @Test
-    @DisplayName("잘못된 difficulty / players 타입은 500이 아니라 400")
+    @DisplayName("잘못된 difficulty / players / playMode 타입은 500이 아니라 400")
     void list_invalidParamType() throws Exception {
         mockMvc.perform(get("/api/boardgames").param("difficulty", "FOO"))
                 .andExpect(status().isBadRequest())
@@ -315,7 +301,18 @@ class BoardGameApiIntegrationTest {
         mockMvc.perform(get("/api/boardgames").param("players", "abc"))
                 .andExpect(status().isBadRequest());
 
+        mockMvc.perform(get("/api/boardgames").param("playMode", "HYBRID"))
+                .andExpect(status().isBadRequest());
+
         mockMvc.perform(get("/api/boardgames/{id}", "abc"))
                 .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    @DisplayName("없는 id 상세는 404")
+    void detail_notFound() throws Exception {
+        mockMvc.perform(get("/api/boardgames/{id}", 999999L))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.success").value(false));
     }
 }

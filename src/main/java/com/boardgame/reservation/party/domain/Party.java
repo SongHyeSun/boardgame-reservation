@@ -77,6 +77,11 @@ public class Party extends BaseTimeEntity {
         this.status = PartyStatus.CLOSED;
     }
 
+    /** 게임 운영 중지 등으로 모집을 접는다. 마감(CLOSED)된 파티는 이력으로 남기므로 호출부가 RECRUITING 만 골라 부른다 */
+    public void cancel() {
+        this.status = PartyStatus.CANCELLED;
+    }
+
     public boolean isHost(Long memberId) {
         return host.getId().equals(memberId);
     }
