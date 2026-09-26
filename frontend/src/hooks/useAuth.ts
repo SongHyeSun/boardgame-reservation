@@ -1,6 +1,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useNavigate } from 'react-router'
 import { login, logout, signup } from '../api/auth.ts'
+import type { SignupRequest } from '../types/auth.ts'
 import { meQueryKey } from './useMe.ts'
 
 /**
@@ -18,8 +19,11 @@ export function useLogin() {
   })
 }
 
+/** image 는 아바타 이미지 파트. null 이면 파트를 보내지 않는다 (utils/avatar.ts toAvatarRequest 참고) */
 export function useSignup() {
-  return useMutation({ mutationFn: signup })
+  return useMutation({
+    mutationFn: ({ data, image }: { data: SignupRequest; image: File | null }) => signup(data, image),
+  })
 }
 
 /**

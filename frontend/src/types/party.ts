@@ -1,5 +1,7 @@
 // party/dto 기준
 
+import type { Avatar } from './auth.ts'
+
 export type PartyStatus = 'RECRUITING' | 'CLOSED' | 'CANCELLED'
 
 /** 목록/개설 응답 항목 */
@@ -9,6 +11,7 @@ export interface PartyResponse {
   boardGameId: number
   boardGameName: string
   hostNickname: string
+  hostAvatar: Avatar
   capacity: number
   currentCount: number
   status: PartyStatus
@@ -18,6 +21,7 @@ export interface PartyResponse {
 export interface PartyMemberInfo {
   memberId: number
   nickname: string
+  avatar: Avatar
   joinedAt: string
 }
 
@@ -30,6 +34,7 @@ export interface PartyDetailResponse {
   boardGameName: string
   hostId: number
   hostNickname: string
+  hostAvatar: Avatar
   capacity: number
   remaining: number
   status: PartyStatus

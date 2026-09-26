@@ -1,9 +1,10 @@
 import { ApiError } from '../types/api.ts'
 import type { LoginRequest, MemberResponse, SignupRequest } from '../types/auth.ts'
-import { request } from './client.ts'
+import { request, requestMultipart } from './client.ts'
 
-export function signup(body: SignupRequest): Promise<MemberResponse> {
-  return request<MemberResponse>({ method: 'POST', url: '/auth/signup', data: body })
+/** multipart: data(JSON) + image(선택). 성공 201 */
+export function signup(body: SignupRequest, image: File | null): Promise<MemberResponse> {
+  return requestMultipart<MemberResponse>('POST', '/auth/signup', body, image)
 }
 
 export function login(body: LoginRequest): Promise<MemberResponse> {

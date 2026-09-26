@@ -9,6 +9,7 @@ import { useMe } from '../../hooks/useMe.ts'
 import { useParties } from '../../hooks/useParties.ts'
 import type { BoardGameResponse } from '../../types/boardgame.ts'
 import { formatPlayAt, formatPlayers } from '../../utils/format.ts'
+import { isAdmin } from '../../utils/role.ts'
 import { parsePositiveInteger } from '../../utils/validation.ts'
 
 interface BoardGameProps {
@@ -69,7 +70,7 @@ function BoardGameInfo({ boardGame }: BoardGameProps) {
         </div>
       </dl>
       {boardGame.description && <p className="mt-4 whitespace-pre-wrap text-gray-700">{boardGame.description}</p>}
-      {me?.role === 'ADMIN' && <AdminActions boardGame={boardGame} />}
+      {me && isAdmin(me.role) && <AdminActions boardGame={boardGame} />}
     </div>
   )
 }

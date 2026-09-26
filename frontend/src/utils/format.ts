@@ -1,7 +1,27 @@
 // 표시용 포맷. 난이도·파티 상태 라벨과 날짜 표기는 화면에서 직접 만들지 말고 여기 것을 쓴다.
 
+import type { AdminRequestStatus, Role } from '../types/auth.ts'
 import type { Difficulty } from '../types/boardgame.ts'
 import type { PartyStatus } from '../types/party.ts'
+
+export const ROLE_LABEL: Record<Role, string> = {
+  USER: '일반 회원',
+  ADMIN: '관리자',
+  SUPER_ADMIN: '최고 관리자',
+}
+
+export const ADMIN_REQUEST_STATUS_LABEL: Record<AdminRequestStatus, string> = {
+  NONE: '신청 안 함',
+  PENDING: '승인 대기 중',
+  APPROVED: '승인됨',
+  REJECTED: '거절됨',
+}
+
+/** 선택 입력 → 요청 값: 앞뒤 공백을 지우고, 비어 있으면 null (서버는 선택 필드를 null 로 받는다) */
+export function blankToNull(value: string): string | null {
+  const trimmed = value.trim()
+  return trimmed === '' ? null : trimmed
+}
 
 export const DIFFICULTIES: readonly Difficulty[] = ['EASY', 'NORMAL', 'HARD']
 

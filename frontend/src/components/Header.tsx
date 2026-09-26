@@ -1,6 +1,8 @@
 import { Link, NavLink } from 'react-router'
 import { useLogout } from '../hooks/useAuth.ts'
 import { useMe } from '../hooks/useMe.ts'
+import { isAdmin, isSuperAdmin } from '../utils/role.ts'
+import Avatar from './Avatar.tsx'
 import ErrorMessage from './ErrorMessage.tsx'
 
 const navLinkClass = ({ isActive }: { isActive: boolean }) =>
@@ -34,12 +36,20 @@ function AuthMenu() {
       <NavLink to="/parties/new" className={navLinkClass}>
         파티 만들기
       </NavLink>
-      {me.role === 'ADMIN' && (
+      {isAdmin(me.role) && (
         <NavLink to="/boardgames/new" className={navLinkClass}>
           게임 등록
         </NavLink>
       )}
-      <span className="text-gray-900">{me.nickname}님</span>
+      {isSuperAdmin(me.role) && (
+        <NavLink to="/admin/admin-requests" className={navLinkClass}>
+          관리자 승인
+        </NavLink>
+      )}
+      <NavLink to="/me" className={(state) => `flex items-center gap-2 ${navLinkClass(state)}`}>
+        <Avatar avatar={me.avatar} size="sm" nickname={me.nickname} />
+        {me.nickname}님
+      </NavLink>
       <button
         type="button"
         onClick={() => logout.mutate()}

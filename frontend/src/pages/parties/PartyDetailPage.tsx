@@ -1,4 +1,5 @@
 import { Link, useLocation, useParams } from 'react-router'
+import Avatar from '../../components/Avatar.tsx'
 import BackLink from '../../components/BackLink.tsx'
 import ErrorMessage from '../../components/ErrorMessage.tsx'
 import Loading from '../../components/Loading.tsx'
@@ -132,7 +133,10 @@ function PartyInfo({ party }: PartyProps) {
         </div>
         <div>
           <dt className="text-gray-500">호스트</dt>
-          <dd className="font-medium">{party.hostNickname}</dd>
+          <dd className="flex items-center gap-2 font-medium">
+            <Avatar avatar={party.hostAvatar} size="sm" nickname={party.hostNickname} />
+            {party.hostNickname}
+          </dd>
         </div>
         <div>
           <dt className="text-gray-500">플레이 일시</dt>
@@ -163,13 +167,16 @@ function PartyMembers({ party }: PartyProps) {
             key={member.memberId}
             className="flex items-center justify-between gap-2 rounded border border-gray-200 bg-white px-4 py-2"
           >
-            <span className="font-medium">
-              {member.nickname}
-              {member.memberId === party.hostId && (
-                <span className="ml-2 rounded bg-indigo-100 px-2 py-0.5 text-xs font-medium text-indigo-700">
-                  호스트
-                </span>
-              )}
+            <span className="flex items-center gap-2 font-medium">
+              <Avatar avatar={member.avatar} size="sm" nickname={member.nickname} />
+              <span>
+                {member.nickname}
+                {member.memberId === party.hostId && (
+                  <span className="ml-2 rounded bg-indigo-100 px-2 py-0.5 text-xs font-medium text-indigo-700">
+                    호스트
+                  </span>
+                )}
+              </span>
             </span>
             <span className="text-sm text-gray-500">{formatDateTime(member.joinedAt)} 참여</span>
           </li>

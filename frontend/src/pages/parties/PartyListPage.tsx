@@ -1,4 +1,5 @@
 import { Link, useSearchParams } from 'react-router'
+import Avatar from '../../components/Avatar.tsx'
 import EmptyMessage from '../../components/EmptyMessage.tsx'
 import ErrorMessage from '../../components/ErrorMessage.tsx'
 import Loading from '../../components/Loading.tsx'
@@ -90,8 +91,10 @@ function PartyResults({ tab }: { tab: StatusTab }) {
               <h2 className="font-semibold">{party.title}</h2>
               <PartyStatusBadge status={party.status} />
             </div>
-            <p className="mt-1 text-sm text-gray-600">
-              {party.boardGameName} · 호스트 {party.hostNickname}
+            <p className="mt-1 flex items-center gap-1.5 text-sm text-gray-600">
+              {party.boardGameName} · 호스트
+              <Avatar avatar={party.hostAvatar} size="sm" nickname={party.hostNickname} />
+              {party.hostNickname}
             </p>
             <div className="mt-2 flex items-center justify-between gap-2 text-sm text-gray-600">
               <span>{formatPlayAt(party.playAt)}</span>

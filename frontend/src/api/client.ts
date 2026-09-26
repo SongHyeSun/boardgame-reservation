@@ -41,3 +41,18 @@ export async function request<T>(config: AxiosRequestConfig): Promise<T> {
   const response = await http.request<ApiResponse<T>>(config)
   return response.data.data
 }
+
+/**
+ * 이미지가 포함된 생성/수정 API용 multipart/form-data 요청: `data`(JSON 파트) + `image`(파일 파트, 선택).
+ * Content-Type 헤더는 직접 지정하지 않는다. FormData 를 넘기면 브라우저가 boundary 를 포함해 설정한다.
+ * JSON 파트는 Blob 으로 넣어 파트의 Content-Type 을 application/json 으로 표시한다. (서버 @RequestPart 가 이 표시로 JSON 을 읽음)
+ * image 가 null 이면 image 파트 자체를 만들지 않는다.
+ */
+export function requestMultipart<T>(method: 'POST' | 'PUT', url: string, data: object, image: File | null): Promise<T> {
+  const form = new FormData()
+  form.append('data', new Blob([JSON.stringify(data)], { type: 'application/json' }))
+  if (image !== null) {
+    form.append('image', image)
+  }
+  return request<T>({ method, url, data: form })
+}
