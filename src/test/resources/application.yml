@@ -11,12 +11,20 @@ spring:
   autoconfigure:
     # Spring Boot 4 에는 spring.session.store-type=none 이 없어서 자동설정을 exclude 로 끈다.
     # → Redis 없이 돌아가는 테스트(auth/boardgame 등)는 기본 서블릿 HttpSession 사용.
-    # Redis 세션이 필요한 테스트는 PartyRedisTestSupport 처럼 이 값을 비워서 다시 켠다.
+    # Redis 세션이 필요한 테스트는 RedisIntegrationTestSupport 처럼 이 값을 비워서 다시 켠다.
     exclude:
       - org.springframework.boot.session.autoconfigure.SessionAutoConfiguration
       - org.springframework.boot.session.data.redis.autoconfigure.SessionDataRedisAutoConfiguration
+
+  session:
+    data:
+      redis:
+        # main 과 동일: Redis 세션이 켜진 테스트(RedisIntegrationTestSupport)에서 indexed 저장소를 사용
+        repository-type: indexed
 
 app:
   admin:
     email:
     password:
+  upload:
+    dir: build/test-uploads

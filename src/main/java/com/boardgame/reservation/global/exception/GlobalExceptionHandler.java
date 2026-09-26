@@ -7,10 +7,14 @@ import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.AuthenticationException;
+import org.springframework.web.HttpMediaTypeNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
+import org.springframework.web.multipart.MaxUploadSizeExceededException;
+import org.springframework.web.multipart.MultipartException;
+import org.springframework.web.multipart.support.MissingServletRequestPartException;
 
 /**
  * 모든 예외를 공통 응답 포맷(ApiResponse)으로 변환한다.
@@ -41,6 +45,31 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(HttpMessageNotReadableException.class)
     public ResponseEntity<ApiResponse<Void>> handleNotReadable(HttpMessageNotReadableException e) {
         return toResponse(ErrorCode.INVALID_INPUT, ErrorCode.INVALID_INPUT.getMessage());
+    }
+
+    /** multipart 필수 파트(data) 누락 → 400 (처리하지 않으면 아래 Exception 핸들러로 떨어져 500) */
+    @ExceptionHandler(MissingServletRequestPartException.class)
+    public ResponseEntity<ApiResponse<Void>> handleMissingPart(MissingServletRequestPartException e) {
+        return toResponse(ErrorCode.INVALID_INPUT,
+                e.getRequestPartName() + ": " + ErrorCode.INVALID_INPUT.getMessage());
+    }
+
+    /** multipart 엔드포인트에 JSON 등 다른 Content-Type 으로 요청 (예: 옛 JSON 가입 요청, data 파트에 Content-Type 누락) → 400 */
+    @ExceptionHandler(HttpMediaTypeNotSupportedException.class)
+    public ResponseEntity<ApiResponse<Void>> handleMediaTypeNotSupported(HttpMediaTypeNotSupportedException e) {
+        return toResponse(ErrorCode.INVALID_INPUT, ErrorCode.INVALID_INPUT.getMessage());
+    }
+
+    /** multipart 파싱 실패 → 400. (용량 초과는 아래 MaxUploadSizeExceededException 이 더 구체적이라 그쪽이 우선) */
+    @ExceptionHandler(MultipartException.class)
+    public ResponseEntity<ApiResponse<Void>> handleMultipart(MultipartException e) {
+        return toResponse(ErrorCode.INVALID_INPUT, ErrorCode.INVALID_INPUT.getMessage());
+    }
+
+    /** spring.servlet.multipart 한도(5MB/6MB) 초과. 서비스 계층의 5MB 검사와 같은 에러코드 */
+    @ExceptionHandler(MaxUploadSizeExceededException.class)
+    public ResponseEntity<ApiResponse<Void>> handleMaxUploadSize(MaxUploadSizeExceededException e) {
+        return toResponse(ErrorCode.FILE_TOO_LARGE, ErrorCode.FILE_TOO_LARGE.getMessage());
     }
 
     /** 쿼리/경로 파라미터 타입 오류 (?difficulty=FOO, ?players=abc, /boardgames/abc) → 400 */

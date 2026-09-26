@@ -20,7 +20,9 @@ import org.springframework.web.context.WebApplicationContext;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
+import java.util.Set;
 
+import static com.boardgame.reservation.support.MultipartTestUtils.signup;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.authentication;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
@@ -290,6 +292,42 @@ class PartyApiIntegrationTest extends PartyRedisTestSupport {
                 .andExpect(jsonPath("$.data.length()").value(0));
     }
 
+    // ───────────── 아바타 ─────────────
+
+    @Test
+    @DisplayName("목록·상세에 호스트/참여자 아바타가 함께 내려온다 (기본 이모지, 이모지 변경, 이미지)")
+    void avatars_inListAndDetail() throws Exception {
+        String hostImageKey = "avatars/00000000-0000-0000-0000-000000000001.png";
+        host.useImageAvatar(hostImageKey);
+        memberRepository.save(host);
+        guest.useEmojiAvatar("🦊");
+        memberRepository.save(guest);
+        long partyId = createParty(4);
+        mockMvc.perform(post("/api/parties/{id}/join", partyId).with(loginAs(guest)))
+                .andExpect(status().isOk());
+        mockMvc.perform(post("/api/parties/{id}/join", partyId).with(loginAs(other)))
+                .andExpect(status().isOk());
+
+        mockMvc.perform(get("/api/parties/{id}", partyId))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.hostAvatar.type").value("IMAGE"))
+                .andExpect(jsonPath("$.data.hostAvatar.imageUrl").value("/api/files/" + hostImageKey))
+                // 참여자 목록: 호스트(이미지) → guest(🦊) → other(기본 🎲)
+                .andExpect(jsonPath("$.data.members[0].nickname").value("host"))
+                .andExpect(jsonPath("$.data.members[0].avatar.type").value("IMAGE"))
+                .andExpect(jsonPath("$.data.members[0].avatar.imageUrl").value("/api/files/" + hostImageKey))
+                .andExpect(jsonPath("$.data.members[1].avatar.type").value("EMOJI"))
+                .andExpect(jsonPath("$.data.members[1].avatar.emoji").value("🦊"))
+                .andExpect(jsonPath("$.data.members[1].avatar.imageUrl").doesNotExist())
+                .andExpect(jsonPath("$.data.members[2].avatar.emoji").value("🎲"));
+
+        mockMvc.perform(get("/api/parties"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data[0].hostNickname").value("host"))
+                .andExpect(jsonPath("$.data[0].hostAvatar.type").value("IMAGE"))
+                .andExpect(jsonPath("$.data[0].hostAvatar.imageUrl").value("/api/files/" + hostImageKey));
+    }
+
     // ───────────── 세션 (Spring Session + Redis) ─────────────
 
     @Test
@@ -300,11 +338,9 @@ class PartyApiIntegrationTest extends PartyRedisTestSupport {
                 .addFilters(sessionRepositoryFilter)
                 .apply(springSecurity())
                 .build();
-        sessionMockMvc.perform(post("/api/auth/signup")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("""
-                                {"email":"session@test.com","password":"password123","nickname":"세션"}
-                                """))
+        sessionMockMvc.perform(signup("""
+                        {"email":"session@test.com","password":"password123","nickname":"세션","name":"세션유저"}
+                        """))
                 .andExpect(status().isCreated());
         assertThat(redisTemplate.keys("spring:session:*")).isEmpty();
 
@@ -323,8 +359,16 @@ class PartyApiIntegrationTest extends PartyRedisTestSupport {
         String sessionId = new String(Base64.getDecoder().decode(sessionCookie.getValue()), StandardCharsets.UTF_8);
         String redisKey = "spring:session:sessions:" + sessionId;
 
-        assertThat(redisTemplate.keys("spring:session:*")).containsExactly(redisKey);
+        // indexed 저장소라 세션 본문 외에 만료·인덱스 키가 함께 생긴다
+        assertThat(redisTemplate.keys("spring:session:*")).contains(redisKey);
         assertThat(redisTemplate.opsForHash().keys(redisKey)).contains("sessionAttr:SPRING_SECURITY_CONTEXT");
+        // principal name(email) 기준 인덱스 → 관리자 승인 시 이 회원의 세션을 찾아 무효화하는 데 쓰인다
+        Set<String> indexKeys = redisTemplate.keys("spring:session:index:*:session@test.com");
+        assertThat(indexKeys).hasSize(1);
+        // 인덱스 셋의 값은 JDK 직렬화로 저장돼 StringRedisTemplate 로 읽으면 앞에 직렬화 헤더가 붙는다 → 끝이 세션 ID 인지로 확인
+        assertThat(redisTemplate.opsForSet().members(indexKeys.iterator().next()))
+                .hasSize(1)
+                .allSatisfy(value -> assertThat(value).endsWith(sessionId));
 
         // 새 요청은 쿠키만 가지고 있다 → Redis 에서 역직렬화된 SecurityContext 로 인증
         sessionMockMvc.perform(get("/api/members/me").cookie(sessionCookie))

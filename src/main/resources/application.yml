@@ -12,6 +12,19 @@ spring:
       host: ${REDIS_HOST:localhost}
       port: ${REDIS_PORT:6379}
 
+  session:
+    data:
+      redis:
+        # indexed: principal name(email) 기준 세션 조회/삭제 가능 (FindByIndexNameSessionRepository).
+        # 관리자 승인 시 해당 회원의 기존 세션을 무효화하는 데 사용. 기동 시 Redis 에 notify-keyspace-events 를 설정한다.
+        # (CONFIG 가 막힌 관리형 Redis 에서는 configure-action: none + 파라미터 그룹에서 직접 설정)
+        repository-type: indexed
+
+  servlet:
+    multipart:
+      max-file-size: 5MB
+      max-request-size: 6MB
+
   jpa:
     open-in-view: false          # 트랜잭션 밖(컨트롤러/뷰)에서 지연로딩 금지 → 커넥션 오래 잡는 문제 방지
     hibernate:
@@ -35,6 +48,8 @@ app:
   admin:
     email: ${ADMIN_EMAIL:}
     password: ${ADMIN_PASSWORD:}
+  upload:
+    dir: ${UPLOAD_DIR:./uploads}   # LocalFileStorage 저장 위치 (7단계 배포 때 S3 구현체로 교체 예정)
 
 logging:
   level:

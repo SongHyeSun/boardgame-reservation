@@ -1,5 +1,6 @@
 package com.boardgame.reservation.party.dto;
 
+import com.boardgame.reservation.member.dto.AvatarResponse;
 import com.boardgame.reservation.party.domain.Party;
 import com.boardgame.reservation.party.domain.PartyMember;
 import com.boardgame.reservation.party.domain.PartyStatus;
@@ -16,18 +17,23 @@ public record PartyDetailResponse(
         String boardGameName,
         Long hostId,
         String hostNickname,
+        AvatarResponse hostAvatar,
         int capacity,
         int remaining,
         PartyStatus status,
         LocalDateTime playAt,
         List<MemberInfo> members
 ) {
-    public record MemberInfo(Long memberId, String nickname, LocalDateTime joinedAt) {
+    public record MemberInfo(Long memberId, String nickname, AvatarResponse avatar, LocalDateTime joinedAt) {
     }
 
     public static PartyDetailResponse of(Party party, List<PartyMember> partyMembers) {
         List<MemberInfo> members = partyMembers.stream()
-                .map(pm -> new MemberInfo(pm.getMember().getId(), pm.getMember().getNickname(), pm.getJoinedAt()))
+                .map(pm -> new MemberInfo(
+                        pm.getMember().getId(),
+                        pm.getMember().getNickname(),
+                        AvatarResponse.from(pm.getMember()),
+                        pm.getJoinedAt()))
                 .toList();
         return new PartyDetailResponse(
                 party.getId(),
@@ -37,6 +43,7 @@ public record PartyDetailResponse(
                 party.getBoardGame().getName(),
                 party.getHost().getId(),
                 party.getHost().getNickname(),
+                AvatarResponse.from(party.getHost()),
                 party.getCapacity(),
                 party.getCapacity() - members.size(),
                 party.getStatus(),

@@ -1,8 +1,10 @@
 package com.boardgame.reservation.member.dto;
 
+import com.boardgame.reservation.member.domain.AdminRequestStatus;
 import com.boardgame.reservation.member.domain.Member;
 import com.boardgame.reservation.member.domain.Role;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 /** 엔티티를 그대로 반환하지 않고 DTO로 변환 → password 같은 필드가 응답에 새지 않는다 */
@@ -11,7 +13,14 @@ public record MemberResponse(
         String email,
         String nickname,
         Role role,
-        LocalDateTime createdAt
+        LocalDateTime createdAt,
+        String name,
+        LocalDate birthDate,
+        String affiliation,
+        String job,
+        String bio,
+        AvatarResponse avatar,
+        AdminRequestStatus adminRequestStatus
 ) {
     public static MemberResponse from(Member member) {
         return new MemberResponse(
@@ -19,7 +28,14 @@ public record MemberResponse(
                 member.getEmail(),
                 member.getNickname(),
                 member.getRole(),
-                member.getCreatedAt()
+                member.getCreatedAt(),
+                member.getName(),
+                member.getBirthDate(),
+                member.getAffiliation(),
+                member.getJob(),
+                member.getBio(),
+                AvatarResponse.from(member),
+                member.getAdminRequestStatus()
         );
     }
 }

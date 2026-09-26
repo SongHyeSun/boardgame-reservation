@@ -1,5 +1,6 @@
 package com.boardgame.reservation.party.dto;
 
+import com.boardgame.reservation.member.dto.AvatarResponse;
 import com.boardgame.reservation.party.domain.Party;
 import com.boardgame.reservation.party.domain.PartyStatus;
 
@@ -12,6 +13,7 @@ public record PartyResponse(
         Long boardGameId,
         String boardGameName,
         String hostNickname,
+        AvatarResponse hostAvatar,
         int capacity,
         long currentCount,
         PartyStatus status,
@@ -24,6 +26,7 @@ public record PartyResponse(
                 party.getBoardGame().getId(),
                 party.getBoardGame().getName(),
                 party.getHost().getNickname(),
+                AvatarResponse.from(party.getHost()),
                 party.getCapacity(),
                 currentCount,
                 party.getStatus(),

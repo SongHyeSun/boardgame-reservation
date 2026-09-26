@@ -2,11 +2,16 @@
 ### 사전 준비: 보드게임이 1개 이상 있어야 함 (http/boardgame.http, ADMIN 로그인 후 등록). 아래는 boardGameId=1, 인원 2~4명 가정.
 ### 참여 테스트는 다른 계정이 필요하므로 host / guest 두 계정으로 로그인을 바꿔 가며 실행
 
-### 1. 호스트 가입 + 로그인
+### 1. 호스트 가입 + 로그인 (가입은 multipart: data 파트에 JSON)
 POST http://localhost:8080/api/auth/signup
+Content-Type: multipart/form-data; boundary=boundary
+
+--boundary
+Content-Disposition: form-data; name="data"
 Content-Type: application/json
 
-{ "email": "host@test.com", "password": "password123", "nickname": "호스트" }
+{ "email": "host@test.com", "password": "password123", "nickname": "호스트", "name": "호스트님" }
+--boundary--
 
 ###
 POST http://localhost:8080/api/auth/login
@@ -37,9 +42,14 @@ DELETE http://localhost:8080/api/parties/1/leave
 
 ### 6. 게스트 가입 + 로그인
 POST http://localhost:8080/api/auth/signup
+Content-Type: multipart/form-data; boundary=boundary
+
+--boundary
+Content-Disposition: form-data; name="data"
 Content-Type: application/json
 
-{ "email": "guest@test.com", "password": "password123", "nickname": "게스트" }
+{ "email": "guest@test.com", "password": "password123", "nickname": "게스트", "name": "게스트님", "avatarEmoji": "🦊" }
+--boundary--
 
 ###
 POST http://localhost:8080/api/auth/login

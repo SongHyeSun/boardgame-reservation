@@ -1,0 +1,144 @@
+### IntelliJ HTTP Client — 위에서부터 순서대로 ▶ 실행 (쿠키 JSESSIONID 는 자동 저장·전송)
+### 이 파일은 "가입(관리자 신청) → 내 정보 수정 → 최고 관리자 승인 → 기존 세션 만료 → 재로그인" 흐름 전체를 확인한다.
+###
+### 사전 준비
+###  - 최고 관리자(SUPER_ADMIN)는 서버 기동 시 환경변수 ADMIN_EMAIL / ADMIN_PASSWORD 계정으로 생성된다. 아래 12번의 로그인 값을 맞춰 바꿔 쓸 것.
+###  - 이미지 업로드 예시(3, 6번)는 이 http 폴더에 avatar.png 같은 실제 이미지 파일(jpg/jpeg/png/webp, 5MB 이하)을 두고 경로를 맞춘다.
+###  - 승인 대상(applicant@test.com)은 다른 요청과 세션이 섞이지 않도록 반드시 로그아웃/로그인 순서를 지킬 것.
+
+### 1. 가입 — 프로필 + 이모지 아바타 + 관리자 신청(requestAdmin: true → USER 로 가입, 상태 PENDING)
+POST http://localhost:8080/api/auth/signup
+Content-Type: multipart/form-data; boundary=boundary
+
+--boundary
+Content-Disposition: form-data; name="data"
+Content-Type: application/json
+
+{
+  "email": "applicant@test.com",
+  "password": "password123",
+  "nickname": "지원자",
+  "name": "김지원",
+  "birthDate": "1995-05-01",
+  "affiliation": "보드게임 동아리",
+  "job": "개발자",
+  "bio": "잘 부탁드려요",
+  "avatarEmoji": "🦊",
+  "requestAdmin": true
+}
+--boundary--
+
+### 2. 로그인 (이 세션은 승인 후 만료된다 — 16번에서 확인)
+POST http://localhost:8080/api/auth/login
+Content-Type: application/json
+
+{ "email": "applicant@test.com", "password": "password123" }
+
+### 3. (선택) 다른 계정으로 이미지 아바타 가입 — avatar.png 를 준비할 것. 응답의 avatar.imageUrl 을 브라우저/9번으로 확인
+POST http://localhost:8080/api/auth/signup
+Content-Type: multipart/form-data; boundary=boundary
+
+--boundary
+Content-Disposition: form-data; name="data"
+Content-Type: application/json
+
+{ "email": "imageuser@test.com", "password": "password123", "nickname": "이미지유저", "name": "이미지" }
+--boundary
+Content-Disposition: form-data; name="image"; filename="avatar.png"
+Content-Type: image/png
+
+< ./avatar.png
+--boundary--
+
+### 4. 내 정보 — 프로필·아바타·adminRequestStatus(PENDING) 확인. 화면 값은 항상 DB 기준
+GET http://localhost:8080/api/members/me
+
+### 5. 내 정보 수정 — 이모지 아바타 (선택 필드는 보내지 않으면 지워진다 = 전체 교체)
+PUT http://localhost:8080/api/members/me
+Content-Type: multipart/form-data; boundary=boundary
+
+--boundary
+Content-Disposition: form-data; name="data"
+Content-Type: application/json
+
+{
+  "nickname": "새지원자",
+  "name": "김지원",
+  "birthDate": "1995-05-01",
+  "affiliation": "새 소속",
+  "job": "개발자",
+  "bio": "수정했어요",
+  "avatarType": "EMOJI",
+  "avatarEmoji": "🐉"
+}
+--boundary--
+
+### 6. 내 정보 수정 — 이미지 업로드 (image 파트가 있으면 avatarType 과 무관하게 IMAGE)
+PUT http://localhost:8080/api/members/me
+Content-Type: multipart/form-data; boundary=boundary
+
+--boundary
+Content-Disposition: form-data; name="data"
+Content-Type: application/json
+
+{ "nickname": "새지원자", "name": "김지원", "avatarType": "IMAGE" }
+--boundary
+Content-Disposition: form-data; name="image"; filename="avatar.png"
+Content-Type: image/png
+
+< ./avatar.png
+--boundary--
+
+### 7. 이미지 제거 → 파일 삭제 + EMOJI 로 전환 (removeImage 와 새 image 를 같이 보내면 400, avatarType=IMAGE 와 같이 보내도 400)
+PUT http://localhost:8080/api/members/me
+Content-Type: multipart/form-data; boundary=boundary
+
+--boundary
+Content-Disposition: form-data; name="data"
+Content-Type: application/json
+
+{ "nickname": "새지원자", "name": "김지원", "avatarType": "EMOJI", "removeImage": true }
+--boundary--
+
+### 8. 비밀번호 변경 — 현재 비밀번호 불일치 → 400 INVALID_PASSWORD (성공 시 200). 성공시키면 이후 로그인 비밀번호가 바뀌니 주의
+PATCH http://localhost:8080/api/members/me/password
+Content-Type: application/json
+
+{ "currentPassword": "wrong-password", "newPassword": "password456" }
+
+### 9. 업로드 이미지 조회 (로그인 불필요) — 3번/6번 응답의 imageUrl 로 바꿔서 실행. 형식이 다르면 404
+GET http://localhost:8080/api/files/avatars/00000000-0000-0000-0000-000000000000.png
+
+### 10. 이미 PENDING 인 상태에서 다시 신청 → 409 INVALID_ADMIN_REQUEST
+POST http://localhost:8080/api/members/me/admin-request
+
+### 11. 관리자 승인 API 를 일반 회원 세션으로 호출 → 403 (SUPER_ADMIN 만 가능)
+GET http://localhost:8080/api/admin/admin-requests
+
+### 12. 로그아웃 후 최고 관리자로 로그인 (ADMIN_EMAIL / ADMIN_PASSWORD 값으로 교체)
+POST http://localhost:8080/api/auth/logout
+
+###
+POST http://localhost:8080/api/auth/login
+Content-Type: application/json
+
+{ "email": "admin@test.com", "password": "admin1234!" }
+
+### 13. 승인 대기 목록 (PENDING 만, 오래된 신청부터) — memberId 를 아래 승인/거절에 사용
+GET http://localhost:8080/api/admin/admin-requests
+
+### 14. 승인 → role ADMIN. 그 회원의 기존 로그인 세션이 전부 무효화된다 (memberId 교체)
+PATCH http://localhost:8080/api/admin/admin-requests/2/approve
+
+### 15. (승인 대신) 거절 → REJECTED, 세션은 유지되고 그 회원은 재신청 가능 (memberId 교체)
+PATCH http://localhost:8080/api/admin/admin-requests/2/reject
+
+### 16. 승인된 회원으로 확인 — 2번에서 받은 옛 세션은 401 이어야 하고, 다시 로그인하면 role: ADMIN
+###     (IntelliJ 는 쿠키를 자동 저장하므로 옛 세션을 재현하려면 2번 로그인 직후 쿠키를 다른 곳에 복사해 두고 요청에 Cookie 헤더로 붙인다)
+POST http://localhost:8080/api/auth/login
+Content-Type: application/json
+
+{ "email": "applicant@test.com", "password": "password123" }
+
+###
+GET http://localhost:8080/api/members/me

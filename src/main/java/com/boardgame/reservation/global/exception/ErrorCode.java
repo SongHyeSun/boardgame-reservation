@@ -22,6 +22,14 @@ public enum ErrorCode {
     INVALID_CREDENTIALS(HttpStatus.UNAUTHORIZED, "이메일 또는 비밀번호가 올바르지 않습니다."),
     DUPLICATE_EMAIL(HttpStatus.CONFLICT, "이미 가입된 이메일입니다."),
     MEMBER_NOT_FOUND(HttpStatus.NOT_FOUND, "회원을 찾을 수 없습니다."),
+    INVALID_PASSWORD(HttpStatus.BAD_REQUEST, "현재 비밀번호가 일치하지 않습니다."),
+    INVALID_ADMIN_REQUEST(HttpStatus.CONFLICT, "처리할 수 없는 관리자 신청 상태입니다."),
+    INVALID_AVATAR(HttpStatus.BAD_REQUEST, "아바타 설정이 올바르지 않습니다."),
+
+    // 파일
+    INVALID_FILE(HttpStatus.BAD_REQUEST, "지원하지 않는 이미지 파일입니다."),
+    FILE_TOO_LARGE(HttpStatus.BAD_REQUEST, "이미지는 5MB 이하만 업로드할 수 있습니다."),
+    FILE_NOT_FOUND(HttpStatus.NOT_FOUND, "파일을 찾을 수 없습니다."),
 
     // 보드게임
     BOARDGAME_NOT_FOUND(HttpStatus.NOT_FOUND, "보드게임을 찾을 수 없습니다."),

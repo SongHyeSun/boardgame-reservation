@@ -20,6 +20,7 @@ Java 17, Spring Boot 4.x, Gradle, Spring Security(세션 기반), Spring Data JP
 - 설명은 짧게, 코드 위주
 - 테스트: .\gradlew test  (Windows PowerShell)
 - git 커밋/브랜치는 내가 직접 함. 요청 전엔 git 명령 실행 금지
+- 추가 기능(A~D) 작업 시 docs/extension-overview.md를 먼저 읽는다. 단계별 계획서보다 우선한다.
 
 ## 프론트엔드
 - 위치: `frontend/`. 명령은 `frontend/`에서 실행 (`npm run dev | build | lint`). 설계는 docs/frontend-plan.md

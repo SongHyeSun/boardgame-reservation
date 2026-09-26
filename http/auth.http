@@ -1,15 +1,23 @@
 ### IntelliJ HTTP Client — 파일 열고 각 요청 옆 ▶ 클릭
 ### 쿠키(JSESSIONID)는 IntelliJ가 자동으로 저장·전송하므로 로그인 후 /me 가 바로 됩니다.
 
-### 1. 회원가입
+### 1. 회원가입 (multipart/form-data: data(JSON 파트) + image(선택))
+### name 필수(2~20자). 선택: birthDate, affiliation, job, bio, avatarEmoji, requestAdmin(관리자 신청)
+### data 파트에는 반드시 Content-Type: application/json 을 붙여야 한다. 더 많은 예시는 http/member.http
 POST http://localhost:8080/api/auth/signup
+Content-Type: multipart/form-data; boundary=boundary
+
+--boundary
+Content-Disposition: form-data; name="data"
 Content-Type: application/json
 
 {
   "email": "hyeseon@test.com",
   "password": "password123",
-  "nickname": "혜선"
+  "nickname": "혜선",
+  "name": "홍혜선"
 }
+--boundary--
 
 ### 2. 로그인 (세션 생성)
 POST http://localhost:8080/api/auth/login

@@ -6,6 +6,8 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.security.access.hierarchicalroles.RoleHierarchy;
+import org.springframework.security.access.hierarchicalroles.RoleHierarchyImpl;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -60,6 +62,10 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/api/auth/signup", "/api/auth/login").permitAll()
                         // 조회는 누구나 (설계문서 3-2, 3-3)
                         .requestMatchers(HttpMethod.GET, "/api/boardgames/**", "/api/parties/**").permitAll()
+                        // 업로드 이미지(아바타 등) 서빙. key 형식 검증은 FileStorage 가 한다
+                        .requestMatchers(HttpMethod.GET, "/api/files/**").permitAll()
+                        // 관리자 가입 승인은 SUPER_ADMIN 만 (ADMIN 은 403)
+                        .requestMatchers("/api/admin/admin-requests/**").hasRole("SUPER_ADMIN")
                         // 보드게임 등록/수정/삭제는 ADMIN만
                         .requestMatchers("/api/boardgames/**").hasRole("ADMIN")
                         .requestMatchers("/error").permitAll()
@@ -84,6 +90,18 @@ public class SecurityConfig {
                         }));
 
         return http.build();
+    }
+
+    /**
+     * 역할 계층: SUPER_ADMIN > ADMIN > USER.
+     * hasRole('ADMIN') 로 보호된 API 에 SUPER_ADMIN 도 통과한다.
+     */
+    @Bean
+    public static RoleHierarchy roleHierarchy() {
+        return RoleHierarchyImpl.fromHierarchy("""
+                ROLE_SUPER_ADMIN > ROLE_ADMIN
+                ROLE_ADMIN > ROLE_USER
+                """);
     }
 
     /** 로그인 성공 시 SecurityContext를 HttpSession에 저장하는 저장소 */

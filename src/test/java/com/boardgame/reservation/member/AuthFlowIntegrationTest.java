@@ -14,6 +14,7 @@ import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
 
+import static com.boardgame.reservation.support.MultipartTestUtils.signup;
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -48,12 +49,11 @@ class AuthFlowIntegrationTest {
     }
 
     private static final String SIGNUP_BODY = """
-            {"email":"hyeseon@test.com","password":"password123","nickname":"혜선"}
+            {"email":"hyeseon@test.com","password":"password123","nickname":"혜선","name":"홍혜선"}
             """;
 
     private MockHttpSession signupAndLogin() throws Exception {
-        mockMvc.perform(post("/api/auth/signup")
-                        .contentType(MediaType.APPLICATION_JSON).content(SIGNUP_BODY))
+        mockMvc.perform(signup(SIGNUP_BODY))
                 .andExpect(status().isCreated());
 
         MvcResult result = mockMvc.perform(post("/api/auth/login")
@@ -70,8 +70,7 @@ class AuthFlowIntegrationTest {
     @Test
     @DisplayName("회원가입 성공 시 201과 회원 정보를 반환하고, 비밀번호는 응답에 없다")
     void signup_success() throws Exception {
-        mockMvc.perform(post("/api/auth/signup")
-                        .contentType(MediaType.APPLICATION_JSON).content(SIGNUP_BODY))
+        mockMvc.perform(signup(SIGNUP_BODY))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.data.email").value("hyeseon@test.com"))
@@ -84,15 +83,12 @@ class AuthFlowIntegrationTest {
     @Test
     @DisplayName("같은 이메일(대소문자 달라도)로 다시 가입하면 409")
     void signup_duplicateEmail() throws Exception {
-        mockMvc.perform(post("/api/auth/signup")
-                        .contentType(MediaType.APPLICATION_JSON).content(SIGNUP_BODY))
+        mockMvc.perform(signup(SIGNUP_BODY))
                 .andExpect(status().isCreated());
 
-        mockMvc.perform(post("/api/auth/signup")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("""
-                                {"email":"HyeSeon@Test.com","password":"password123","nickname":"다른사람"}
-                                """))
+        mockMvc.perform(signup("""
+                        {"email":"HyeSeon@Test.com","password":"password123","nickname":"다른사람","name":"다른사람"}
+                        """))
                 .andExpect(status().isConflict())
                 .andExpect(jsonPath("$.success").value(false))
                 .andExpect(jsonPath("$.message").value("이미 가입된 이메일입니다."));
@@ -101,11 +97,9 @@ class AuthFlowIntegrationTest {
     @Test
     @DisplayName("입력값 검증 실패 시 400")
     void signup_invalidInput() throws Exception {
-        mockMvc.perform(post("/api/auth/signup")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("""
-                                {"email":"not-an-email","password":"short","nickname":"a"}
-                                """))
+        mockMvc.perform(signup("""
+                        {"email":"not-an-email","password":"short","nickname":"a","name":"홍혜선"}
+                        """))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.success").value(false));
     }
@@ -130,8 +124,7 @@ class AuthFlowIntegrationTest {
     @Test
     @DisplayName("비밀번호가 틀리면 401")
     void login_wrongPassword() throws Exception {
-        mockMvc.perform(post("/api/auth/signup")
-                        .contentType(MediaType.APPLICATION_JSON).content(SIGNUP_BODY))
+        mockMvc.perform(signup(SIGNUP_BODY))
                 .andExpect(status().isCreated());
 
         mockMvc.perform(post("/api/auth/login")
