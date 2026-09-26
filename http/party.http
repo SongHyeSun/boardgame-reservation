@@ -1,5 +1,6 @@
 ### IntelliJ HTTP Client — 위에서부터 순서대로 ▶ 실행 (쿠키 자동 저장)
-### 사전 준비: 보드게임이 1개 이상 있어야 함 (http/boardgame.http, ADMIN 로그인 후 등록). 아래는 boardGameId=1, 인원 2~4명 가정.
+### 사전 준비: 보드게임이 1개 이상 있어야 함 (http/boardgame.http, ADMIN 로그인 후 등록).
+###   아래는 boardGameId=1 이 인원 2~4명, 오프라인·온라인 모두 가능한 게임이라고 가정 (boardgame.http 10번으로 수정 가능).
 ### 참여 테스트는 다른 계정이 필요하므로 host / guest 두 계정으로 로그인을 바꿔 가며 실행
 
 ### 1. 호스트 가입 + 로그인 (가입은 multipart: data 파트에 JSON)
@@ -19,7 +20,9 @@ Content-Type: application/json
 
 { "email": "host@test.com", "password": "password123" }
 
-### 2. 파티 개설 (capacity 는 호스트 포함, 201) — 응답의 data.id 를 아래 {id} 에 사용
+### 2. 파티 개설 — 등록된 보드게임 + 오프라인 (capacity 는 호스트 포함, 201) — 응답의 data.id 를 아래 {id} 에 사용
+### 게임은 boardGameId(등록된 보드게임) 또는 customGameName(기타 게임) 중 정확히 하나. playMode 는 필수(ONLINE | OFFLINE)
+### 오프라인이면 location(선택), 온라인이면 onlinePlatform·onlineLink(선택, http:// / https:// 만). 방식과 맞지 않는 필드는 무시됨
 POST http://localhost:8080/api/parties
 Content-Type: application/json
 
@@ -28,13 +31,58 @@ Content-Type: application/json
   "title": "카탄 같이 하실 분",
   "description": "초보 환영",
   "capacity": 3,
-  "playAt": "2026-10-01T19:00:00"
+  "playAt": "2026-10-01T19:00:00",
+  "playMode": "OFFLINE",
+  "location": "동아리방"
 }
 
-### 3. 목록 (비로그인 가능, 필터: status / boardGameId)
+### 2-1. 파티 개설 — 등록된 보드게임 + 온라인 (게임이 온라인을 지원해야 함, 아니면 400 "이 게임은 해당 방식으로 진행할 수 없습니다.")
+### 이 파티가 있는 동안 boardgame.http 10-2 로 그 게임의 온라인을 끄면 409
+POST http://localhost:8080/api/parties
+Content-Type: application/json
+
+{
+  "boardGameId": 1,
+  "title": "카탄 온라인",
+  "capacity": 3,
+  "playMode": "ONLINE",
+  "onlinePlatform": "보드게임아레나",
+  "onlineLink": "https://boardgamearena.com/table?table=1"
+}
+
+### 2-2. 파티 개설 — 기타 게임(직접 입력). 정원 2~20, 방식 자유, 게임 지원 여부 검사 없음 (boardGameId 는 응답에서 null, customGame:true)
+POST http://localhost:8080/api/parties
+Content-Type: application/json
+
+{
+  "customGameName": "구스구스덕",
+  "title": "오리 잡으실 분",
+  "capacity": 8,
+  "playMode": "ONLINE",
+  "onlinePlatform": "디스코드",
+  "onlineLink": "https://discord.gg/abc"
+}
+
+### 2-3. 잘못된 개설 요청 → 400 (boardGameId·customGameName 둘 다/둘 다 없음 "보드게임을 선택하거나 게임 이름을 입력해주세요.")
+POST http://localhost:8080/api/parties
+Content-Type: application/json
+
+{ "title": "게임이 없어요", "capacity": 4, "playMode": "OFFLINE" }
+
+### 2-4. 접속 링크 형식 오류 → 400 "http:// 또는 https:// 링크만 입력할 수 있습니다."
+POST http://localhost:8080/api/parties
+Content-Type: application/json
+
+{ "customGameName": "롤", "title": "링크 오류", "capacity": 5, "playMode": "ONLINE", "onlineLink": "ftp://example.com" }
+
+### 3. 목록 (비로그인 가능, 필터: status / boardGameId / playMode) — 기타 게임 파티는 boardGameId 필터에서 제외됨
+### 응답: gameName, customGame, boardGameId(기타 게임이면 null), boardGameVisible, playMode, currentCount …
 GET http://localhost:8080/api/parties?status=RECRUITING&boardGameId=1
 
-### 4. 상세 (참여자 목록 + remaining)
+###
+GET http://localhost:8080/api/parties?playMode=ONLINE
+
+### 4. 상세 (참여자 목록 + remaining). onlineLink 는 호스트·참여자에게만 값이 있고, 비로그인·미참여·내보내진 회원에게는 null
 GET http://localhost:8080/api/parties/1
 
 ### 5. 호스트 탈퇴 시도 → 400 HOST_CANNOT_LEAVE
@@ -63,7 +111,7 @@ POST http://localhost:8080/api/parties/1/join
 ### 8. 다시 참여 → 409 "이미 참여한 파티입니다"
 POST http://localhost:8080/api/parties/1/join
 
-### 9. 참여 취소 → 200
+### 9. 참여 취소 → 200 (자진 탈퇴는 행이 지워져 다시 참여할 수 있음)
 DELETE http://localhost:8080/api/parties/1/leave
 
 ### 10. 게스트가 마감 시도 → 403 NOT_PARTY_HOST
@@ -80,3 +128,15 @@ PATCH http://localhost:8080/api/parties/1/close
 
 ### 12. 마감 후 참여 → 409 PARTY_NOT_RECRUITING (게스트 로그인 상태에서 확인)
 POST http://localhost:8080/api/parties/1/join
+
+### 13. 참여자 내보내기 — 호스트만. 아래는 2-2 의 기타 게임 파티(id=3), 게스트(memberId=2) 가정 (memberId 는 4번 상세의 members[].memberId)
+### 순서: 게스트로 로그인해 3번 파티에 참여(7번과 같은 요청) → 호스트로 로그인 → 아래 실행
+### 규칙: 비호스트 403 / 호스트 자신 400 CANNOT_KICK_HOST / 참여 중이 아님 400 NOT_JOINED / 모집 중이 아님 409
+DELETE http://localhost:8080/api/parties/3/members/2
+
+### 13-1. 내보낸 뒤 상세 — 참여자 목록·remaining 에서 빠짐 (게스트로 조회하면 onlineLink 도 null)
+GET http://localhost:8080/api/parties/3
+
+### 13-2. 내보내진 게스트가 다시 참여(게스트 로그인 상태에서) → 403 "파티장이 내보낸 파티에는 다시 참여할 수 없습니다."
+### 참여 취소(leave)로도 우회할 수 없음 (400). 다른 회원은 그 자리에 참여할 수 있음
+POST http://localhost:8080/api/parties/3/join

@@ -153,6 +153,10 @@ public class BoardGame extends BaseTimeEntity {
         this.visible = true;
     }
 
+    public boolean supports(PlayMode mode) {
+        return mode == PlayMode.ONLINE ? onlineAvailable : offlineAvailable;
+    }
+
     /** 등록 관리자가 없는(레거시) 게임은 아무도 소유자가 아니다 */
     public boolean isOwnedBy(Long memberId) {
         return createdBy != null && createdBy.getId().equals(memberId);

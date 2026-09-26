@@ -87,7 +87,11 @@ public class BoardGameService {
         }
         String youtubeVideoId = YoutubeUrlParser.parse(request.youtubeUrl());
 
+        boolean wasOnline = boardGame.isOnlineAvailable();
+        boolean wasOffline = boardGame.isOfflineAvailable();
         boardGame.update(request.toDetails());
+        // 값 검증(400)이 먼저 나가도록 update 뒤에 확인한다. 예외가 나면 트랜잭션이 롤백돼 변경은 버려진다
+        ensureDisabledModesNotInUse(boardGame, wasOnline, wasOffline);
         boardGame.changeYoutube(youtubeVideoId);
 
         String oldKey = boardGame.getImageKey();
@@ -140,6 +144,19 @@ public class BoardGameService {
             throw new BusinessException(ErrorCode.NOT_GAME_OWNER);
         }
         return boardGame;
+    }
+
+    /** 이번 수정으로 꺼지는 진행 방식에 모집 중(RECRUITING)인 파티가 있으면 막는다 (자동 취소하지 않음) */
+    private void ensureDisabledModesNotInUse(BoardGame boardGame, boolean wasOnline, boolean wasOffline) {
+        if (wasOnline && !boardGame.isOnlineAvailable() && isRecruitingIn(boardGame, PlayMode.ONLINE)
+                || wasOffline && !boardGame.isOfflineAvailable() && isRecruitingIn(boardGame, PlayMode.OFFLINE)) {
+            throw new BusinessException(ErrorCode.PLAY_MODE_IN_USE);
+        }
+    }
+
+    private boolean isRecruitingIn(BoardGame boardGame, PlayMode playMode) {
+        return partyRepository.existsByBoardGameIdAndPlayModeAndStatus(
+                boardGame.getId(), playMode, PartyStatus.RECRUITING);
     }
 
     private void validatePlayerRange(BoardGameRequest request) {

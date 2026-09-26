@@ -176,6 +176,28 @@ Content-Type: application/json
 }
 --boundary--
 
+### 10-2. 수정 — 진행 방식 끄기 제한: 그 방식으로 모집 중(RECRUITING)인 파티가 있으면 409 "해당 방식으로 모집 중인 파티가 있어 변경할 수 없습니다."
+### (파티를 자동으로 취소하지 않음. 파티가 마감·취소된 뒤에는 끌 수 있음. 아래는 1번 게임의 온라인을 끄는 예 — party.http 2-1 로 온라인 파티를 만든 뒤 실행)
+PUT http://localhost:8080/api/boardgames/1
+Content-Type: multipart/form-data; boundary=boundary
+
+--boundary
+Content-Disposition: form-data; name="data"
+Content-Type: application/json
+
+{
+  "name": "카탄 확장판",
+  "minPlayers": 3,
+  "maxPlayers": 6,
+  "playTime": 90,
+  "difficulty": "HARD",
+  "description": "5~6인 확장",
+  "offlineAvailable": true,
+  "onlineAvailable": false,
+  "stock": 3
+}
+--boundary--
+
 ### 11. 숨기기(운영 중지) — 소유 관리자. 모집 중인 파티가 모두 CANCELLED(마감된 파티는 유지), Redis 키 삭제. 이미 숨긴 상태면 변경 없이 200
 PATCH http://localhost:8080/api/boardgames/1/visibility
 Content-Type: application/json

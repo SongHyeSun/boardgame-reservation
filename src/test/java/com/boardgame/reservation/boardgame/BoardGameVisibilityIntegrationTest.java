@@ -70,7 +70,7 @@ class BoardGameVisibilityIntegrationTest extends RedisIntegrationTestSupport {
         String json = mockMvc.perform(post("/api/parties").with(loginAs(partyHost))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
-                                {"boardGameId":%d,"title":"같이 해요","description":"초보 환영","capacity":4}
+                                {"boardGameId":%d,"title":"같이 해요","description":"초보 환영","capacity":4,"playMode":"OFFLINE"}
                                 """.formatted(game.getId())))
                 .andExpect(status().isCreated())
                 .andReturn().getResponse().getContentAsString();
@@ -133,7 +133,7 @@ class BoardGameVisibilityIntegrationTest extends RedisIntegrationTestSupport {
         assertThat(redisTemplate.hasKey(membersKey(recruitingA))).isFalse();
         assertThat(hasKeys(recruitingB)).isFalse();
         // 참여 이력은 그대로
-        assertThat(partyMemberRepository.countByPartyId(recruitingA)).isEqualTo(2);
+        assertThat(partyMemberRepository.countJoinedByPartyId(recruitingA)).isEqualTo(2);
 
         assertThat(applicationEvents.stream(BoardGameSuspendedEvent.class).toList())
                 .singleElement()
@@ -183,7 +183,7 @@ class BoardGameVisibilityIntegrationTest extends RedisIntegrationTestSupport {
         mockMvc.perform(post("/api/parties").with(loginAs(host))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
-                                {"boardGameId":%d,"title":"새 파티","capacity":4}
+                                {"boardGameId":%d,"title":"새 파티","capacity":4,"playMode":"OFFLINE"}
                                 """.formatted(game.getId())))
                 .andExpect(status().isConflict())
                 .andExpect(jsonPath("$.message").value("운영이 중지된 게임입니다."));

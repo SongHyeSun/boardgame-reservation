@@ -4,8 +4,8 @@ import com.boardgame.reservation.boardgame.domain.BoardGame;
 import com.boardgame.reservation.global.exception.BusinessException;
 import com.boardgame.reservation.global.exception.ErrorCode;
 import com.boardgame.reservation.member.domain.Member;
-import com.boardgame.reservation.party.dto.PartyCreateRequest;
 import com.boardgame.reservation.party.service.PartyService;
+import com.boardgame.reservation.support.PartyRequests;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -76,7 +76,7 @@ class PartyConcurrencyTest extends PartyRedisTestSupport {
         Member host = saveMember("host");
         BoardGame boardGame = saveBoardGame(2, 8);
         Long partyId = partyService.create(host.getId(),
-                new PartyCreateRequest(boardGame.getId(), "선착순", null, 5, null)).id();
+                PartyRequests.boardGame(boardGame.getId(), "선착순", 5)).id();
 
         List<Member> members = memberRepository.saveAll(
                 IntStream.range(0, 100)
@@ -90,8 +90,51 @@ class PartyConcurrencyTest extends PartyRedisTestSupport {
 
         assertThat(results.stream().filter(r -> r == null).count()).isEqualTo(4);
         assertThat(count(results, ErrorCode.PARTY_FULL)).isEqualTo(96);
-        assertThat(partyMemberRepository.countByPartyId(partyId)).isEqualTo(5);
+        assertThat(partyMemberRepository.countJoinedByPartyId(partyId)).isEqualTo(5);
         assertThat(redisTemplate.opsForValue().get(remainingKey(partyId))).isEqualTo("0");
+    }
+
+    @Test
+    @DisplayName("기타 게임 파티(정원 5, 호스트 포함)에 100명이 동시에 join → 성공 정확히 4, PARTY_FULL 96, DB 5명, Redis remaining 0")
+    void join_100Members_customGameParty() throws Exception {
+        Member host = saveMember("host");
+        Long partyId = partyService.create(host.getId(), PartyRequests.customGame("구스구스덕", "선착순", 5)).id();
+
+        List<Member> members = memberRepository.saveAll(
+                IntStream.range(0, 100)
+                        .mapToObj(i -> Member.createUser("m" + i + "@test.com", "pw", "m" + i))
+                        .toList());
+        List<Supplier<?>> tasks = members.stream()
+                .<Supplier<?>>map(m -> () -> partyService.join(partyId, m.getId()))
+                .toList();
+
+        List<ErrorCode> results = runConcurrently(tasks);
+
+        assertThat(results.stream().filter(r -> r == null).count()).isEqualTo(4);
+        assertThat(count(results, ErrorCode.PARTY_FULL)).isEqualTo(96);
+        assertThat(partyMemberRepository.countJoinedByPartyId(partyId)).isEqualTo(5);
+        assertThat(redisTemplate.opsForValue().get(remainingKey(partyId))).isEqualTo("0");
+    }
+
+    @Test
+    @DisplayName("내보내진 회원이 20번 동시 join → 전부 KICKED_FROM_PARTY, 자리·참여자는 그대로 (Redis remaining 4, DB JOINED 1)")
+    void join_kickedMember_20times() throws Exception {
+        Member host = saveMember("host");
+        Member guest = saveMember("guest");
+        Long partyId = partyService.create(host.getId(), PartyRequests.customGame("롤", "내보내기", 5)).id();
+        partyService.join(partyId, guest.getId());
+        partyService.kick(partyId, host.getId(), guest.getId());
+
+        List<Supplier<?>> tasks = new ArrayList<>();
+        for (int i = 0; i < 20; i++) {
+            tasks.add(() -> partyService.join(partyId, guest.getId()));
+        }
+
+        List<ErrorCode> results = runConcurrently(tasks);
+
+        assertThat(count(results, ErrorCode.KICKED_FROM_PARTY)).isEqualTo(20);
+        assertThat(partyMemberRepository.countJoinedByPartyId(partyId)).isEqualTo(1);
+        assertThat(redisTemplate.opsForValue().get(remainingKey(partyId))).isEqualTo("4");
     }
 
     @Test
@@ -101,7 +144,7 @@ class PartyConcurrencyTest extends PartyRedisTestSupport {
         Member guest = saveMember("guest");
         BoardGame boardGame = saveBoardGame(2, 8);
         Long partyId = partyService.create(host.getId(),
-                new PartyCreateRequest(boardGame.getId(), "중복 방어", null, 5, null)).id();
+                PartyRequests.boardGame(boardGame.getId(), "중복 방어", 5)).id();
 
         List<Supplier<?>> tasks = new ArrayList<>();
         for (int i = 0; i < 10; i++) {
@@ -112,7 +155,7 @@ class PartyConcurrencyTest extends PartyRedisTestSupport {
 
         assertThat(results.stream().filter(r -> r == null).count()).isEqualTo(1);
         assertThat(count(results, ErrorCode.ALREADY_JOINED)).isEqualTo(9);
-        assertThat(partyMemberRepository.findMemberIdsByPartyId(partyId))
+        assertThat(partyMemberRepository.findJoinedMemberIdsByPartyId(partyId))
                 .filteredOn(id -> id.equals(guest.getId())).hasSize(1);
         // 호스트 1 + guest 1 → 남은 자리 3
         assertThat(redisTemplate.opsForValue().get(remainingKey(partyId))).isEqualTo("3");

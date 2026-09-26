@@ -2,6 +2,7 @@ package com.boardgame.reservation.boardgame;
 
 import com.boardgame.reservation.boardgame.domain.BoardGame;
 import com.boardgame.reservation.boardgame.domain.Difficulty;
+import com.boardgame.reservation.boardgame.domain.PlayMode;
 import com.boardgame.reservation.boardgame.dto.BoardGameRequest;
 import com.boardgame.reservation.boardgame.dto.BoardGameResponse;
 import com.boardgame.reservation.boardgame.event.BoardGameSuspendedEvent;
@@ -441,6 +442,82 @@ class BoardGameServiceTest {
                 .isEqualTo(ErrorCode.INVALID_INPUT);
 
         verifyNoInteractions(fileStorage);
+    }
+
+    // ───────────── 진행 방식 끄기 제한 ─────────────
+
+    /** 온라인·오프라인 모두 가능한 게임 (id 1) */
+    private static BoardGame bothModesGame(Member owner) {
+        BoardGame game = BoardGame.create(
+                new BoardGame.Details("Catan", 3, 4, 60, Difficulty.NORMAL, "설명", true, true, 2), owner);
+        ReflectionTestUtils.setField(game, "id", 1L);
+        return game;
+    }
+
+    @Test
+    @DisplayName("온라인으로 모집 중인 파티가 있으면 온라인을 끌 수 없다 (PLAY_MODE_IN_USE), 게임도 파일도 바뀌지 않는다")
+    void update_disableOnline_withRecruitingParty_throws() {
+        BoardGame game = bothModesGame(member(OWNER_ID));
+        givenOwnedGame(game);
+        given(partyRepository.existsByBoardGameIdAndPlayModeAndStatus(1L, PlayMode.ONLINE, PartyStatus.RECRUITING))
+                .willReturn(true);
+
+        assertThat(thrown(() -> boardGameService.update(1L, OWNER_ID,
+                request("Catan", 3, 4, true, false, 2, null, null), ImageFixtures.jpeg("image"))).getErrorCode())
+                .isEqualTo(ErrorCode.PLAY_MODE_IN_USE);
+
+        verifyNoInteractions(fileStorage);
+    }
+
+    @Test
+    @DisplayName("오프라인으로 모집 중인 파티가 있으면 오프라인을 끌 수 없다 (PLAY_MODE_IN_USE)")
+    void update_disableOffline_withRecruitingParty_throws() {
+        givenOwnedGame(bothModesGame(member(OWNER_ID)));
+        given(partyRepository.existsByBoardGameIdAndPlayModeAndStatus(1L, PlayMode.OFFLINE, PartyStatus.RECRUITING))
+                .willReturn(true);
+
+        assertThat(thrown(() -> boardGameService.update(1L, OWNER_ID,
+                request("Catan", 3, 4, false, true, 0, null, null), null)).getErrorCode())
+                .isEqualTo(ErrorCode.PLAY_MODE_IN_USE);
+    }
+
+    @Test
+    @DisplayName("그 방식으로 모집 중인 파티가 없으면(마감·취소는 제외) 방식을 끌 수 있다")
+    void update_disableMode_withoutRecruitingParty_ok() {
+        BoardGame game = bothModesGame(member(OWNER_ID));
+        givenOwnedGame(game);
+        given(partyRepository.existsByBoardGameIdAndPlayModeAndStatus(1L, PlayMode.ONLINE, PartyStatus.RECRUITING))
+                .willReturn(false);
+
+        boardGameService.update(1L, OWNER_ID, request("Catan", 3, 4, true, false, 2, null, null), null);
+
+        assertThat(game.isOnlineAvailable()).isFalse();
+        assertThat(game.isOfflineAvailable()).isTrue();
+    }
+
+    @Test
+    @DisplayName("방식을 켜거나 그대로 두는 수정은 파티를 조회하지 않는다")
+    void update_enableOrKeepModes_doesNotQueryParties() {
+        BoardGame offlineOnly = ownedGame(member(OWNER_ID));
+        givenOwnedGame(offlineOnly);
+        boardGameService.update(1L, OWNER_ID, request("Catan", 3, 4, true, true, 2, null, null), null);
+        assertThat(offlineOnly.isOnlineAvailable()).isTrue();
+
+        boardGameService.update(1L, OWNER_ID, request("Catan", 3, 4, true, true, 2, null, null), null);
+
+        verifyNoInteractions(partyRepository);
+    }
+
+    @Test
+    @DisplayName("두 방식을 모두 끄면 모집 중 파티 여부와 상관없이 INVALID_PLAY_MODE(400)가 먼저다")
+    void update_disableBothModes_invalidPlayModeFirst() {
+        givenOwnedGame(bothModesGame(member(OWNER_ID)));
+
+        assertThat(thrown(() -> boardGameService.update(1L, OWNER_ID,
+                request("Catan", 3, 4, false, false, 0, null, null), null)).getErrorCode())
+                .isEqualTo(ErrorCode.INVALID_PLAY_MODE);
+
+        verifyNoInteractions(partyRepository);
     }
 
     // ───────────── 숨기기 / 다시 보이기 ─────────────

@@ -1,10 +1,7 @@
 package com.boardgame.reservation.party;
 
-import com.boardgame.reservation.boardgame.domain.BoardGame;
-import com.boardgame.reservation.member.domain.Member;
 import com.jayway.jsonpath.JsonPath;
 import jakarta.servlet.http.Cookie;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,7 +10,6 @@ import org.springframework.session.web.http.SessionRepositoryFilter;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
-import org.springframework.web.context.WebApplicationContext;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
@@ -34,33 +30,14 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * 파티 API 를 Security 필터 체인 + 실제 Redis(Testcontainers) + H2 로 검증.
  * 보드게임은 2~4명이라 capacity 2 면 호스트 + 1명으로 꽉 찬다.
  */
-class PartyApiIntegrationTest extends PartyRedisTestSupport {
+class PartyApiIntegrationTest extends PartyApiTestSupport {
 
-    @Autowired
-    WebApplicationContext context;
     @Autowired
     SessionRepositoryFilter<?> sessionRepositoryFilter;
 
-    MockMvc mockMvc;
-    Member host;
-    Member guest;
-    Member other;
-    BoardGame boardGame;
-
-    @BeforeEach
-    void setUp() {
-        mockMvc = MockMvcBuilders.webAppContextSetup(context)
-                .apply(springSecurity())
-                .build();
-        host = saveMember("host");
-        guest = saveMember("guest");
-        other = saveMember("other");
-        boardGame = saveBoardGame(2, 4);
-    }
-
     private String body(int capacity) {
         return """
-                {"boardGameId":%d,"title":"같이 해요","description":"초보 환영","capacity":%d}
+                {"boardGameId":%d,"title":"같이 해요","description":"초보 환영","capacity":%d,"playMode":"OFFLINE"}
                 """.formatted(boardGame.getId(), capacity);
     }
 
@@ -147,7 +124,7 @@ class PartyApiIntegrationTest extends PartyRedisTestSupport {
                 .andExpect(status().isConflict())
                 .andExpect(jsonPath("$.message").value("이미 참여한 파티입니다"));
 
-        assertThat(partyMemberRepository.countByPartyId(partyId)).isEqualTo(2);
+        assertThat(partyMemberRepository.countJoinedByPartyId(partyId)).isEqualTo(2);
     }
 
     @Test
@@ -172,7 +149,7 @@ class PartyApiIntegrationTest extends PartyRedisTestSupport {
                 .andExpect(status().isConflict())
                 .andExpect(jsonPath("$.message").value("정원이 마감되었습니다"));
 
-        assertThat(partyMemberRepository.countByPartyId(partyId)).isEqualTo(2);
+        assertThat(partyMemberRepository.countJoinedByPartyId(partyId)).isEqualTo(2);
         assertThat(redisTemplate.opsForValue().get(remainingKey(partyId))).isEqualTo("0");
         mockMvc.perform(get("/api/parties/{id}", partyId))
                 .andExpect(jsonPath("$.data.status").value("RECRUITING"));
@@ -201,7 +178,7 @@ class PartyApiIntegrationTest extends PartyRedisTestSupport {
         // 복구된 members 게이트가 기존 참여자의 재참여도 막는다
         mockMvc.perform(post("/api/parties/{id}/join", partyId).with(loginAs(guest)))
                 .andExpect(status().isConflict());
-        assertThat(partyMemberRepository.countByPartyId(partyId)).isEqualTo(3);
+        assertThat(partyMemberRepository.countJoinedByPartyId(partyId)).isEqualTo(3);
     }
 
     // ───────────── 취소 / 마감 ─────────────
@@ -272,7 +249,7 @@ class PartyApiIntegrationTest extends PartyRedisTestSupport {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.length()").value(1))
                 .andExpect(jsonPath("$.data[0].id").value(recruiting))
-                .andExpect(jsonPath("$.data[0].boardGameName").value("Catan"))
+                .andExpect(jsonPath("$.data[0].gameName").value("Catan"))
                 .andExpect(jsonPath("$.data[0].boardGameVisible").value(true))
                 .andExpect(jsonPath("$.data[0].hostNickname").value("host"))
                 .andExpect(jsonPath("$.data[0].currentCount").value(2));

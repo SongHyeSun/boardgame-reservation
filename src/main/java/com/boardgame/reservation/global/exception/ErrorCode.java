@@ -39,16 +39,22 @@ public enum ErrorCode {
     INVALID_PLAY_MODE(HttpStatus.BAD_REQUEST, "온라인·오프라인 중 하나 이상 선택해야 합니다."),
     INVALID_STOCK(HttpStatus.BAD_REQUEST, "오프라인 가능 게임은 재고가 1 이상이어야 합니다."),
     BOARDGAME_NOT_AVAILABLE(HttpStatus.CONFLICT, "운영이 중지된 게임입니다."),
+    PLAY_MODE_IN_USE(HttpStatus.CONFLICT, "해당 방식으로 모집 중인 파티가 있어 변경할 수 없습니다."),
 
     // 파티
     PARTY_NOT_FOUND(HttpStatus.NOT_FOUND, "파티를 찾을 수 없습니다."),
-    INVALID_CAPACITY(HttpStatus.BAD_REQUEST, "모집 인원이 보드게임 인원 범위를 벗어났습니다."),
+    INVALID_CAPACITY(HttpStatus.BAD_REQUEST, "모집 인원이 허용 범위를 벗어났습니다."),
+    INVALID_GAME_SELECTION(HttpStatus.BAD_REQUEST, "보드게임을 선택하거나 게임 이름을 입력해주세요."),
+    PLAY_MODE_NOT_SUPPORTED(HttpStatus.BAD_REQUEST, "이 게임은 해당 방식으로 진행할 수 없습니다."),
+    INVALID_ONLINE_LINK(HttpStatus.BAD_REQUEST, "http:// 또는 https:// 링크만 입력할 수 있습니다."),
     PARTY_NOT_RECRUITING(HttpStatus.CONFLICT, "모집 중인 파티가 아닙니다."),
     PARTY_FULL(HttpStatus.CONFLICT, "정원이 마감되었습니다"),
     ALREADY_JOINED(HttpStatus.CONFLICT, "이미 참여한 파티입니다"),
     NOT_JOINED(HttpStatus.BAD_REQUEST, "참여하지 않은 파티입니다."),
     HOST_CANNOT_LEAVE(HttpStatus.BAD_REQUEST, "호스트는 파티를 탈퇴할 수 없습니다."),
-    NOT_PARTY_HOST(HttpStatus.FORBIDDEN, "파티 호스트만 할 수 있습니다.");
+    NOT_PARTY_HOST(HttpStatus.FORBIDDEN, "파티 호스트만 할 수 있습니다."),
+    CANNOT_KICK_HOST(HttpStatus.BAD_REQUEST, "호스트는 내보낼 수 없습니다."),
+    KICKED_FROM_PARTY(HttpStatus.FORBIDDEN, "파티장이 내보낸 파티에는 다시 참여할 수 없습니다.");
 
     private final HttpStatus status;
     private final String message;

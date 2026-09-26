@@ -1,5 +1,6 @@
 package com.boardgame.reservation.party.controller;
 
+import com.boardgame.reservation.boardgame.domain.PlayMode;
 import com.boardgame.reservation.global.response.ApiResponse;
 import com.boardgame.reservation.global.security.MemberPrincipal;
 import com.boardgame.reservation.party.domain.PartyStatus;
@@ -26,11 +27,12 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.List;
 
 /**
- * GET    /api/parties               목록 (status, boardGameId 선택 필터) — 누구나
- * GET    /api/parties/{id}          상세 — 누구나
+ * GET    /api/parties               목록 (status, boardGameId, playMode 선택 필터) — 누구나
+ * GET    /api/parties/{id}          상세 (onlineLink 는 호스트·참여자에게만) — 누구나
  * POST   /api/parties               개설 (201) — 로그인
  * POST   /api/parties/{id}/join     선착순 참여 {remaining} — 로그인
  * DELETE /api/parties/{id}/leave    참여 취소 — 로그인
+ * DELETE /api/parties/{id}/members/{memberId}  참여자 내보내기 (재참여 불가) — 호스트
  * PATCH  /api/parties/{id}/close    마감 — 호스트
  * 인증은 SecurityConfig(GET permitAll, 나머지 authenticated), 호스트 검사는 서비스에서 한다.
  */
@@ -44,14 +46,20 @@ public class PartyController {
     @GetMapping
     public ResponseEntity<ApiResponse<List<PartyResponse>>> list(
             @RequestParam(required = false) PartyStatus status,
-            @RequestParam(required = false) Long boardGameId
+            @RequestParam(required = false) Long boardGameId,
+            @RequestParam(required = false) PlayMode playMode
     ) {
-        return ResponseEntity.ok(ApiResponse.ok(partyService.search(status, boardGameId)));
+        return ResponseEntity.ok(ApiResponse.ok(partyService.search(status, boardGameId, playMode)));
     }
 
+    /** GET 은 permitAll 이라 principal 은 비로그인이면 null. 로그인 사용자면 접속 링크 노출 여부 판단에 쓴다 */
     @GetMapping("/{id}")
-    public ResponseEntity<ApiResponse<PartyDetailResponse>> get(@PathVariable Long id) {
-        return ResponseEntity.ok(ApiResponse.ok(partyService.getParty(id)));
+    public ResponseEntity<ApiResponse<PartyDetailResponse>> get(
+            @AuthenticationPrincipal MemberPrincipal principal,
+            @PathVariable Long id
+    ) {
+        Long viewerId = principal == null ? null : principal.getId();
+        return ResponseEntity.ok(ApiResponse.ok(partyService.getParty(id, viewerId)));
     }
 
     @PostMapping
@@ -77,6 +85,16 @@ public class PartyController {
             @PathVariable Long id
     ) {
         partyService.leave(id, principal.getId());
+        return ResponseEntity.ok(ApiResponse.ok());
+    }
+
+    @DeleteMapping("/{id}/members/{memberId}")
+    public ResponseEntity<ApiResponse<Void>> kick(
+            @AuthenticationPrincipal MemberPrincipal principal,
+            @PathVariable Long id,
+            @PathVariable Long memberId
+    ) {
+        partyService.kick(id, principal.getId(), memberId);
         return ResponseEntity.ok(ApiResponse.ok());
     }
 

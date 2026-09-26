@@ -83,3 +83,10 @@
 ## 6. 게임 숨기기로 CANCELLED 파티가 생기면서 `close()` 가 이를 CLOSED 로 덮어쓸 수 있던 문제 (B-1)
 
 - 원인: `PartyService.close()` 가 상태 검사 없이 `party.close()` 를 호출해, 호스트가 취소된 파티를 닫으면 CANCELLED 가 CLOSED 로 바뀔 수 있었다 → `!isRecruiting` 이면 `PARTY_NOT_RECRUITING`(409) 으로 막음.
+
+---
+
+## 7. B-2: 스키마 NOT NULL 해제와 내보내기 우회 경로
+
+- `ddl-auto: update` 는 기존 컬럼의 NOT NULL 을 풀지 못함 → `party.board_game_id` 는 수동 ALTER 로 해제 (`ALTER TABLE party ALTER COLUMN board_game_id DROP NOT NULL;`)
+- 내보내진(KICKED) 회원이 leave 로 자기 행을 지워 재참여하는 우회 경로 → 삭제 조건에 `status = JOINED` 추가로 차단

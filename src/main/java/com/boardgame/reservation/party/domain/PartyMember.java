@@ -3,6 +3,8 @@ package com.boardgame.reservation.party.domain;
 import com.boardgame.reservation.member.domain.Member;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -14,12 +16,14 @@ import jakarta.persistence.UniqueConstraint;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.ColumnDefault;
 
 import java.time.LocalDateTime;
 
 /**
- * ERD: PARTY_MEMBER (id, party_id, member_id, joined_at)
+ * ERD: PARTY_MEMBER (id, party_id, member_id, joined_at, status)
  * UNIQUE(party_id, member_id) 는 중복 참여의 최종 방어선 (Redis 게이트가 뚫려도 DB가 막는다).
+ * 내보내기는 행을 지우지 않고 status 를 KICKED 로 바꿔, 같은 제약이 재참여도 막는다. 인원·목록·복구는 JOINED 만 센다.
  */
 @Entity
 @Table(name = "party_member",
@@ -43,10 +47,16 @@ public class PartyMember {
     @Column(nullable = false)
     private LocalDateTime joinedAt;
 
+    @Enumerated(EnumType.STRING)
+    @ColumnDefault("'JOINED'")
+    @Column(nullable = false, length = 10)
+    private PartyMemberStatus status;
+
     private PartyMember(Party party, Member member) {
         this.party = party;
         this.member = member;
         this.joinedAt = LocalDateTime.now();
+        this.status = PartyMemberStatus.JOINED;
     }
 
     public static PartyMember create(Party party, Member member) {
