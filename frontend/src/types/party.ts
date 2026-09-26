@@ -10,6 +10,7 @@ export interface PartyResponse {
   title: string
   boardGameId: number
   boardGameName: string
+  boardGameVisible: boolean // false = 게임 운영 중지
   hostNickname: string
   hostAvatar: Avatar
   capacity: number
@@ -32,6 +33,7 @@ export interface PartyDetailResponse {
   description: string | null
   boardGameId: number
   boardGameName: string
+  boardGameVisible: boolean // false = 게임 운영 중지
   hostId: number
   hostNickname: string
   hostAvatar: Avatar

@@ -18,6 +18,7 @@ import {
   AVATAR_IMAGE_TYPES,
   type AvatarFormState,
 } from './avatar.ts'
+import { parseYoutubeUrl, YOUTUBE_URL_INVALID_MESSAGE, YOUTUBE_URL_MAX } from './youtube.ts'
 
 export type FieldErrors<T> = Partial<Record<keyof T, string>>
 
@@ -162,8 +163,8 @@ export function validateChangePassword(values: PasswordFormValues): FieldErrors<
   return errors
 }
 
-/** 형식(jpg/jpeg/png/webp)·크기(5MB) 1차 검증. 서버는 파일 시그니처까지 확인한다. */
-export function validateAvatarImage(file: File): string | undefined {
+/** 형식(jpg/jpeg/png/webp)·크기(5MB) 1차 검증. 아바타·게임 이미지 공용. 서버는 파일 시그니처까지 확인한다. */
+export function validateImageFile(file: File): string | undefined {
   if (!AVATAR_IMAGE_TYPES.includes(file.type)) {
     return AVATAR_IMAGE_INVALID_MESSAGE
   }
@@ -182,7 +183,7 @@ export function validateAvatar(state: AvatarFormState, hasStoredImage: boolean):
     return undefined
   }
   if (state.file) {
-    return validateAvatarImage(state.file)
+    return validateImageFile(state.file)
   }
   return hasStoredImage ? undefined : AVATAR_IMAGE_REQUIRED_MESSAGE
 }
@@ -210,6 +211,8 @@ function validatePositiveInteger(value: string, requiredMessage: string, minMess
 /**
  * 보드게임 등록/수정 폼 검증. 이름·설명은 trim 한 값을 전송하므로 trim 기준으로 잰다.
  * 난이도는 select 의 고정 옵션이라 검사하지 않는다. min > max 는 서버에선 서비스 검증(400)이지만 여기서 미리 막는다.
+ * 진행 방식 오류(둘 다 해제)는 체크박스 그룹의 대표 키 offlineAvailable 에 담는다. 재고는 오프라인 가능일 때만 검사한다.
+ * 이미지 파일은 ImageInput 이 선택 즉시 validateImageFile 로 검사하므로 여기서 다루지 않는다.
  */
 export function validateBoardGame(values: BoardGameFormValues): FieldErrors<BoardGameFormValues> {
   const errors: FieldErrors<BoardGameFormValues> = {}
@@ -246,6 +249,26 @@ export function validateBoardGame(values: BoardGameFormValues): FieldErrors<Boar
 
   if (values.description.trim().length > BOARDGAME_DESCRIPTION_MAX) {
     errors.description = `설명은 ${BOARDGAME_DESCRIPTION_MAX}자 이하여야 합니다.`
+  }
+
+  if (!values.offlineAvailable && !values.onlineAvailable) {
+    errors.offlineAvailable = '온라인·오프라인 중 하나 이상 선택해야 합니다.'
+  } else if (values.offlineAvailable) {
+    const stockError = validatePositiveInteger(
+      values.stock,
+      '재고는 필수입니다.',
+      '오프라인 가능 게임은 재고가 1 이상이어야 합니다.',
+    )
+    if (stockError) {
+      errors.stock = stockError
+    }
+  }
+
+  const youtubeUrl = values.youtubeUrl.trim()
+  if (youtubeUrl.length > YOUTUBE_URL_MAX) {
+    errors.youtubeUrl = `유튜브 링크는 ${YOUTUBE_URL_MAX}자 이하여야 합니다.`
+  } else if (parseYoutubeUrl(youtubeUrl).kind === 'invalid') {
+    errors.youtubeUrl = YOUTUBE_URL_INVALID_MESSAGE
   }
 
   return errors

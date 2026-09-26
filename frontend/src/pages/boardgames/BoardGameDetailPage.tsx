@@ -3,33 +3,50 @@ import BackLink from '../../components/BackLink.tsx'
 import DifficultyBadge from '../../components/DifficultyBadge.tsx'
 import EmptyMessage from '../../components/EmptyMessage.tsx'
 import ErrorMessage from '../../components/ErrorMessage.tsx'
+import GameImage from '../../components/GameImage.tsx'
+import GameStatusBadge from '../../components/GameStatusBadge.tsx'
 import Loading from '../../components/Loading.tsx'
-import { useBoardGame, useDeleteBoardGame } from '../../hooks/useBoardGames.ts'
+import PlayModeBadge from '../../components/PlayModeBadge.tsx'
+import YoutubePlayer from '../../components/YoutubePlayer.tsx'
+import { useBoardGame, useChangeBoardGameVisibility } from '../../hooks/useBoardGames.ts'
 import { useMe } from '../../hooks/useMe.ts'
 import { useParties } from '../../hooks/useParties.ts'
 import type { BoardGameResponse } from '../../types/boardgame.ts'
-import { formatPlayAt, formatPlayers } from '../../utils/format.ts'
-import { isAdmin } from '../../utils/role.ts'
+import { availablePlayModes, formatPlayAt, formatPlayers } from '../../utils/format.ts'
 import { parsePositiveInteger } from '../../utils/validation.ts'
+
+const HIDE_CONFIRM_MESSAGE = '모집 중인 파티가 모두 취소되며 되돌릴 수 없습니다. 숨길까요?'
 
 interface BoardGameProps {
   boardGame: BoardGameResponse
 }
 
-/** ADMIN 전용. 삭제가 409(파티가 있는 게임) 등으로 실패하면 서버 메시지를 그대로 보여 준다. */
-function AdminActions({ boardGame }: BoardGameProps) {
-  const remove = useDeleteBoardGame(boardGame.id, boardGame.name)
+/**
+ * 게임을 등록한 관리자 본인에게만 보인다. (SUPER_ADMIN 도 남의 게임은 서버가 403 이므로 me.id === owner.id 로 판단)
+ * 숨기기는 모집 중 파티를 전부 취소하므로 확인을 받고, 다시 보이기는 게임만 노출한다. 실패하면 서버 메시지를 그대로 보여 준다.
+ */
+function OwnerActions({ boardGame }: BoardGameProps) {
+  const change = useChangeBoardGameVisibility(boardGame.id)
 
-  function handleDelete() {
-    if (remove.isPending || !window.confirm(`"${boardGame.name}" 게임을 삭제할까요?`)) {
+  function handleHide() {
+    if (change.isPending || !window.confirm(HIDE_CONFIRM_MESSAGE)) {
       return
     }
-    remove.mutate()
+    change.reset()
+    change.mutate(false)
+  }
+
+  function handleShow() {
+    if (change.isPending) {
+      return
+    }
+    change.reset()
+    change.mutate(true)
   }
 
   return (
     <div className="mt-4 space-y-2">
-      {remove.isError && <ErrorMessage message={remove.error.message} />}
+      {change.isError && <ErrorMessage message={change.error.message} />}
       <div className="flex gap-2">
         <Link
           to={`/boardgames/${boardGame.id}/edit`}
@@ -37,58 +54,99 @@ function AdminActions({ boardGame }: BoardGameProps) {
         >
           수정
         </Link>
-        <button
-          type="button"
-          onClick={handleDelete}
-          disabled={remove.isPending}
-          className="rounded border border-red-300 bg-white px-3 py-1.5 text-sm text-red-600 hover:bg-red-50 disabled:opacity-50"
-        >
-          {remove.isPending ? '삭제 중…' : '삭제'}
-        </button>
+        {boardGame.visible ? (
+          <button
+            type="button"
+            onClick={handleHide}
+            disabled={change.isPending}
+            className="rounded border border-red-300 bg-white px-3 py-1.5 text-sm text-red-600 hover:bg-red-50 disabled:opacity-50"
+          >
+            {change.isPending ? '처리 중…' : '숨기기'}
+          </button>
+        ) : (
+          <button
+            type="button"
+            onClick={handleShow}
+            disabled={change.isPending}
+            className="rounded border border-gray-300 bg-white px-3 py-1.5 text-sm text-gray-700 hover:bg-gray-50 disabled:opacity-50"
+          >
+            {change.isPending ? '처리 중…' : '다시 보이기'}
+          </button>
+        )}
       </div>
+    </div>
+  )
+}
+
+function InfoItem({ label, value }: { label: string; value: string }) {
+  return (
+    <div>
+      <dt className="text-gray-500">{label}</dt>
+      <dd className="font-medium">{value}</dd>
     </div>
   )
 }
 
 function BoardGameInfo({ boardGame }: BoardGameProps) {
   const { data: me } = useMe()
+  const isOwner = me != null && boardGame.owner !== null && me.id === boardGame.owner.id
 
   return (
     <div className="rounded border border-gray-200 bg-white p-6">
-      <div className="flex items-start justify-between gap-2">
+      <GameImage imageUrl={boardGame.imageUrl} name={boardGame.name} className="w-full max-w-sm" />
+
+      <div className="mt-4 flex items-start justify-between gap-2">
         <h1 className="text-2xl font-bold">{boardGame.name}</h1>
         <DifficultyBadge difficulty={boardGame.difficulty} />
       </div>
-      <dl className="mt-4 flex gap-8 text-sm">
-        <div>
-          <dt className="text-gray-500">인원</dt>
-          <dd className="font-medium">{formatPlayers(boardGame.minPlayers, boardGame.maxPlayers)}</dd>
-        </div>
-        <div>
-          <dt className="text-gray-500">플레이 시간</dt>
-          <dd className="font-medium">{boardGame.playTime}분</dd>
-        </div>
+      <div className="mt-2 flex flex-wrap items-center gap-1.5">
+        <GameStatusBadge visible={boardGame.visible} />
+        {availablePlayModes(boardGame).map((mode) => (
+          <PlayModeBadge key={mode} mode={mode} />
+        ))}
+      </div>
+
+      <dl className="mt-4 flex flex-wrap gap-x-8 gap-y-3 text-sm">
+        <InfoItem label="인원" value={formatPlayers(boardGame.minPlayers, boardGame.maxPlayers)} />
+        <InfoItem label="플레이 시간" value={`${boardGame.playTime}분`} />
+        {boardGame.offlineAvailable && <InfoItem label="재고" value={`${boardGame.stock}개`} />}
+        <InfoItem label="등록 관리자" value={boardGame.owner?.nickname ?? '-'} />
       </dl>
+
+      {boardGame.youtubeVideoId && (
+        <div className="mt-4">
+          <YoutubePlayer videoId={boardGame.youtubeVideoId} title={`${boardGame.name} 소개 영상`} />
+        </div>
+      )}
+
       {boardGame.description && <p className="mt-4 whitespace-pre-wrap text-gray-700">{boardGame.description}</p>}
-      {me && isAdmin(me.role) && <AdminActions boardGame={boardGame} />}
+      {isOwner && <OwnerActions boardGame={boardGame} />}
     </div>
   )
 }
 
+interface RecruitingPartiesProps {
+  boardGameId: number
+  /** 운영 중지된 게임은 파티를 만들 수 없다(서버 409) */
+  canCreateParty: boolean
+}
+
 /** 이 게임의 모집 중 파티. status 를 안 주면 서버가 전 상태를 돌려주므로 RECRUITING 을 명시한다. */
-function RecruitingParties({ boardGameId }: { boardGameId: number }) {
+function RecruitingParties({ boardGameId, canCreateParty }: RecruitingPartiesProps) {
   const { data: parties, isPending, isError, error } = useParties({ boardGameId, status: 'RECRUITING' })
 
   return (
     <section className="mt-8">
       <div className="flex items-center justify-between gap-2">
         <h2 className="text-lg font-semibold">모집 중인 파티</h2>
-        <Link
-          to={`/parties/new?boardGameId=${boardGameId}`}
-          className="rounded bg-indigo-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-indigo-700"
-        >
-          이 게임으로 파티 만들기
-        </Link>
+        {canCreateParty && (
+          <Link
+            to={`/parties/new?boardGameId=${boardGameId}`}
+            className="rounded bg-indigo-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-indigo-700"
+          >
+            이 게임으로 파티 만들기
+          </Link>
+        )}
       </div>
 
       <div className="mt-3">
@@ -134,7 +192,7 @@ function BoardGameDetail({ id }: { id: number }) {
   return (
     <div>
       <BoardGameInfo boardGame={boardGame} />
-      <RecruitingParties boardGameId={boardGame.id} />
+      <RecruitingParties boardGameId={boardGame.id} canCreateParty={boardGame.visible} />
     </div>
   )
 }

@@ -1,13 +1,19 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { useNavigate } from 'react-router'
 import {
+  changeBoardGameVisibility,
   createBoardGame,
   getBoardGame,
   getBoardGames,
-  removeBoardGame,
   updateBoardGame,
 } from '../api/boardgames.ts'
 import type { BoardGameFilter, BoardGameRequest } from '../types/boardgame.ts'
+import { refetchMeAfterError } from './useMe.ts'
+
+interface BoardGameSubmission {
+  data: BoardGameRequest
+  /** multipart 의 image 파트. null 이면 파트 자체를 보내지 않는다 */
+  image: File | null
+}
 
 export function useBoardGames(filter: BoardGameFilter = {}) {
   return useQuery({
@@ -26,37 +32,42 @@ export function useBoardGame(id: number) {
 export function useCreateBoardGame() {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: (body: BoardGameRequest) => createBoardGame(body),
+    mutationFn: ({ data, image }: BoardGameSubmission) => createBoardGame(data, image),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['boardgames'] }),
+    onError: (error) => refetchMeAfterError(queryClient, error),
   })
 }
 
 export function useUpdateBoardGame(id: number) {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: (body: BoardGameRequest) => updateBoardGame(id, body),
+    mutationFn: ({ data, image }: BoardGameSubmission) => updateBoardGame(id, data, image),
     onSuccess: () =>
       Promise.all([
         queryClient.invalidateQueries({ queryKey: ['boardgames'] }),
         queryClient.invalidateQueries({ queryKey: ['boardgame', id] }),
       ]),
+    onError: (error) => refetchMeAfterError(queryClient, error),
   })
 }
 
 /**
- * 삭제된 id 를 마운트된 상세가 다시 조회하면 404 가 나므로 ['boardgame', id] 는 invalidate 가 아니라 제거한다.
- * 이동을 먼저 한 뒤 캐시를 정리한다. (useLogout 과 같은 순서. 이동 안내는 목록이 state.notice 로 표시)
- * 409(파티가 있는 게임) 등 실패 시에는 이동하지 않고 상세 화면이 error 를 표시한다.
+ * 숨기기는 이 게임의 모집 중 파티를 서버가 전부 취소하므로 파티 목록·상세도 다시 조회한다.
+ * 응답이 변경된 게임이라 상세 캐시에 바로 넣는다. (재조회 전에도 버튼·배지가 새 상태를 따른다)
+ * promise 를 return 하므로 재조회가 끝날 때까지 mutation 은 pending 이다.
  */
-export function useDeleteBoardGame(id: number, name: string) {
+export function useChangeBoardGameVisibility(id: number) {
   const queryClient = useQueryClient()
-  const navigate = useNavigate()
   return useMutation({
-    mutationFn: () => removeBoardGame(id),
-    onSuccess: () => {
-      navigate('/boardgames', { replace: true, state: { notice: `"${name}" 게임을 삭제했습니다.` } })
-      queryClient.removeQueries({ queryKey: ['boardgame', id] })
-      return queryClient.invalidateQueries({ queryKey: ['boardgames'] })
+    mutationFn: (visible: boolean) => changeBoardGameVisibility(id, visible),
+    onSuccess: (boardGame) => {
+      queryClient.setQueryData(['boardgame', id], boardGame)
+      return Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['boardgames'] }),
+        queryClient.invalidateQueries({ queryKey: ['parties'] }),
+        queryClient.invalidateQueries({ queryKey: ['party'] }),
+      ])
     },
+    onError: (error) => refetchMeAfterError(queryClient, error),
   })
 }

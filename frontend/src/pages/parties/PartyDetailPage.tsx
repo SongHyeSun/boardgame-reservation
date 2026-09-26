@@ -2,6 +2,7 @@ import { Link, useLocation, useParams } from 'react-router'
 import Avatar from '../../components/Avatar.tsx'
 import BackLink from '../../components/BackLink.tsx'
 import ErrorMessage from '../../components/ErrorMessage.tsx'
+import GameStatusBadge from '../../components/GameStatusBadge.tsx'
 import Loading from '../../components/Loading.tsx'
 import PartyStatusBadge from '../../components/PartyStatusBadge.tsx'
 import { useCloseParty, useJoinParty, useLeaveParty, useParty } from '../../hooks/useParties.ts'
@@ -122,13 +123,20 @@ function PartyInfo({ party }: PartyProps) {
         <PartyStatusBadge status={party.status} />
       </div>
 
+      {party.status === 'CANCELLED' && !party.boardGameVisible && (
+        <p role="status" className="mt-3 rounded border border-orange-200 bg-orange-50 px-3 py-2 text-sm text-orange-700">
+          게임 운영 중지로 취소된 파티입니다.
+        </p>
+      )}
+
       <dl className="mt-4 grid grid-cols-2 gap-4 text-sm sm:grid-cols-4">
         <div>
           <dt className="text-gray-500">보드게임</dt>
-          <dd className="font-medium">
+          <dd className="flex flex-wrap items-center gap-1.5 font-medium">
             <Link to={`/boardgames/${party.boardGameId}`} className="text-indigo-600 hover:underline">
               {party.boardGameName}
             </Link>
+            <GameStatusBadge visible={party.boardGameVisible} />
           </dd>
         </div>
         <div>

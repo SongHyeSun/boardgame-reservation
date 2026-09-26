@@ -3,15 +3,20 @@ import { Link, useNavigate, useParams } from 'react-router'
 import BackLink from '../../components/BackLink.tsx'
 import ErrorMessage from '../../components/ErrorMessage.tsx'
 import FormField from '../../components/FormField.tsx'
+import ImageInput from '../../components/ImageInput.tsx'
 import Loading from '../../components/Loading.tsx'
 import SelectField from '../../components/SelectField.tsx'
 import TextAreaField from '../../components/TextAreaField.tsx'
+import YoutubePlayer from '../../components/YoutubePlayer.tsx'
 import { useBoardGame, useCreateBoardGame, useUpdateBoardGame } from '../../hooks/useBoardGames.ts'
+import { useMe } from '../../hooks/useMe.ts'
 import type { BoardGameFormValues, BoardGameRequest, BoardGameResponse } from '../../types/boardgame.ts'
-import { DIFFICULTIES, DIFFICULTY_LABEL, isDifficulty } from '../../utils/format.ts'
+import { blankToNull, DIFFICULTIES, DIFFICULTY_LABEL, isDifficulty } from '../../utils/format.ts'
 import { parsePositiveInteger, validateBoardGame, type FieldErrors } from '../../utils/validation.ts'
+import { parseYoutubeUrl, YOUTUBE_URL_INVALID_MESSAGE, youtubeUrlFromVideoId } from '../../utils/youtube.ts'
 
 const DESCRIPTION_MAX = 2000
+const NOT_OWNER_MESSAGE = '본인이 등록한 게임만 관리할 수 있습니다.'
 
 const EMPTY_VALUES: BoardGameFormValues = {
   name: '',
@@ -20,6 +25,10 @@ const EMPTY_VALUES: BoardGameFormValues = {
   playTime: '',
   difficulty: 'NORMAL',
   description: '',
+  offlineAvailable: true,
+  onlineAvailable: false,
+  stock: '1',
+  youtubeUrl: '',
 }
 
 function toFormValues(boardGame: BoardGameResponse): BoardGameFormValues {
@@ -30,44 +39,70 @@ function toFormValues(boardGame: BoardGameResponse): BoardGameFormValues {
     playTime: String(boardGame.playTime),
     difficulty: boardGame.difficulty,
     description: boardGame.description ?? '',
+    offlineAvailable: boardGame.offlineAvailable,
+    onlineAvailable: boardGame.onlineAvailable,
+    // 온라인 전용 게임은 서버에 0 으로 저장돼 있다. 오프라인을 다시 켰을 때 바로 유효하도록 1 로 시작한다.
+    stock: boardGame.stock >= 1 ? String(boardGame.stock) : '1',
+    // PUT 은 전체 교체라 링크를 비우면 영상이 지워진다. 서버는 영상 ID 만 주므로 대표 형식으로 채워 항상 다시 보낸다.
+    youtubeUrl: youtubeUrlFromVideoId(boardGame.youtubeVideoId),
   }
 }
 
-/** 검증을 통과한 폼 값 → 요청 본문. 이름·설명은 trim 하고, 빈 설명은 null. */
-function toRequest(values: BoardGameFormValues): BoardGameRequest | null {
+/**
+ * 검증을 통과한 폼 값 → 요청 본문. 문자열은 trim 하고, 빈 설명·빈 유튜브 링크는 null.
+ * 온라인 전용이면 재고 입력은 무시하고 0 을 보낸다. removeImage 는 저장된 이미지가 있는 수정 화면에서만 넘긴다.
+ */
+function toRequest(values: BoardGameFormValues, removeImage: boolean | undefined): BoardGameRequest | null {
   const minPlayers = parsePositiveInteger(values.minPlayers)
   const maxPlayers = parsePositiveInteger(values.maxPlayers)
   const playTime = parsePositiveInteger(values.playTime)
-  if (minPlayers === null || maxPlayers === null || playTime === null) {
+  const stock = values.offlineAvailable ? parsePositiveInteger(values.stock) : 0
+  if (minPlayers === null || maxPlayers === null || playTime === null || stock === null) {
     return null
   }
-  const description = values.description.trim()
-  return {
+  const body: BoardGameRequest = {
     name: values.name.trim(),
     minPlayers,
     maxPlayers,
     playTime,
     difficulty: values.difficulty,
-    description: description === '' ? null : description,
+    description: blankToNull(values.description),
+    offlineAvailable: values.offlineAvailable,
+    onlineAvailable: values.onlineAvailable,
+    stock,
+    youtubeUrl: blankToNull(values.youtubeUrl),
   }
+  if (removeImage !== undefined) {
+    body.removeImage = removeImage
+  }
+  return body
 }
 
 interface BoardGameFormViewProps {
   title: string
   initial: BoardGameFormValues
+  /** 서버에 저장된 이미지 (수정 화면). 있으면 "저장된 이미지 삭제" 를 보여 준다 */
+  storedImageUrl: string | null
   submitLabel: string
   pendingLabel: string
   isPending: boolean
   errorMessage: string | null
   cancelTo: string
-  onSubmit: (body: BoardGameRequest) => void
+  onSubmit: (body: BoardGameRequest, image: File | null) => void
 }
 
-type TextField = Exclude<keyof BoardGameFormValues, 'difficulty'>
+type TextField = Exclude<keyof BoardGameFormValues, 'difficulty' | 'offlineAvailable' | 'onlineAvailable'>
+type PlayModeField = 'offlineAvailable' | 'onlineAvailable'
+
+const PLAY_MODE_OPTIONS: readonly { field: PlayModeField; label: string }[] = [
+  { field: 'offlineAvailable', label: '오프라인 가능' },
+  { field: 'onlineAvailable', label: '온라인 가능' },
+]
 
 function BoardGameFormView({
   title,
   initial,
+  storedImageUrl,
   submitLabel,
   pendingLabel,
   isPending,
@@ -77,6 +112,12 @@ function BoardGameFormView({
 }: BoardGameFormViewProps) {
   const [values, setValues] = useState<BoardGameFormValues>(initial)
   const [errors, setErrors] = useState<FieldErrors<BoardGameFormValues>>({})
+  // 새 파일과 삭제 표시는 함께 쓸 수 없다(서버 400). 삭제를 체크하면 ImageInput 을 내려 파일을 비우고, 그동안엔 파일을 고를 수 없다.
+  const [image, setImage] = useState<File | null>(null)
+  const [removeImage, setRemoveImage] = useState(false)
+
+  const youtube = parseYoutubeUrl(values.youtubeUrl)
+  const youtubeError = errors.youtubeUrl ?? (youtube.kind === 'invalid' ? YOUTUBE_URL_INVALID_MESSAGE : undefined)
 
   function handleChange(field: TextField, value: string) {
     setValues((prev) => ({ ...prev, [field]: value }))
@@ -90,6 +131,19 @@ function BoardGameFormView({
     }
   }
 
+  // 오프라인 여부에 따라 재고 검사 대상이 바뀌므로 재고 오류도 함께 지운다
+  function handlePlayModeChange(field: PlayModeField, checked: boolean) {
+    setValues((prev) => ({ ...prev, [field]: checked }))
+    setErrors((prev) => ({ ...prev, offlineAvailable: undefined, stock: undefined }))
+  }
+
+  function handleRemoveImageChange(checked: boolean) {
+    setRemoveImage(checked)
+    if (checked) {
+      setImage(null)
+    }
+  }
+
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     if (isPending) {
@@ -100,9 +154,9 @@ function BoardGameFormView({
     if (Object.keys(fieldErrors).length > 0) {
       return
     }
-    const body = toRequest(values)
+    const body = toRequest(values, storedImageUrl === null ? undefined : removeImage)
     if (body) {
-      onSubmit(body)
+      onSubmit(body, image)
     }
   }
 
@@ -120,6 +174,31 @@ function BoardGameFormView({
           onChange={(event) => handleChange('name', event.target.value)}
           error={errors.name}
         />
+
+        <fieldset>
+          <legend className="mb-1 block text-sm font-medium text-gray-700">대표 이미지 (선택)</legend>
+          {!removeImage && (
+            <ImageInput
+              id="boardgame-image"
+              variant="cover"
+              file={image}
+              onChange={setImage}
+              currentUrl={storedImageUrl}
+              currentAlt="현재 게임 이미지"
+            />
+          )}
+          {storedImageUrl && (
+            <label className="mt-2 flex items-center gap-1.5 text-sm text-gray-700">
+              <input
+                type="checkbox"
+                checked={removeImage}
+                onChange={(event) => handleRemoveImageChange(event.target.checked)}
+              />
+              저장된 이미지 삭제
+            </label>
+          )}
+        </fieldset>
+
         <div className="grid grid-cols-2 gap-4">
           <FormField
             id="minPlayers"
@@ -171,6 +250,53 @@ function BoardGameFormView({
           error={errors.description}
         />
 
+        <div className="space-y-2">
+          <FormField
+            id="youtubeUrl"
+            label="유튜브 링크 (선택)"
+            type="text"
+            inputMode="url"
+            placeholder="https://youtu.be/…"
+            hint="비우면 영상이 없는 게임이 됩니다."
+            value={values.youtubeUrl}
+            onChange={(event) => handleChange('youtubeUrl', event.target.value)}
+            error={youtubeError}
+          />
+          {youtube.kind === 'valid' && <YoutubePlayer videoId={youtube.videoId} title="유튜브 미리보기" />}
+        </div>
+
+        <fieldset>
+          <legend className="mb-1 block text-sm font-medium text-gray-700">진행 방식</legend>
+          <div className="flex gap-4">
+            {PLAY_MODE_OPTIONS.map(({ field, label }) => (
+              <label key={field} className="flex items-center gap-1.5 text-sm text-gray-700">
+                <input
+                  type="checkbox"
+                  checked={values[field]}
+                  onChange={(event) => handlePlayModeChange(field, event.target.checked)}
+                />
+                {label}
+              </label>
+            ))}
+          </div>
+          <p className="mt-1 text-xs text-gray-500">둘 다 선택할 수 있고, 최소 하나는 선택해야 합니다.</p>
+          {errors.offlineAvailable && <p className="mt-1 text-sm text-red-600">{errors.offlineAvailable}</p>}
+        </fieldset>
+
+        {values.offlineAvailable && (
+          <FormField
+            id="stock"
+            label="재고 (개)"
+            type="number"
+            min={1}
+            inputMode="numeric"
+            hint="오프라인으로 빌려줄 수 있는 보유 수량"
+            value={values.stock}
+            onChange={(event) => handleChange('stock', event.target.value)}
+            error={errors.stock}
+          />
+        )}
+
         <div className="flex gap-2">
           <button
             type="submit"
@@ -196,15 +322,17 @@ function CreateBoardGameForm() {
     <BoardGameFormView
       title="게임 등록"
       initial={EMPTY_VALUES}
+      storedImageUrl={null}
       submitLabel="등록"
       pendingLabel="등록 중…"
       isPending={create.isPending}
       errorMessage={create.isError ? create.error.message : null}
       cancelTo="/boardgames"
-      onSubmit={(body) =>
-        create.mutate(body, {
-          onSuccess: (created) => navigate(`/boardgames/${created.id}`, { replace: true }),
-        })
+      onSubmit={(data, image) =>
+        create.mutate(
+          { data, image },
+          { onSuccess: (created) => navigate(`/boardgames/${created.id}`, { replace: true }) },
+        )
       }
     />
   )
@@ -219,33 +347,49 @@ function EditBoardGameForm({ boardGame }: { boardGame: BoardGameResponse }) {
     <BoardGameFormView
       title="게임 수정"
       initial={toFormValues(boardGame)}
+      storedImageUrl={boardGame.imageUrl}
       submitLabel="저장"
       pendingLabel="저장 중…"
       isPending={update.isPending}
       errorMessage={update.isError ? update.error.message : null}
       cancelTo={`/boardgames/${boardGame.id}`}
-      onSubmit={(body) =>
-        update.mutate(body, {
-          onSuccess: (updated) => navigate(`/boardgames/${updated.id}`, { replace: true }),
-        })
+      onSubmit={(data, image) =>
+        update.mutate(
+          { data, image },
+          { onSuccess: (updated) => navigate(`/boardgames/${updated.id}`, { replace: true }) },
+        )
       }
     />
   )
 }
 
-function EditBoardGame({ id }: { id: number }) {
-  const { data: boardGame, isPending, isError, error } = useBoardGame(id)
+function EditBlocked({ message, backTo, backLabel }: { message: string; backTo: string; backLabel: string }) {
+  return (
+    <div className="space-y-4">
+      <ErrorMessage message={message} />
+      <BackLink to={backTo}>{backLabel}</BackLink>
+    </div>
+  )
+}
 
-  if (isPending) {
+/** 수정은 소유 관리자만 할 수 있으므로 본인 게임이 아니면 폼을 열지 않는다. (서버가 403 으로 최종 검사) */
+function EditBoardGame({ id }: { id: number }) {
+  const gameQuery = useBoardGame(id)
+  const meQuery = useMe()
+
+  if (gameQuery.isPending || meQuery.isPending) {
     return <Loading />
   }
-  if (isError) {
-    return (
-      <div className="space-y-4">
-        <ErrorMessage message={error.message} />
-        <BackLink to="/boardgames">← 게임 목록</BackLink>
-      </div>
-    )
+  if (gameQuery.isError) {
+    return <EditBlocked message={gameQuery.error.message} backTo="/boardgames" backLabel="← 게임 목록" />
+  }
+  if (meQuery.isError) {
+    return <EditBlocked message={meQuery.error.message} backTo={`/boardgames/${id}`} backLabel="← 게임 상세" />
+  }
+  const boardGame = gameQuery.data
+  const me = meQuery.data
+  if (me === null || boardGame.owner === null || me.id !== boardGame.owner.id) {
+    return <EditBlocked message={NOT_OWNER_MESSAGE} backTo={`/boardgames/${id}`} backLabel="← 게임 상세" />
   }
   return <EditBoardGameForm key={boardGame.id} boardGame={boardGame} />
 }

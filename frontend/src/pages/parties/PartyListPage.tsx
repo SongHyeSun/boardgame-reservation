@@ -2,6 +2,7 @@ import { Link, useSearchParams } from 'react-router'
 import Avatar from '../../components/Avatar.tsx'
 import EmptyMessage from '../../components/EmptyMessage.tsx'
 import ErrorMessage from '../../components/ErrorMessage.tsx'
+import GameStatusBadge from '../../components/GameStatusBadge.tsx'
 import Loading from '../../components/Loading.tsx'
 import PartyStatusBadge from '../../components/PartyStatusBadge.tsx'
 import { useParties } from '../../hooks/useParties.ts'
@@ -91,8 +92,10 @@ function PartyResults({ tab }: { tab: StatusTab }) {
               <h2 className="font-semibold">{party.title}</h2>
               <PartyStatusBadge status={party.status} />
             </div>
-            <p className="mt-1 flex items-center gap-1.5 text-sm text-gray-600">
-              {party.boardGameName} · 호스트
+            <p className="mt-1 flex flex-wrap items-center gap-1.5 text-sm text-gray-600">
+              {party.boardGameName}
+              <GameStatusBadge visible={party.boardGameVisible} />
+              · 호스트
               <Avatar avatar={party.hostAvatar} size="sm" nickname={party.hostNickname} />
               {party.hostNickname}
             </p>

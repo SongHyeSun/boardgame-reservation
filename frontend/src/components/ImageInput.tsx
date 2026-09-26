@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, type ChangeEvent } from 'react'
 import { AVATAR_IMAGE_ACCEPT } from '../utils/avatar.ts'
-import { validateAvatarImage } from '../utils/validation.ts'
+import { validateImageFile } from '../utils/validation.ts'
 
 interface ImageInputProps {
   id: string
@@ -11,6 +11,15 @@ interface ImageInputProps {
   currentUrl?: string | null
   /** 제출 검증 등 부모가 내려주는 오류 */
   error?: string
+  /** 미리보기 모양. avatar = 원형(기본, 프로필), cover = 4:3 사각(게임 대표 이미지) */
+  variant?: 'avatar' | 'cover'
+  /** currentUrl 이미지의 대체 텍스트 (기본: 프로필 이미지) */
+  currentAlt?: string
+}
+
+const PREVIEW_CLASS: Record<NonNullable<ImageInputProps['variant']>, string> = {
+  avatar: 'h-20 w-20 rounded-full border border-gray-200 object-cover',
+  cover: 'aspect-[4/3] w-40 rounded border border-gray-200 object-cover',
 }
 
 /**
@@ -19,7 +28,15 @@ interface ImageInputProps {
  * file 은 이 컴포넌트의 핸들러로만 바뀐다. (이모지 모드로 전환하면 이 컴포넌트가 언마운트되며 파일은 부모가 버린다)
  * 미리보기 object URL 은 effect 가 아니라 핸들러에서 만들고 교체·언마운트 시 해제한다.
  */
-export default function ImageInput({ id, file, onChange, currentUrl = null, error }: ImageInputProps) {
+export default function ImageInput({
+  id,
+  file,
+  onChange,
+  currentUrl = null,
+  error,
+  variant = 'avatar',
+  currentAlt = '현재 프로필 이미지',
+}: ImageInputProps) {
   const inputRef = useRef<HTMLInputElement>(null)
   const previewRef = useRef<string | null>(null)
   const [previewUrl, setPreviewUrl] = useState<string | null>(null)
@@ -55,7 +72,7 @@ export default function ImageInput({ id, file, onChange, currentUrl = null, erro
       replaceSelection(null)
       return
     }
-    const message = validateAvatarImage(selected)
+    const message = validateImageFile(selected)
     setSelectError(message ?? null)
     replaceSelection(message === undefined ? selected : null)
   }
@@ -75,8 +92,8 @@ export default function ImageInput({ id, file, onChange, currentUrl = null, erro
         <div className="flex items-center gap-3">
           <img
             src={shownUrl}
-            alt={shownPreview ? '선택한 이미지 미리보기' : '현재 프로필 이미지'}
-            className="h-20 w-20 rounded-full border border-gray-200 object-cover"
+            alt={shownPreview ? '선택한 이미지 미리보기' : currentAlt}
+            className={PREVIEW_CLASS[variant]}
           />
           <span className="text-xs text-gray-500">{shownPreview ? '선택한 이미지' : '현재 이미지'}</span>
         </div>

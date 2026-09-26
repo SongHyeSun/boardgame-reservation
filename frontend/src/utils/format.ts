@@ -1,7 +1,7 @@
 // 표시용 포맷. 난이도·파티 상태 라벨과 날짜 표기는 화면에서 직접 만들지 말고 여기 것을 쓴다.
 
 import type { AdminRequestStatus, Role } from '../types/auth.ts'
-import type { Difficulty } from '../types/boardgame.ts'
+import type { Difficulty, PlayMode } from '../types/boardgame.ts'
 import type { PartyStatus } from '../types/party.ts'
 
 export const ROLE_LABEL: Record<Role, string> = {
@@ -33,6 +33,22 @@ export const DIFFICULTY_LABEL: Record<Difficulty, string> = {
 
 export function isDifficulty(value: string | null): value is Difficulty {
   return DIFFICULTIES.some((difficulty) => difficulty === value)
+}
+
+export const PLAY_MODES: readonly PlayMode[] = ['OFFLINE', 'ONLINE']
+
+export const PLAY_MODE_LABEL: Record<PlayMode, string> = {
+  OFFLINE: '오프라인',
+  ONLINE: '온라인',
+}
+
+export function isPlayMode(value: string | null): value is PlayMode {
+  return PLAY_MODES.some((mode) => mode === value)
+}
+
+/** 게임이 지원하는 진행 방식 (오프라인 → 온라인 순). 서버가 최소 하나는 true 임을 보장한다 */
+export function availablePlayModes(game: { offlineAvailable: boolean; onlineAvailable: boolean }): PlayMode[] {
+  return PLAY_MODES.filter((mode) => (mode === 'OFFLINE' ? game.offlineAvailable : game.onlineAvailable))
 }
 
 export const PARTY_STATUSES: readonly PartyStatus[] = ['RECRUITING', 'CLOSED', 'CANCELLED']
