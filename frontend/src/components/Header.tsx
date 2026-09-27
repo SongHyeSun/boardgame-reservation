@@ -4,6 +4,7 @@ import { useMe } from '../hooks/useMe.ts'
 import { isAdmin, isSuperAdmin } from '../utils/role.ts'
 import Avatar from './Avatar.tsx'
 import ErrorMessage from './ErrorMessage.tsx'
+import NotificationBell from './NotificationBell.tsx'
 
 const navLinkClass = ({ isActive }: { isActive: boolean }) =>
   isActive ? 'font-semibold text-indigo-600' : 'text-gray-700 hover:text-indigo-600'
@@ -59,6 +60,7 @@ function AuthMenu() {
         <Avatar avatar={me.avatar} size="sm" nickname={me.nickname} />
         {me.nickname}님
       </NavLink>
+      <NotificationBell />
       <button
         type="button"
         onClick={() => logout.mutate()}
