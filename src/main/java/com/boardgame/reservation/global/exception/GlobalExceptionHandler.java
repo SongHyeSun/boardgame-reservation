@@ -3,12 +3,14 @@ package com.boardgame.reservation.global.exception;
 import com.boardgame.reservation.global.response.ApiResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
+import org.springframework.dao.PessimisticLockingFailureException;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.web.HttpMediaTypeNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
@@ -76,6 +78,24 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(MethodArgumentTypeMismatchException.class)
     public ResponseEntity<ApiResponse<Void>> handleTypeMismatch(MethodArgumentTypeMismatchException e) {
         return toResponse(ErrorCode.INVALID_INPUT, e.getName() + ": " + ErrorCode.INVALID_INPUT.getMessage());
+    }
+
+    /** 필수 쿼리 파라미터 누락 (예: availability 의 from/to) → 400. 처리하지 않으면 아래 Exception 핸들러로 떨어져 500 */
+    @ExceptionHandler(MissingServletRequestParameterException.class)
+    public ResponseEntity<ApiResponse<Void>> handleMissingParameter(MissingServletRequestParameterException e) {
+        return toResponse(ErrorCode.INVALID_INPUT, e.getParameterName() + ": " + ErrorCode.INVALID_INPUT.getMessage());
+    }
+
+    /**
+     * 비관적 락 대기 초과(PostgreSQL lock_timeout 3초)·데드락 → 409 RESERVATION_BUSY.
+     * Hibernate 의 LockTimeoutException/PessimisticLockException/LockAcquisitionException 은 Spring 이
+     * CannotAcquireLockException/PessimisticLockingFailureException 으로 변환하고 둘 다 이 타입의 하위다.
+     * 트랜잭션은 예외가 서비스 밖으로 나가며 이미 롤백됐다.
+     */
+    @ExceptionHandler(PessimisticLockingFailureException.class)
+    public ResponseEntity<ApiResponse<Void>> handleLockFailure(PessimisticLockingFailureException e) {
+        log.warn("lock wait failed: {}", e.getMessage());
+        return toResponse(ErrorCode.RESERVATION_BUSY, ErrorCode.RESERVATION_BUSY.getMessage());
     }
 
     /** 로그인 실패 (이메일 없음 / 비밀번호 틀림 모두 동일 메시지 → 계정 존재 여부 노출 방지) */

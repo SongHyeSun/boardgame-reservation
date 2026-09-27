@@ -54,7 +54,18 @@ public enum ErrorCode {
     HOST_CANNOT_LEAVE(HttpStatus.BAD_REQUEST, "호스트는 파티를 탈퇴할 수 없습니다."),
     NOT_PARTY_HOST(HttpStatus.FORBIDDEN, "파티 호스트만 할 수 있습니다."),
     CANNOT_KICK_HOST(HttpStatus.BAD_REQUEST, "호스트는 내보낼 수 없습니다."),
-    KICKED_FROM_PARTY(HttpStatus.FORBIDDEN, "파티장이 내보낸 파티에는 다시 참여할 수 없습니다.");
+    KICKED_FROM_PARTY(HttpStatus.FORBIDDEN, "파티장이 내보낸 파티에는 다시 참여할 수 없습니다."),
+
+    // 예약
+    RESERVATION_NOT_FOUND(HttpStatus.NOT_FOUND, "예약을 찾을 수 없습니다."),
+    INVALID_RESERVATION_PERIOD(HttpStatus.BAD_REQUEST, "예약 기간이 올바르지 않습니다."),
+    NOT_AVAILABLE(HttpStatus.CONFLICT, "선택한 기간에 대여 가능한 재고가 없습니다."),
+    DUPLICATE_RESERVATION(HttpStatus.CONFLICT, "이미 해당 기간에 예약한 게임입니다."),
+    INVALID_RESERVATION_STATUS(HttpStatus.CONFLICT, "처리할 수 없는 예약 상태입니다."),
+    CANNOT_CANCEL_RESERVATION(HttpStatus.CONFLICT, "취소할 수 없는 예약입니다. 시작일 전날까지만 취소할 수 있습니다."),
+    STOCK_BELOW_RESERVED(HttpStatus.CONFLICT, "이미 예약된 수량보다 재고를 줄일 수 없습니다."),
+    RESERVATION_BUSY(HttpStatus.CONFLICT, "요청이 몰리고 있습니다. 잠시 후 다시 시도해주세요."),
+    RESERVATION_NOT_SUPPORTED(HttpStatus.CONFLICT, "온라인 전용 게임은 대여할 수 없습니다.");
 
     private final HttpStatus status;
     private final String message;

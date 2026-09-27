@@ -1,7 +1,6 @@
 package com.boardgame.reservation.party;
 
 import com.boardgame.reservation.boardgame.domain.BoardGame;
-import com.boardgame.reservation.global.exception.BusinessException;
 import com.boardgame.reservation.global.exception.ErrorCode;
 import com.boardgame.reservation.member.domain.Member;
 import com.boardgame.reservation.party.service.PartyService;
@@ -12,63 +11,22 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 import java.util.stream.IntStream;
 
+import static com.boardgame.reservation.support.ConcurrencyTestUtils.count;
+import static com.boardgame.reservation.support.ConcurrencyTestUtils.runConcurrently;
+import static com.boardgame.reservation.support.ConcurrencyTestUtils.successCount;
 import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * 선착순 정합성 검증: 서비스를 직접, 진짜 동시에 호출한다 (트랜잭션 없는 테스트 → 각 호출이 독립 커밋).
- * 실제 Redis(Testcontainers) + H2.
+ * 실제 Redis(Testcontainers) + H2. 동시 실행 헬퍼는 support/ConcurrencyTestUtils (예약 동시성 테스트와 공용).
  */
 class PartyConcurrencyTest extends PartyRedisTestSupport {
 
-    private static final int THREADS = 32;
-
     @Autowired
     PartyService partyService;
-
-    /** 모든 작업을 latch 로 동시에 출발시키고, 결과를 ErrorCode(성공이면 null)로 모아 돌려준다 */
-    private static List<ErrorCode> runConcurrently(List<Supplier<?>> tasks) throws Exception {
-        ExecutorService pool = Executors.newFixedThreadPool(THREADS);
-        // 풀 크기보다 작업이 많으면 동시에 대기 가능한 건 THREADS 개뿐 → 그만큼만 기다렸다가 출발
-        CountDownLatch ready = new CountDownLatch(Math.min(tasks.size(), THREADS));
-        CountDownLatch start = new CountDownLatch(1);
-        try {
-            List<Future<ErrorCode>> futures = new ArrayList<>();
-            for (Supplier<?> task : tasks) {
-                futures.add(pool.submit(() -> {
-                    ready.countDown();
-                    start.await();
-                    try {
-                        task.get();
-                        return null;
-                    } catch (BusinessException e) {
-                        return e.getErrorCode();
-                    }
-                }));
-            }
-            assertThat(ready.await(30, TimeUnit.SECONDS)).isTrue();
-            start.countDown();
-
-            List<ErrorCode> results = new ArrayList<>();
-            for (Future<ErrorCode> future : futures) {
-                results.add(future.get(60, TimeUnit.SECONDS)); // 예상 밖 예외는 여기서 테스트 실패
-            }
-            return results;
-        } finally {
-            pool.shutdownNow();
-        }
-    }
-
-    private static long count(List<ErrorCode> results, ErrorCode code) {
-        return results.stream().filter(r -> r == code).count();
-    }
 
     @Test
     @DisplayName("capacity 5(호스트 포함) 파티에 100명이 동시에 join → 성공 정확히 4, PARTY_FULL 96, DB 5명, Redis remaining 0")
@@ -88,7 +46,7 @@ class PartyConcurrencyTest extends PartyRedisTestSupport {
 
         List<ErrorCode> results = runConcurrently(tasks);
 
-        assertThat(results.stream().filter(r -> r == null).count()).isEqualTo(4);
+        assertThat(successCount(results)).isEqualTo(4);
         assertThat(count(results, ErrorCode.PARTY_FULL)).isEqualTo(96);
         assertThat(partyMemberRepository.countJoinedByPartyId(partyId)).isEqualTo(5);
         assertThat(redisTemplate.opsForValue().get(remainingKey(partyId))).isEqualTo("0");
@@ -110,7 +68,7 @@ class PartyConcurrencyTest extends PartyRedisTestSupport {
 
         List<ErrorCode> results = runConcurrently(tasks);
 
-        assertThat(results.stream().filter(r -> r == null).count()).isEqualTo(4);
+        assertThat(successCount(results)).isEqualTo(4);
         assertThat(count(results, ErrorCode.PARTY_FULL)).isEqualTo(96);
         assertThat(partyMemberRepository.countJoinedByPartyId(partyId)).isEqualTo(5);
         assertThat(redisTemplate.opsForValue().get(remainingKey(partyId))).isEqualTo("0");
@@ -153,7 +111,7 @@ class PartyConcurrencyTest extends PartyRedisTestSupport {
 
         List<ErrorCode> results = runConcurrently(tasks);
 
-        assertThat(results.stream().filter(r -> r == null).count()).isEqualTo(1);
+        assertThat(successCount(results)).isEqualTo(1);
         assertThat(count(results, ErrorCode.ALREADY_JOINED)).isEqualTo(9);
         assertThat(partyMemberRepository.findJoinedMemberIdsByPartyId(partyId))
                 .filteredOn(id -> id.equals(guest.getId())).hasSize(1);

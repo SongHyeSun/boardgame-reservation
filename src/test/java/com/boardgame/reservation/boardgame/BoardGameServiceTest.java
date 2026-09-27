@@ -18,18 +18,26 @@ import com.boardgame.reservation.party.domain.Party;
 import com.boardgame.reservation.party.domain.PartyStatus;
 import com.boardgame.reservation.party.repository.PartyRedisRepository;
 import com.boardgame.reservation.party.repository.PartyRepository;
+import com.boardgame.reservation.reservation.domain.CancelReason;
+import com.boardgame.reservation.reservation.domain.Reservation;
+import com.boardgame.reservation.reservation.domain.ReservationStatus;
+import com.boardgame.reservation.reservation.repository.ReservationRepository;
 import com.boardgame.reservation.support.ImageFixtures;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.util.ReflectionTestUtils;
 
+import java.time.Clock;
+import java.time.Instant;
+import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.List;
 import java.util.Optional;
 
@@ -53,6 +61,9 @@ class BoardGameServiceTest {
 
     private static final long OWNER_ID = 7L;
     private static final long OTHER_ID = 8L;
+    /** 고정 시각: 2026-09-27 12:00 (Asia/Seoul). 서비스의 "오늘" 은 2026-09-27 */
+    private static final Clock CLOCK = Clock.fixed(Instant.parse("2026-09-27T03:00:00Z"), ZoneId.of("Asia/Seoul"));
+    private static final LocalDate TODAY = LocalDate.of(2026, 9, 27);
 
     @Mock
     BoardGameRepository boardGameRepository;
@@ -63,12 +74,20 @@ class BoardGameServiceTest {
     @Mock
     PartyRedisRepository partyRedisRepository;
     @Mock
+    ReservationRepository reservationRepository;
+    @Mock
     FileStorage fileStorage;
     @Mock
     ApplicationEventPublisher eventPublisher;
 
-    @InjectMocks
     BoardGameService boardGameService;
+
+    /** @InjectMocks 는 Clock 처럼 mock 이 아닌 의존성에 null 을 넣으므로 MemberServiceTest 처럼 직접 생성한다 */
+    @BeforeEach
+    void setUp() {
+        boardGameService = new BoardGameService(boardGameRepository, partyRepository, memberRepository,
+                partyRedisRepository, reservationRepository, fileStorage, eventPublisher, CLOCK);
+    }
 
     // ───────────── fixture ─────────────
 
@@ -99,8 +118,9 @@ class BoardGameServiceTest {
         return party;
     }
 
+    /** 수정·숨기기는 게임 행 락 조회(findByIdForUpdate)로 게임을 읽는다 */
     private void givenOwnedGame(BoardGame game) {
-        given(boardGameRepository.findWithOwnerById(1L)).willReturn(Optional.of(game));
+        given(boardGameRepository.findByIdForUpdate(1L)).willReturn(Optional.of(game));
     }
 
     private static BusinessException thrown(Runnable action) {
@@ -274,7 +294,7 @@ class BoardGameServiceTest {
     void get_hiddenGame_returned() {
         BoardGame game = ownedGame(member(OWNER_ID));
         game.hide();
-        givenOwnedGame(game);
+        given(boardGameRepository.findWithOwnerById(1L)).willReturn(Optional.of(game)); // 조회는 락 없는 findWithOwnerById
 
         assertThat(boardGameService.getBoardGame(1L).visible()).isFalse();
     }
@@ -333,7 +353,7 @@ class BoardGameServiceTest {
     @Test
     @DisplayName("등록 관리자가 없는(레거시) 게임은 누구도 수정할 수 없다")
     void update_legacyGame_throws() {
-        given(boardGameRepository.findWithOwnerById(1L))
+        given(boardGameRepository.findByIdForUpdate(1L))
                 .willReturn(Optional.of(BoardGame.create("Old", 2, 4, 30, Difficulty.EASY, "옛날 게임")));
 
         assertThat(thrown(() -> boardGameService.update(1L, OWNER_ID, request("Old", 2, 4), null)).getErrorCode())
@@ -352,7 +372,7 @@ class BoardGameServiceTest {
     @Test
     @DisplayName("없는 id 수정 시 BOARDGAME_NOT_FOUND")
     void update_notFound_throws() {
-        given(boardGameRepository.findWithOwnerById(99L)).willReturn(Optional.empty());
+        given(boardGameRepository.findByIdForUpdate(99L)).willReturn(Optional.empty());
 
         assertThat(thrown(() -> boardGameService.update(99L, OWNER_ID, request("Catan", 3, 4), null)).getErrorCode())
                 .isEqualTo(ErrorCode.BOARDGAME_NOT_FOUND);
@@ -553,7 +573,7 @@ class BoardGameServiceTest {
         assertThat(second.getStatus()).isEqualTo(PartyStatus.CANCELLED);
         verify(partyRedisRepository).delete(10L);
         verify(partyRedisRepository).delete(11L);
-        verify(eventPublisher).publishEvent(new BoardGameSuspendedEvent(1L, List.of(10L, 11L)));
+        verify(eventPublisher).publishEvent(new BoardGameSuspendedEvent(1L, List.of(10L, 11L), List.of()));
     }
 
     @Test
@@ -566,7 +586,7 @@ class BoardGameServiceTest {
         boardGameService.changeVisibility(1L, OWNER_ID, false);
 
         assertThat(game.isVisible()).isFalse();
-        verify(eventPublisher).publishEvent(new BoardGameSuspendedEvent(1L, List.of()));
+        verify(eventPublisher).publishEvent(new BoardGameSuspendedEvent(1L, List.of(), List.of()));
         verifyNoInteractions(partyRedisRepository);
     }
 
@@ -621,5 +641,164 @@ class BoardGameServiceTest {
         assertThat(boardGameService.changeVisibility(1L, OWNER_ID, true).visible()).isTrue();
 
         verifyNoInteractions(partyRepository, partyRedisRepository, eventPublisher);
+    }
+
+    // ───────────── 예약과의 연동: 재고 줄이기 · 오프라인 끄기 · 숨기기 ─────────────
+
+    /** 오프라인 전용, 재고 stock, id 1 */
+    private static BoardGame offlineGame(Member owner, int stock) {
+        BoardGame game = BoardGame.create(
+                new BoardGame.Details("Catan", 3, 4, 60, Difficulty.NORMAL, "설명", true, false, stock), owner);
+        ReflectionTestUtils.setField(game, "id", 1L);
+        return game;
+    }
+
+    /** 오늘 기준 startOffset~endOffset 일 뒤의 (활성) 예약 */
+    private static Reservation reservation(long id, BoardGame game, int startOffset, int endOffset) {
+        Reservation reservation = Reservation.create(
+                game, member(99), TODAY.plusDays(startOffset), TODAY.plusDays(endOffset));
+        ReflectionTestUtils.setField(reservation, "id", id);
+        return reservation;
+    }
+
+    @Test
+    @DisplayName("재고 줄이기: 오늘 이후 최대 점유 수(2)보다 작게(1) 줄이면 STOCK_BELOW_RESERVED")
+    void update_reduceStockBelowMaxOccupied_throws() {
+        BoardGame game = offlineGame(member(OWNER_ID), 3);
+        givenOwnedGame(game);
+        given(reservationRepository.findActiveEndingOnOrAfter(1L, TODAY))
+                .willReturn(List.of(reservation(20L, game, 1, 3), reservation(21L, game, 2, 4)));
+
+        assertThat(thrown(() -> boardGameService.update(1L, OWNER_ID,
+                request("Catan", 3, 4, true, false, 1, null, null), null)).getErrorCode())
+                .isEqualTo(ErrorCode.STOCK_BELOW_RESERVED);
+    }
+
+    @Test
+    @DisplayName("재고 줄이기: 최대 점유 수와 같게(2) 줄이는 것은 가능하다 (겹치지 않는 예약은 합산하지 않는다)")
+    void update_reduceStockToMaxOccupied_ok() {
+        BoardGame game = offlineGame(member(OWNER_ID), 3);
+        givenOwnedGame(game);
+        // 20·21 은 +2~+3 에서만 겹치고, 22 는 다른 날이라 최대 점유는 2
+        given(reservationRepository.findActiveEndingOnOrAfter(1L, TODAY)).willReturn(List.of(
+                reservation(20L, game, 1, 3), reservation(21L, game, 2, 4), reservation(22L, game, 6, 7)));
+
+        boardGameService.update(1L, OWNER_ID, request("Catan", 3, 4, true, false, 2, null, null), null);
+
+        assertThat(game.getStock()).isEqualTo(2);
+    }
+
+    @Test
+    @DisplayName("재고 줄이기: 진행 중 예약(어제 시작~내일 종료)은 오늘부터 세므로 재고를 1 이하로 못 줄인다")
+    void update_reduceStock_countsOngoingReservationFromToday() {
+        BoardGame game = offlineGame(member(OWNER_ID), 2);
+        givenOwnedGame(game);
+        given(reservationRepository.findActiveEndingOnOrAfter(1L, TODAY))
+                .willReturn(List.of(reservation(20L, game, -1, 1), reservation(21L, game, 0, 0)));
+
+        assertThat(thrown(() -> boardGameService.update(1L, OWNER_ID,
+                request("Catan", 3, 4, true, false, 1, null, null), null)).getErrorCode())
+                .isEqualTo(ErrorCode.STOCK_BELOW_RESERVED);
+    }
+
+    @Test
+    @DisplayName("재고를 늘리거나 그대로 두는 수정은 예약을 조회하지 않는다")
+    void update_stockNotReduced_doesNotQueryReservations() {
+        BoardGame game = offlineGame(member(OWNER_ID), 2);
+        givenOwnedGame(game);
+
+        boardGameService.update(1L, OWNER_ID, request("Catan", 3, 4, true, false, 2, null, null), null);
+        boardGameService.update(1L, OWNER_ID, request("Catan", 3, 4, true, false, 5, null, null), null);
+
+        assertThat(game.getStock()).isEqualTo(5);
+        verifyNoInteractions(reservationRepository);
+    }
+
+    @Test
+    @DisplayName("오프라인 끄기: 종료일이 오늘 이후인 활성 예약이 있으면 PLAY_MODE_IN_USE, 메시지는 예약 기준이고 자동 취소는 없다")
+    void update_disableOffline_withUpcomingReservation_throws() {
+        BoardGame game = bothModesGame(member(OWNER_ID));
+        givenOwnedGame(game);
+        given(reservationRepository.existsActiveEndingOnOrAfter(1L, TODAY)).willReturn(true);
+
+        BusinessException e = thrown(() -> boardGameService.update(1L, OWNER_ID,
+                request("Catan", 3, 4, false, true, 0, null, null), null));
+
+        assertThat(e.getErrorCode()).isEqualTo(ErrorCode.PLAY_MODE_IN_USE);
+        assertThat(e.getMessage()).contains("대여 예약").isNotEqualTo(ErrorCode.PLAY_MODE_IN_USE.getMessage());
+        verify(reservationRepository, never()).findActiveEndingOnOrAfter(any(), any());
+    }
+
+    @Test
+    @DisplayName("오프라인 끄기: 남은 활성 예약이 없으면 끌 수 있고, 재고 검사는 하지 않는다 (재고는 0 이 됨)")
+    void update_disableOffline_withoutReservations_ok() {
+        BoardGame game = bothModesGame(member(OWNER_ID));
+        givenOwnedGame(game);
+        given(reservationRepository.existsActiveEndingOnOrAfter(1L, TODAY)).willReturn(false);
+
+        boardGameService.update(1L, OWNER_ID, request("Catan", 3, 4, false, true, 0, null, null), null);
+
+        assertThat(game.isOfflineAvailable()).isFalse();
+        assertThat(game.getStock()).isZero();
+        verify(reservationRepository, never()).findActiveEndingOnOrAfter(any(), any());
+    }
+
+    @Test
+    @DisplayName("오프라인 끄기: 오프라인 파티가 모집 중이면 예약 조회 전에 파티 규칙(PLAY_MODE_IN_USE)이 먼저 막는다")
+    void update_disableOffline_partyRuleFirst() {
+        givenOwnedGame(bothModesGame(member(OWNER_ID)));
+        given(partyRepository.existsByBoardGameIdAndPlayModeAndStatus(1L, PlayMode.OFFLINE, PartyStatus.RECRUITING))
+                .willReturn(true);
+
+        BusinessException e = thrown(() -> boardGameService.update(1L, OWNER_ID,
+                request("Catan", 3, 4, false, true, 0, null, null), null));
+
+        assertThat(e.getMessage()).isEqualTo(ErrorCode.PLAY_MODE_IN_USE.getMessage());
+        verifyNoInteractions(reservationRepository);
+    }
+
+    @Test
+    @DisplayName("숨기면 종료일이 오늘 이후인 활성 예약이 GAME_SUSPENDED 로 취소되고, 이벤트에 취소된 예약 id 가 담긴다")
+    void hide_cancelsUpcomingReservations() {
+        BoardGame game = ownedGame(member(OWNER_ID));
+        givenOwnedGame(game);
+        Reservation pending = reservation(20L, game, 3, 4);
+        Reservation approved = reservation(21L, game, -1, 1);
+        approved.approve(TODAY.atStartOfDay());
+        given(reservationRepository.findActiveEndingOnOrAfter(1L, TODAY)).willReturn(List.of(pending, approved));
+
+        boardGameService.changeVisibility(1L, OWNER_ID, false);
+
+        assertThat(pending.getStatus()).isEqualTo(ReservationStatus.CANCELLED);
+        assertThat(pending.getCancelReason()).isEqualTo(CancelReason.GAME_SUSPENDED);
+        assertThat(approved.getStatus()).isEqualTo(ReservationStatus.CANCELLED);
+        assertThat(approved.getCancelReason()).isEqualTo(CancelReason.GAME_SUSPENDED);
+        verify(eventPublisher).publishEvent(new BoardGameSuspendedEvent(1L, List.of(), List.of(20L, 21L)));
+    }
+
+    @Test
+    @DisplayName("다시 보이기는 예약을 조회하거나 복구하지 않는다")
+    void show_doesNotTouchReservations() {
+        BoardGame game = ownedGame(member(OWNER_ID));
+        game.hide();
+        givenOwnedGame(game);
+
+        boardGameService.changeVisibility(1L, OWNER_ID, true);
+
+        verifyNoInteractions(reservationRepository);
+    }
+
+    @Test
+    @DisplayName("소유자가 아니면 숨기기·수정에서 예약을 건드리지 않는다 (NOT_GAME_OWNER)")
+    void notOwner_doesNotTouchReservations() {
+        givenOwnedGame(ownedGame(member(OWNER_ID)));
+
+        assertThat(thrown(() -> boardGameService.changeVisibility(1L, OTHER_ID, false)).getErrorCode())
+                .isEqualTo(ErrorCode.NOT_GAME_OWNER);
+        assertThat(thrown(() -> boardGameService.update(1L, OTHER_ID,
+                request("Catan", 3, 4, true, false, 1, null, null), null)).getErrorCode())
+                .isEqualTo(ErrorCode.NOT_GAME_OWNER);
+
+        verifyNoInteractions(reservationRepository);
     }
 }

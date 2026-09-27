@@ -66,6 +66,9 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/files/**").permitAll()
                         // 관리자 가입 승인은 SUPER_ADMIN 만 (ADMIN 은 403)
                         .requestMatchers("/api/admin/admin-requests/**").hasRole("SUPER_ADMIN")
+                        // 예약 승인·거절·목록은 ADMIN (소유 관리자 검사는 서비스). 신청·내 예약·취소는 anyRequest().authenticated()
+                        // (availability GET 은 위의 GET /api/boardgames/** permitAll 에 이미 포함)
+                        .requestMatchers("/api/admin/reservations/**").hasRole("ADMIN")
                         // 보드게임 등록/수정/삭제는 ADMIN만
                         .requestMatchers("/api/boardgames/**").hasRole("ADMIN")
                         .requestMatchers("/error").permitAll()
