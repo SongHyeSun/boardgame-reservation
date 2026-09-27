@@ -78,6 +78,35 @@ function OwnerActions({ boardGame }: BoardGameProps) {
   )
 }
 
+const RESERVE_BUTTON = 'inline-block rounded bg-indigo-600 px-4 py-2 font-medium text-white hover:bg-indigo-700'
+
+/**
+ * 대여 예약 진입 버튼. 호출부가 "운영 중이고 오프라인 가능한 게임"일 때만 그린다. (온라인 전용은 대여 불가라 버튼이 없다)
+ * 비로그인은 로그인 뒤 예약 페이지로 바로 돌아오게 redirect 를 붙인다.
+ */
+function ReserveAction({ boardGameId }: { boardGameId: number }) {
+  const { data: me, isPending } = useMe()
+
+  // 로딩 중엔 비워 둔다 (로그인 버튼 깜빡임 방지)
+  if (isPending) {
+    return null
+  }
+  const reservePath = `/boardgames/${boardGameId}/reserve`
+  return (
+    <div className="mt-4">
+      {me ? (
+        <Link to={reservePath} className={RESERVE_BUTTON}>
+          예약하기
+        </Link>
+      ) : (
+        <Link to={`/login?redirect=${encodeURIComponent(reservePath)}`} className={RESERVE_BUTTON}>
+          로그인하고 예약하기
+        </Link>
+      )}
+    </div>
+  )
+}
+
 function InfoItem({ label, value }: { label: string; value: string }) {
   return (
     <div>
@@ -112,6 +141,8 @@ function BoardGameInfo({ boardGame }: BoardGameProps) {
         {boardGame.offlineAvailable && <InfoItem label="재고" value={`${boardGame.stock}개`} />}
         <InfoItem label="등록 관리자" value={boardGame.owner?.nickname ?? '-'} />
       </dl>
+
+      {boardGame.visible && boardGame.offlineAvailable && <ReserveAction boardGameId={boardGame.id} />}
 
       {boardGame.youtubeVideoId && (
         <div className="mt-4">

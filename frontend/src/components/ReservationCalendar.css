@@ -1,0 +1,12 @@
+/* react-day-picker 기본 스타일(style.css)의 CSS 변수만 덮어쓴다. 변수는 .rdp-root 자신에 정의돼 있어 같은 요소에 클래스를 겹쳐 우선순위를 올린다. */
+.rdp-root.reservation-calendar {
+  --rdp-accent-color: #4f46e5; /* indigo-600 */
+  --rdp-accent-background-color: #e0e7ff; /* indigo-100 */
+  /* 날짜 아래에 "마감"·"N개" 라벨이 들어가므로 셀을 키우고 원형 대신 둥근 사각형으로 */
+  /* 7열 × 2.5rem = 280px: 360px 폰에서 카드 안쪽 폭(약 296px)에 들어온다 */
+  --rdp-day-width: 2.5rem;
+  --rdp-day-height: 3.5rem;
+  --rdp-day_button-width: 2.25rem;
+  --rdp-day_button-height: 3.25rem;
+  --rdp-day_button-border-radius: 0.5rem;
+}

@@ -3,6 +3,7 @@
 import type { AdminRequestStatus, Role } from '../types/auth.ts'
 import type { Difficulty, PlayMode } from '../types/boardgame.ts'
 import type { PartyStatus } from '../types/party.ts'
+import type { ReservationStatus } from '../types/reservation.ts'
 
 export const ROLE_LABEL: Record<Role, string> = {
   USER: '일반 회원',
@@ -61,6 +62,22 @@ export const PARTY_STATUS_LABEL: Record<PartyStatus, string> = {
 
 export function isPartyStatus(value: string | null): value is PartyStatus {
   return PARTY_STATUSES.some((status) => status === value)
+}
+
+export const RESERVATION_STATUSES: readonly ReservationStatus[] = ['PENDING', 'APPROVED', 'REJECTED', 'CANCELLED']
+
+export const RESERVATION_STATUS_LABEL: Record<ReservationStatus, string> = {
+  PENDING: '승인 대기',
+  APPROVED: '승인',
+  REJECTED: '거절',
+  CANCELLED: '취소',
+}
+
+/** 서버 상태가 아니라 화면 판단(APPROVED + 종료일 지남)이라 RESERVATION_STATUS_LABEL 과 따로 둔다 */
+export const RESERVATION_COMPLETED_LABEL = '대여 완료'
+
+export function isReservationStatus(value: string | null): value is ReservationStatus {
+  return RESERVATION_STATUSES.some((status) => status === value)
 }
 
 /** 3~4명, 최소·최대가 같으면 4명 */

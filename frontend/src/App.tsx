@@ -6,6 +6,7 @@ import ProtectedRoute from './components/ProtectedRoute.tsx'
 import SuperAdminRoute from './components/SuperAdminRoute.tsx'
 import NotFoundPage from './pages/NotFoundPage.tsx'
 import AdminRequestsPage from './pages/admin/AdminRequestsPage.tsx'
+import AdminReservationsPage from './pages/admin/AdminReservationsPage.tsx'
 import LoginPage from './pages/auth/LoginPage.tsx'
 import SignupPage from './pages/auth/SignupPage.tsx'
 import BoardGameDetailPage from './pages/boardgames/BoardGameDetailPage.tsx'
@@ -15,6 +16,8 @@ import MyPage from './pages/member/MyPage.tsx'
 import PartyCreatePage from './pages/parties/PartyCreatePage.tsx'
 import PartyDetailPage from './pages/parties/PartyDetailPage.tsx'
 import PartyListPage from './pages/parties/PartyListPage.tsx'
+import MyReservationsPage from './pages/reservations/MyReservationsPage.tsx'
+import ReservePage from './pages/reservations/ReservePage.tsx'
 
 export const router = createBrowserRouter([
   {
@@ -39,12 +42,15 @@ export const router = createBrowserRouter([
         children: [
           { path: 'parties/new', element: <PartyCreatePage /> },
           { path: 'me', element: <MyPage /> },
+          { path: 'me/reservations', element: <MyReservationsPage /> },
+          { path: 'boardgames/:id/reserve', element: <ReservePage /> },
           {
             // ADMIN 전용 (SUPER_ADMIN 포함)
             element: <AdminRoute />,
             children: [
               { path: 'boardgames/new', element: <BoardGameFormPage /> },
               { path: 'boardgames/:id/edit', element: <BoardGameFormPage /> },
+              { path: 'admin/reservations', element: <AdminReservationsPage /> },
             ],
           },
           {

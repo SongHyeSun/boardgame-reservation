@@ -52,13 +52,15 @@ export function useUpdateBoardGame(id: number) {
       Promise.all([
         queryClient.invalidateQueries({ queryKey: ['boardgames'] }),
         queryClient.invalidateQueries({ queryKey: ['boardgame', id] }),
+        // 재고가 바뀌면 날짜별 남은 수량이 달라진다
+        queryClient.invalidateQueries({ queryKey: ['availability', id] }),
       ]),
     onError: (error) => refetchMeAfterError(queryClient, error),
   })
 }
 
 /**
- * 숨기기는 이 게임의 모집 중 파티를 서버가 전부 취소하므로 파티 목록·상세도 다시 조회한다.
+ * 숨기기는 이 게임의 모집 중 파티와 진행 중 대여 예약을 서버가 전부 취소하므로 파티·예약 목록도 다시 조회한다.
  * 응답이 변경된 게임이라 상세 캐시에 바로 넣는다. (재조회 전에도 버튼·배지가 새 상태를 따른다)
  * promise 를 return 하므로 재조회가 끝날 때까지 mutation 은 pending 이다.
  */
@@ -72,6 +74,9 @@ export function useChangeBoardGameVisibility(id: number) {
         queryClient.invalidateQueries({ queryKey: ['boardgames'] }),
         queryClient.invalidateQueries({ queryKey: ['parties'] }),
         queryClient.invalidateQueries({ queryKey: ['party'] }),
+        queryClient.invalidateQueries({ queryKey: ['reservations'] }),
+        queryClient.invalidateQueries({ queryKey: ['admin-reservations'] }),
+        queryClient.invalidateQueries({ queryKey: ['availability', id] }),
       ])
     },
     onError: (error) => refetchMeAfterError(queryClient, error),

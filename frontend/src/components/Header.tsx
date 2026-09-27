@@ -36,17 +36,26 @@ function AuthMenu() {
       <NavLink to="/parties/new" className={navLinkClass}>
         파티 만들기
       </NavLink>
+      <NavLink to="/me/reservations" className={navLinkClass}>
+        내 예약
+      </NavLink>
       {isAdmin(me.role) && (
-        <NavLink to="/boardgames/new" className={navLinkClass}>
-          게임 등록
-        </NavLink>
+        <>
+          <NavLink to="/boardgames/new" className={navLinkClass}>
+            게임 등록
+          </NavLink>
+          <NavLink to="/admin/reservations" className={navLinkClass}>
+            예약 관리
+          </NavLink>
+        </>
       )}
       {isSuperAdmin(me.role) && (
         <NavLink to="/admin/admin-requests" className={navLinkClass}>
           관리자 승인
         </NavLink>
       )}
-      <NavLink to="/me" className={(state) => `flex items-center gap-2 ${navLinkClass(state)}`}>
+      {/* end: /me/reservations(내 예약)에서 닉네임 링크까지 활성으로 보이지 않게 */}
+      <NavLink to="/me" end className={(state) => `flex items-center gap-2 ${navLinkClass(state)}`}>
         <Avatar avatar={me.avatar} size="sm" nickname={me.nickname} />
         {me.nickname}님
       </NavLink>
