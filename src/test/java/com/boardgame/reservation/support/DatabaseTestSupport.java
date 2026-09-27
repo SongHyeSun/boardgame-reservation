@@ -5,6 +5,7 @@ import com.boardgame.reservation.boardgame.domain.Difficulty;
 import com.boardgame.reservation.boardgame.repository.BoardGameRepository;
 import com.boardgame.reservation.member.domain.Member;
 import com.boardgame.reservation.member.repository.MemberRepository;
+import com.boardgame.reservation.notification.repository.NotificationRepository;
 import com.boardgame.reservation.party.repository.PartyMemberRepository;
 import com.boardgame.reservation.party.repository.PartyRepository;
 import com.boardgame.reservation.reservation.repository.ReservationRepository;
@@ -33,6 +34,8 @@ public abstract class DatabaseTestSupport {
     protected MemberRepository memberRepository;
     @Autowired
     protected ReservationRepository reservationRepository;
+    @Autowired
+    protected NotificationRepository notificationRepository;
 
     protected Member saveMember(String name) {
         return memberRepository.save(Member.createUser(name + "@test.com", "pw", name));
@@ -57,6 +60,7 @@ public abstract class DatabaseTestSupport {
 
     @AfterEach
     protected void cleanUpDatabase() {
+        notificationRepository.deleteAllInBatch();
         reservationRepository.deleteAllInBatch();
         partyMemberRepository.deleteAllInBatch();
         partyRepository.deleteAllInBatch();

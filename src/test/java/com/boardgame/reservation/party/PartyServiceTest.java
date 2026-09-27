@@ -27,6 +27,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.test.util.ReflectionTestUtils;
 
@@ -63,6 +64,8 @@ class PartyServiceTest {
     PartyMemberWriter partyMemberWriter;
     @Mock
     PartyRedisRepository partyRedisRepository;
+    @Mock
+    ApplicationEventPublisher eventPublisher;
 
     @InjectMocks
     PartyService partyService;
@@ -331,7 +334,7 @@ class PartyServiceTest {
                 .isEqualTo(ErrorCode.ALREADY_JOINED);
 
         verify(partyRedisRepository, never()).decrement(anyLong());
-        verify(partyMemberWriter, never()).add(anyLong(), anyLong());
+        verify(partyMemberWriter, never()).add(anyLong(), anyLong(), anyLong());
     }
 
     @Test
@@ -348,7 +351,7 @@ class PartyServiceTest {
                 .isEqualTo(ErrorCode.PARTY_FULL);
 
         verify(partyRedisRepository).rollbackJoin(PARTY_ID, OTHER_ID);
-        verify(partyMemberWriter, never()).add(anyLong(), anyLong());
+        verify(partyMemberWriter, never()).add(anyLong(), anyLong(), anyLong());
     }
 
     @Test
@@ -359,7 +362,7 @@ class PartyServiceTest {
         given(partyRedisRepository.addMember(PARTY_ID, OTHER_ID)).willReturn(true);
         given(partyRedisRepository.decrement(PARTY_ID)).willReturn(2L);
         doThrow(new DataIntegrityViolationException("uk_party_member"))
-                .when(partyMemberWriter).add(PARTY_ID, OTHER_ID);
+                .when(partyMemberWriter).add(PARTY_ID, OTHER_ID, 2L);
 
         assertThatThrownBy(() -> partyService.join(PARTY_ID, OTHER_ID))
                 .isInstanceOf(BusinessException.class)
@@ -378,7 +381,7 @@ class PartyServiceTest {
         given(partyRedisRepository.addMember(PARTY_ID, OTHER_ID)).willReturn(true);
         given(partyRedisRepository.decrement(PARTY_ID)).willReturn(2L);
         RuntimeException failure = new IllegalStateException("db down");
-        doThrow(failure).when(partyMemberWriter).add(PARTY_ID, OTHER_ID);
+        doThrow(failure).when(partyMemberWriter).add(PARTY_ID, OTHER_ID, 2L);
 
         assertThatThrownBy(() -> partyService.join(PARTY_ID, OTHER_ID)).isSameAs(failure);
 
@@ -395,7 +398,7 @@ class PartyServiceTest {
 
         assertThat(partyService.join(PARTY_ID, OTHER_ID).remaining()).isEqualTo(2L);
 
-        verify(partyMemberWriter).add(PARTY_ID, OTHER_ID);
+        verify(partyMemberWriter).add(PARTY_ID, OTHER_ID, 2L);
         verify(partyRedisRepository, never()).rollbackJoin(anyLong(), anyLong());
     }
 
@@ -439,7 +442,7 @@ class PartyServiceTest {
         given(partyRedisRepository.addMember(PARTY_ID, OTHER_ID)).willReturn(true);
         given(partyRedisRepository.decrement(PARTY_ID)).willReturn(2L);
         doThrow(new DataIntegrityViolationException("uk_party_member"))
-                .when(partyMemberWriter).add(PARTY_ID, OTHER_ID);
+                .when(partyMemberWriter).add(PARTY_ID, OTHER_ID, 2L);
 
         assertThatThrownBy(() -> partyService.join(PARTY_ID, OTHER_ID))
                 .isInstanceOf(BusinessException.class)

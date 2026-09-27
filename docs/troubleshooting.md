@@ -90,3 +90,9 @@
 
 - `ddl-auto: update` 는 기존 컬럼의 NOT NULL 을 풀지 못함 → `party.board_game_id` 는 수동 ALTER 로 해제 (`ALTER TABLE party ALTER COLUMN board_game_id DROP NOT NULL;`)
 - 내보내진(KICKED) 회원이 leave 로 자기 행을 지워 재참여하는 우회 경로 → 삭제 조건에 `status = JOINED` 추가로 차단
+
+---
+
+## 8. D단계: `ddl-auto: update` 는 새 테이블의 FOREIGN KEY 제약 추가도 실패 시 WARN 만 남기고 기동을 계속할 수 있음 (notification)
+
+- 개발 중 재기동을 반복하며 테이블이 먼저 생성된 뒤 제약이 누락된 사례 → `notification` 테이블 재생성으로 해결.

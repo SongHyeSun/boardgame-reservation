@@ -2,7 +2,9 @@ package com.boardgame.reservation.party.service;
 
 import com.boardgame.reservation.member.repository.MemberRepository;
 import com.boardgame.reservation.party.domain.PartyMember;
+import com.boardgame.reservation.party.event.PartyMemberJoinedEvent;
 import com.boardgame.reservation.party.event.PartyMemberKickedEvent;
+import com.boardgame.reservation.party.event.PartyMemberLeftEvent;
 import com.boardgame.reservation.party.repository.PartyMemberRepository;
 import com.boardgame.reservation.party.repository.PartyRepository;
 import lombok.RequiredArgsConstructor;
@@ -23,18 +25,27 @@ public class PartyMemberWriter {
     private final MemberRepository memberRepository;
     private final ApplicationEventPublisher eventPublisher;
 
-    /** UNIQUE(party_id, member_id) 위반 시 DataIntegrityViolationException (이미 참여했거나 내보내진 회원) */
+    /**
+     * UNIQUE(party_id, member_id) 위반 시 DataIntegrityViolationException (이미 참여했거나 내보내진 회원)
+     * remaining 은 PartyService.join() 이 Redis DECR 로 이미 계산해 둔, 참여 직후 남은 자리 수.
+     * 알림 리스너가 AFTER_COMMIT 이라 이벤트는 반드시 이 트랜잭션 안에서 발행한다.
+     */
     @Transactional
-    public void add(Long partyId, Long memberId) {
+    public void add(Long partyId, Long memberId, long remaining) {
         partyMemberRepository.save(PartyMember.create(
                 partyRepository.getReferenceById(partyId),
                 memberRepository.getReferenceById(memberId)));
+        eventPublisher.publishEvent(new PartyMemberJoinedEvent(partyId, memberId, remaining));
     }
 
     /** 자진 탈퇴: 행을 지운다(재참여 가능). @return 실제로 삭제됐으면 true (참여 중이 아니면, 내보내진 회원이어도 false) */
     @Transactional
     public boolean remove(Long partyId, Long memberId) {
-        return partyMemberRepository.deleteJoined(partyId, memberId) > 0;
+        boolean removed = partyMemberRepository.deleteJoined(partyId, memberId) > 0;
+        if (removed) {
+            eventPublisher.publishEvent(new PartyMemberLeftEvent(partyId, memberId));
+        }
+        return removed;
     }
 
     /**

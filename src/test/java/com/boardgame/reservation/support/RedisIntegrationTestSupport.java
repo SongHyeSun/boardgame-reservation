@@ -21,7 +21,9 @@ import java.util.Set;
  */
 @SpringBootTest(properties = {
         "spring.datasource.url=jdbc:h2:mem:redisdb;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE;DEFAULT_NULL_ORDERING=HIGH",
-        "spring.autoconfigure.exclude="
+        "spring.autoconfigure.exclude=",
+        // 진짜 Redis(Testcontainers)가 있으므로 알림 Pub/Sub 리스너 컨테이너도 안전하게 켤 수 있다
+        "app.notification.pubsub.enabled=true"
 })
 public abstract class RedisIntegrationTestSupport extends DatabaseTestSupport {
 

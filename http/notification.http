@@ -1,0 +1,87 @@
+### IntelliJ HTTP Client — 위에서부터 순서대로 ▶ 실행 (쿠키 자동 저장)
+### 사전 준비: 보드게임이 1개 이상 있어야 함 (http/boardgame.http, ADMIN 로그인 후 등록)
+### SSE(6번)는 실행하면 연결된 채로 유지된다 — IntelliJ HTTP Client 응답 창에서 실시간으로 도착하는 이벤트를 볼 수 있다.
+###   6번을 실행해 연결을 열어둔 채로, 다른 세션(게스트)에서 파티에 참여하면(9번) 6번 응답 창에 notification 이벤트가 도착한다.
+
+### 1. 호스트 가입 + 로그인 (가입은 multipart: data 파트에 JSON)
+POST http://localhost:8080/api/auth/signup
+Content-Type: multipart/form-data; boundary=boundary
+
+--boundary
+Content-Disposition: form-data; name="data"
+Content-Type: application/json
+
+{ "email": "host@test.com", "password": "password123", "nickname": "호스트", "name": "호스트님" }
+--boundary--
+
+###
+POST http://localhost:8080/api/auth/login
+Content-Type: application/json
+
+{ "email": "host@test.com", "password": "password123" }
+
+### 2. 비로그인 SSE 연결 시도 → 401 (쿠키 없이 실행하려면 이 요청만 별도 탭/클라이언트에서)
+GET http://localhost:8080/api/notifications/stream
+Accept: text/event-stream
+
+### 3. 파티 개설 (호스트) — 응답의 data.id 를 아래 {id} 에 사용
+POST http://localhost:8080/api/parties
+Content-Type: application/json
+
+{
+  "boardGameId": 1,
+  "title": "카탄 같이 하실 분",
+  "capacity": 3,
+  "playMode": "OFFLINE",
+  "location": "동아리방"
+}
+
+### 4. 호스트 알림 목록 — 아직 없음
+GET http://localhost:8080/api/notifications?page=0&size=20
+
+### 5. 안 읽은 알림 수 — 0
+GET http://localhost:8080/api/notifications/unread-count
+
+### 6. 호스트로 SSE 연결 (연결 유지됨 — connected 이벤트 1회, 이후 25초마다 heartbeat comment)
+### 이 요청을 실행한 채로 두고, 아래 7~9번을 게스트 계정으로 실행하면 이 응답 창에 notification 이벤트가 도착한다.
+GET http://localhost:8080/api/notifications/stream
+Accept: text/event-stream
+
+### 7. 게스트 가입 + 로그인 (다른 세션/탭에서 실행 — 위 6번의 쿠키를 덮어쓰지 않도록 별도 HTTP Client 환경 사용)
+POST http://localhost:8080/api/auth/signup
+Content-Type: multipart/form-data; boundary=boundary
+
+--boundary
+Content-Disposition: form-data; name="data"
+Content-Type: application/json
+
+{ "email": "guest@test.com", "password": "password123", "nickname": "게스트", "name": "게스트님" }
+--boundary--
+
+###
+POST http://localhost:8080/api/auth/login
+Content-Type: application/json
+
+{ "email": "guest@test.com", "password": "password123" }
+
+### 8. 게스트가 파티 참여 — 호스트에게 PARTY_JOINED 알림 (6번 SSE 응답 창 확인)
+### party.http 3번처럼 {id} 는 3번 응답의 파티 id
+POST http://localhost:8080/api/parties/1/join
+
+### 9. 게스트가 파티 탈퇴 — 호스트에게 PARTY_LEFT 알림
+DELETE http://localhost:8080/api/parties/1/leave
+
+### 10. (호스트 세션에서) 알림 목록 재조회 — PARTY_JOINED·PARTY_LEFT 확인
+GET http://localhost:8080/api/notifications?page=0&size=20
+
+### 11. 안 읽은 알림 수 재조회
+GET http://localhost:8080/api/notifications/unread-count
+
+### 12. 알림 1건 읽음 처리 — {notificationId} 는 10번 응답의 data.content[0].id
+PATCH http://localhost:8080/api/notifications/1/read
+
+### 13. 남의 알림 읽음 시도 → 404 (게스트 세션에서 호스트의 알림 id 로)
+PATCH http://localhost:8080/api/notifications/1/read
+
+### 14. 전체 읽음 처리 (호스트 세션)
+PATCH http://localhost:8080/api/notifications/read-all

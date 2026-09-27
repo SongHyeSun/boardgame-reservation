@@ -14,8 +14,11 @@ import org.testcontainers.utility.DockerImageName;
  * - Redis 는 쓰지 않는다. 세션 자동설정은 테스트 yml 대로 exclude(MockMvc 는 loginAs 로 인증).
  * - 이 클래스를 상속한 테스트는 같은 Spring 컨텍스트·컨테이너를 공유한다 → 상속하는 쪽에서 @SpringBootTest 프로퍼티·@MockitoBean 을 바꾸지 말 것.
  * - DB 정리·saveMember/saveAdmin 은 DatabaseTestSupport.
+ * - Hikari 풀을 ConcurrencyTestUtils.THREADS(32) 보다 넉넉히 키운다: 알림 리스너가 AFTER_COMMIT 에 REQUIRES_NEW 로
+ *   커넥션을 하나 더 쓰므로, 기본 풀(10)로는 32 스레드가 동시에 요청을 던지는 동시성 테스트에서 커넥션 대기가 밀려
+ *   connectionTimeout 을 넘길 수 있다.
  */
-@SpringBootTest
+@SpringBootTest(properties = "spring.datasource.hikari.maximum-pool-size=40")
 public abstract class PostgresIntegrationTestSupport extends DatabaseTestSupport {
 
     @ServiceConnection

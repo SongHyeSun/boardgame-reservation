@@ -50,6 +50,9 @@ app:
     password: ${ADMIN_PASSWORD:}
   upload:
     dir: ${UPLOAD_DIR:./uploads}   # LocalFileStorage 저장 위치 (7단계 배포 때 S3 구현체로 교체 예정)
+  notification:
+    pubsub:
+      enabled: true   # Redis Pub/Sub 알림 팬아웃. 실제 Redis 가 없는 테스트 컨텍스트에서는 false 로 끈다
 
 logging:
   level:

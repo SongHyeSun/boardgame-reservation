@@ -28,3 +28,9 @@ app:
     password:
   upload:
     dir: build/test-uploads
+  notification:
+    pubsub:
+      # RedisMessageListenerContainer 는 SmartLifecycle 이라 컨텍스트 기동 시 바로 구독 연결을 시도한다.
+      # 진짜 Redis 가 없는 테스트(PostgresIntegrationTestSupport 등)에서 컨텍스트가 깨지지 않도록 기본은 꺼둔다.
+      # 진짜 Redis 가 있는 RedisIntegrationTestSupport 가 다시 켠다.
+      enabled: false

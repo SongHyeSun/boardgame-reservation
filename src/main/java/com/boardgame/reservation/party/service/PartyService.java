@@ -16,12 +16,14 @@ import com.boardgame.reservation.party.dto.JoinResponse;
 import com.boardgame.reservation.party.dto.PartyCreateRequest;
 import com.boardgame.reservation.party.dto.PartyDetailResponse;
 import com.boardgame.reservation.party.dto.PartyResponse;
+import com.boardgame.reservation.party.event.PartyClosedEvent;
 import com.boardgame.reservation.party.repository.PartyMemberRepository;
 import com.boardgame.reservation.party.repository.PartyMemberRepository.PartyCount;
 import com.boardgame.reservation.party.repository.PartyRedisRepository;
 import com.boardgame.reservation.party.repository.PartyRepository;
 import com.boardgame.reservation.party.repository.PartySpecification;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
@@ -49,6 +51,7 @@ public class PartyService {
     private final MemberRepository memberRepository;
     private final PartyMemberWriter partyMemberWriter;
     private final PartyRedisRepository partyRedisRepository;
+    private final ApplicationEventPublisher eventPublisher;
 
     // ───────────── 조회 ─────────────
 
@@ -147,6 +150,7 @@ public class PartyService {
             throw new BusinessException(ErrorCode.PARTY_NOT_RECRUITING);
         }
         party.close();
+        eventPublisher.publishEvent(new PartyClosedEvent(partyId));
         runAfterCommit(() -> partyRedisRepository.delete(partyId));
     }
 
@@ -176,7 +180,7 @@ public class PartyService {
         }
 
         try {
-            partyMemberWriter.add(partyId, memberId);
+            partyMemberWriter.add(partyId, memberId, remaining);
         } catch (DataIntegrityViolationException e) {
             // 내보내기 커밋과 이 요청의 SADD 가 엇갈린 경합: 자리와 members 를 모두 되돌리고 내보내진 회원으로 응답
             if (isKicked(partyId, memberId)) {
