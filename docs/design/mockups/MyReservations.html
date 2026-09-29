@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<title>내 예약</title>
+<link rel="stylesheet" href="ds/boardclub/components/bundle.css">
+<link rel="stylesheet" href="screens.css">
+</head>
+<body>
+
+
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Do+Hyeon&amp;family=IBM+Plex+Sans+KR:wght@400;500;600;700&amp;display=swap">
+<style>
+body{margin:0}
+a{color:inherit}
+</style>
+
+<div class="scr" style="width: 390px; height: 1000px;">
+<header class="hdr">
+<a class="logo" href="Main.html"><svg class="logo-mark" viewBox="0 0 26 26" aria-hidden="true"><rect width="26" height="26" rx="7" style="fill:var(--felt)"></rect><circle cx="8" cy="8" r="2.5" style="fill:var(--meeple)"></circle><circle cx="13" cy="13" r="2.5" style="fill:var(--meeple)"></circle><circle cx="18" cy="18" r="2.5" style="fill:var(--meeple)"></circle></svg>보드게임 동아리</a>
+<div class="bell-wrap"><button class="tb-icon-btn" aria-label="알림 3개"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"></path><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"></path></svg></button><span class="bell-count">3</span></div>
+<a class="tb-icon-btn" href="Me.html" aria-label="내 정보"><span class="tb-avatar s3">🎲</span></a>
+<a class="tb-icon-btn" href="MobileMenu.html" aria-label="메뉴"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 6h16M4 12h16M4 18h16"></path></svg></a>
+</header>
+
+<main class="page">
+<h1 class="page-title">내 예약</h1>
+<div class="chips-scroll" role="group" aria-label="상태">
+<button class="tb-chip" aria-pressed="true">전체</button>
+<button class="tb-chip">승인 대기</button>
+<button class="tb-chip">승인</button>
+<button class="tb-chip">거절</button>
+<button class="tb-chip">취소</button>
+</div>
+
+<div class="list">
+<div class="tb-card row-card">
+<span class="thumb"><span class="ph ph--y">카탄</span></span>
+<div class="row-card__body">
+<div class="row-card__title"><span>카탄</span><span class="tb-badge tb-badge--meeple">승인 대기</span></div>
+<span class="small muted num">10/10(토) ~ 10/12(월) · 3일</span>
+<div style="display: flex; justify-content: flex-end; margin-top: 4px;"><button class="tb-btn tb-btn--secondary tb-btn--sm">예약 취소</button></div>
+</div>
+</div>
+
+<div class="tb-card row-card">
+<span class="thumb"><span class="ph ph--g">스플렌더</span></span>
+<div class="row-card__body">
+<div class="row-card__title"><span>스플렌더</span><span class="tb-badge tb-badge--felt"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"></path></svg>승인</span></div>
+<span class="small muted num">10/3(토) · 당일</span>
+<div style="display: flex; justify-content: flex-end; margin-top: 4px;"><button class="tb-btn tb-btn--secondary tb-btn--sm">예약 취소</button></div>
+</div>
+</div>
+
+<div class="tb-card row-card">
+<span class="thumb"><span class="ph ph--r" style="font-size: 11px;">테라포밍 마스</span></span>
+<div class="row-card__body">
+<div class="row-card__title"><span>테라포밍 마스</span><span class="tb-badge tb-badge--danger">거절</span></div>
+<span class="small muted num">9/26(토) ~ 9/27(일) · 2일</span>
+<span class="note-line note-line--danger">사유: 그 주에 수련회에서 쓸 예정이에요</span>
+</div>
+</div>
+
+<div class="tb-card row-card">
+<span class="thumb"><span class="ph ph--p" style="font-size: 11px;">딕싯</span></span>
+<div class="row-card__body">
+<div class="row-card__title"><span>딕싯</span><span class="tb-row" style="gap: 4px; flex-wrap: nowrap;"><span class="tb-badge tb-badge--suspend"><svg viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="5" width="4" height="14" rx="1"></rect><rect x="14" y="5" width="4" height="14" rx="1"></rect></svg>운영 중지</span><span class="tb-badge tb-badge--neutral">취소</span></span></div>
+<span class="small muted num">10/17(토) · 당일</span>
+<span class="note-line">게임 운영 중지로 취소됨</span>
+</div>
+</div>
+
+<div class="tb-card row-card">
+<span class="thumb"><span class="ph ph--b">스컬킹</span></span>
+<div class="row-card__body">
+<div class="row-card__title"><span>스컬킹</span><span class="tb-badge tb-badge--done">대여 완료</span></div>
+<span class="small muted num">9/19(토) ~ 9/20(일) · 2일</span>
+</div>
+</div>
+</div>
+</main>
+</div>
+
+</body>
+</html>

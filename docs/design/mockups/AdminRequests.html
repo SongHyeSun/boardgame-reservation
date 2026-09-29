@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<title>관리자 승인</title>
+<link rel="stylesheet" href="ds/boardclub/components/bundle.css">
+<link rel="stylesheet" href="screens.css">
+</head>
+<body>
+
+
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Do+Hyeon&amp;family=IBM+Plex+Sans+KR:wght@400;500;600;700&amp;display=swap">
+<style>
+body{margin:0}
+a{color:inherit}
+</style>
+
+<div class="scr" style="width: 1280px; height: 660px;">
+<header class="hdr hdr--wide">
+<a class="logo" href="Main.html" style="margin-right: 0;"><svg class="logo-mark" viewBox="0 0 26 26" aria-hidden="true"><rect width="26" height="26" rx="7" style="fill:var(--felt)"></rect><circle cx="8" cy="8" r="2.5" style="fill:var(--meeple)"></circle><circle cx="13" cy="13" r="2.5" style="fill:var(--meeple)"></circle><circle cx="18" cy="18" r="2.5" style="fill:var(--meeple)"></circle></svg>보드게임 동아리</a>
+<nav class="nav" aria-label="주 메뉴"><a href="GameList.html">보드게임</a><a href="PartyListDesktop.html">파티</a><a href="ChatEmpty.html">AI 추천</a><a href="MyReservations.html">내 예약</a><a href="AdminReservations.html">예약 관리</a><a class="on" href="AdminRequests.html">관리자 승인</a></nav>
+<div class="bell-wrap"><button class="tb-icon-btn" aria-label="알림 2개"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"></path><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"></path></svg></button><span class="bell-count">2</span></div>
+<a class="me-btn" href="Me.html" style="text-decoration: none;"><span class="tb-avatar s6">🎩</span>하늘님</a>
+<button class="tb-btn tb-btn--ghost tb-btn--sm" style="color: var(--ink-muted);">로그아웃</button>
+</header>
+
+<main class="page page--wide" style="max-width: 880px;">
+<div><h1 class="page-title" style="font-size: 32px; line-height: 38px;">관리자 승인</h1><p class="lede" style="font-size: 15px;">관리자로 가입 신청한 회원 2명. 승인하면 그 회원은 다시 로그인해야 해요.</p></div>
+
+<div class="list">
+<div class="tb-card req-card">
+<span class="tb-avatar tb-avatar--lg s3">🎲</span>
+<div style="display: flex; flex-direction: column; gap: 6px;">
+<div style="display: flex; align-items: baseline; gap: 8px;"><b style="font-size: 17px;">혜선</b><span class="small muted">송혜선 · hyeseon@example.com</span></div>
+<dl class="kv"><dt>소속</dt><dd>청년부</dd><dt>직업</dt><dd>개발자</dd></dl>
+<span class="small muted num">신청 10/1(목) 20:14</span>
+</div>
+<div class="tb-row"><button class="tb-btn tb-btn--secondary">거절</button><button class="tb-btn tb-btn--primary">승인</button></div>
+</div>
+<div class="tb-card req-card">
+<span class="tb-avatar tb-avatar--lg s5">🦉</span>
+<div style="display: flex; flex-direction: column; gap: 6px;">
+<div style="display: flex; align-items: baseline; gap: 8px;"><b style="font-size: 17px;">민지</b><span class="small muted">이민지 · minji@example.com</span></div>
+<dl class="kv"><dt>소속</dt><dd>찬양팀</dd><dt>직업</dt><dd class="muted">입력 안 함</dd></dl>
+<span class="small muted num">신청 9/29(화) 09:02</span>
+</div>
+<div class="tb-row"><button class="tb-btn tb-btn--secondary">거절</button><button class="tb-btn tb-btn--primary">승인</button></div>
+</div>
+</div>
+</main>
+</div>
+
+</body>
+</html>

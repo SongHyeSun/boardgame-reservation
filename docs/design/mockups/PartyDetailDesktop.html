@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<title>파티 상세 데스크톱</title>
+<link rel="stylesheet" href="ds/boardclub/components/bundle.css">
+<link rel="stylesheet" href="screens.css">
+</head>
+<body>
+
+
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Do+Hyeon&amp;family=IBM+Plex+Sans+KR:wght@400;500;600;700&amp;display=swap">
+<style>
+body{margin:0}
+a{color:inherit}
+</style>
+
+<div class="scr" style="width: 1280px; height: 1000px;">
+<header class="hdr hdr--wide">
+<a class="logo" href="Main.html" style="margin-right: 0;"><svg class="logo-mark" viewBox="0 0 26 26" aria-hidden="true"><rect width="26" height="26" rx="7" style="fill:var(--felt)"></rect><circle cx="8" cy="8" r="2.5" style="fill:var(--meeple)"></circle><circle cx="13" cy="13" r="2.5" style="fill:var(--meeple)"></circle><circle cx="18" cy="18" r="2.5" style="fill:var(--meeple)"></circle></svg>보드게임 동아리</a>
+<nav class="nav" aria-label="주 메뉴"><a href="GameListDesktop.html">보드게임</a><a class="on" href="PartyListDesktop.html">파티</a><a href="ChatDesktop.html">AI 추천</a><a href="MyReservationsDesktop.html">내 예약</a></nav>
+<div class="bell-wrap"><button class="tb-icon-btn" aria-label="알림 1개"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"></path><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"></path></svg></button><span class="bell-count">1</span></div>
+<a class="me-btn" href="MeDesktop.html" style="text-decoration: none;"><span class="tb-avatar s5">🦉</span>민지님</a>
+<button class="tb-btn tb-btn--ghost tb-btn--sm" style="color: var(--ink-muted);">로그아웃</button>
+</header>
+
+<main class="page page--wide" style="gap: 20px;">
+<a class="back" href="PartyListDesktop.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"></path></svg>파티 목록</a>
+
+<div class="two-col">
+<div style="display: flex; flex-direction: column; gap: 24px; min-width: 0;">
+<div style="display: flex; flex-direction: column; gap: 12px;">
+<div class="tb-row" style="gap: 6px;"><span class="tb-badge tb-badge--felt"><span class="tb-live"></span>모집 중</span><span class="tb-badge tb-badge--offline"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M3 8h18M6 8v12M18 8v12"></path></svg>오프라인</span></div>
+<h1 style="margin: 0; font-size: 30px; line-height: 38px; font-weight: 700;">토요일 저녁 스플렌더 한 판</h1>
+</div>
+
+<div style="display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 16px;">
+<a href="GameDetailDesktop.html" class="tb-card" style="display: flex; align-items: center; gap: 12px; padding: 12px; text-decoration: none; box-shadow: none;">
+<span class="thumb"><span class="ph ph--g" style="font-size: 12px; padding: 4px;">스플렌더</span></span>
+<span style="flex-grow: 1;"><b style="display: block; font-size: 16px; line-height: 22px;">스플렌더</b><span class="small muted">2~4명 · 30분 · 게임 보기</span></span>
+<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="width: 18px; height: 18px; color: var(--ink-muted);"><path d="m9 18 6-6-6-6"></path></svg>
+</a>
+<ul class="info-list" style="padding: 12px 0;">
+<li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="4" width="18" height="18" rx="2"></rect><path d="M16 2v4M8 2v4M3 10h18"></path></svg><span class="k">일시</span><span class="num">10/3(토) 19:00</span></li>
+<li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"></path><circle cx="12" cy="10" r="3"></circle></svg><span class="k">장소</span><span>동아리방 (본관 지하 1층)</span></li>
+</ul>
+</div>
+
+<p style="margin: 0; padding: 16px 20px; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-lg); font-size: 16px; line-height: 26px;">처음 하시는 분도 환영해요. 규칙은 시작 전에 10분 정도 같이 읽고 시작할게요. 간식은 제가 챙겨갈게요.</p>
+
+<section class="section">
+<h2 class="section-title">참여자 <span class="num">2/4</span></h2>
+<div class="seat-board seat-board--lg">
+<div class="seat"><span class="tb-avatar s6">🎩</span><span class="seat__name">하늘</span><span class="host-tag">파티장</span></div>
+<div class="seat"><span class="tb-avatar s5">🦉</span><span class="seat__name">민지</span></div>
+<div class="seat"><span class="seat__empty"></span><span class="seat__name seat__name--empty">빈자리</span></div>
+<div class="seat"><span class="seat__empty"></span><span class="seat__name seat__name--empty">빈자리</span></div>
+</div>
+</section>
+</div>
+
+<aside class="tb-card side-card">
+<span class="small muted" style="font-weight: 600;">남은 자리</span>
+<div class="big-remain"><b class="num">2</b><span class="num">/ 4명</span></div>
+<div class="seat-bar" aria-hidden="true"><i style="width: 50%;"></i></div>
+<hr class="divider">
+<div class="small" style="display: flex; flex-direction: column; gap: 4px;"><span class="num"><b>10/3(토) 19:00</b></span><span class="muted">동아리방 (본관 지하 1층)</span></div>
+<button class="tb-btn tb-btn--primary tb-btn--lg tb-btn--block">참여하기</button>
+<span class="small muted" style="text-align: center;">참여하면 파티장에게 알림이 가요</span>
+</aside>
+</div>
+</main>
+
+<div class="tb-toast-stack" style="--page-action-bar: 0px;">
+<div class="tb-toast" role="status"><span class="tb-toast__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M22 21v-2a4 4 0 0 0-3-3.87"></path></svg></span><div><p class="tb-toast__msg">요셉님이 '금요일 밤 구스구스덕 하실 분' 파티에 참여했어요</p><p class="tb-toast__time">방금</p></div><button class="tb-icon-btn" aria-label="닫기"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"></path></svg></button><span class="tb-toast__timer"></span></div>
+</div>
+</div>
+
+</body>
+</html>

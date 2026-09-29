@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<title>대여 예약 데스크톱</title>
+<link rel="stylesheet" href="ds/boardclub/components/bundle.css">
+<link rel="stylesheet" href="screens.css">
+</head>
+<body>
+
+
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Do+Hyeon&amp;family=IBM+Plex+Sans+KR:wght@400;500;600;700&amp;display=swap">
+<style>
+body{margin:0}
+a{color:inherit}
+</style>
+
+<div class="scr" style="width: 1280px; height: 940px;">
+<header class="hdr hdr--wide">
+<a class="logo" href="Main.html" style="margin-right: 0;"><svg class="logo-mark" viewBox="0 0 26 26" aria-hidden="true"><rect width="26" height="26" rx="7" style="fill:var(--felt)"></rect><circle cx="8" cy="8" r="2.5" style="fill:var(--meeple)"></circle><circle cx="13" cy="13" r="2.5" style="fill:var(--meeple)"></circle><circle cx="18" cy="18" r="2.5" style="fill:var(--meeple)"></circle></svg>보드게임 동아리</a>
+<nav class="nav" aria-label="주 메뉴"><a class="on" href="GameListDesktop.html">보드게임</a><a href="PartyListDesktop.html">파티</a><a href="ChatDesktop.html">AI 추천</a><a href="MyReservationsDesktop.html">내 예약</a></nav>
+<div class="bell-wrap"><button class="tb-icon-btn" aria-label="알림 1개"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"></path><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"></path></svg></button><span class="bell-count">1</span></div>
+<a class="me-btn" href="MeDesktop.html" style="text-decoration: none;"><span class="tb-avatar s5">🦉</span>민지님</a>
+<button class="tb-btn tb-btn--ghost tb-btn--sm" style="color: var(--ink-muted);">로그아웃</button>
+</header>
+
+<main class="page page--wide" style="gap: 20px;">
+<a class="back" href="GameDetailDesktop.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"></path></svg>카탄</a>
+<div><h1 class="page-title" style="font-size: 32px; line-height: 38px;">카탄 대여 예약</h1><p class="lede" style="font-size: 15px;">오늘부터 60일 안, 최대 7일까지 빌릴 수 있어요</p></div>
+
+<div class="two-col">
+<div style="display: flex; flex-direction: column; gap: 16px; min-width: 0;">
+<div class="tb-seg" role="group" aria-label="대여 기간" style="width: 280px;"><button aria-pressed="false" style="flex-grow: 1;">당일</button><button aria-pressed="true" style="flex-grow: 1;">여러 날</button></div>
+<div class="cal cal--lg">
+<div class="cal__head">
+<button class="tb-icon-btn" aria-label="이전 달"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="m15 18-6-6 6-6"></path></svg></button>
+<span class="cal__month num">2026년 10월</span>
+<button class="tb-icon-btn" aria-label="다음 달"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="m9 18 6-6-6-6"></path></svg></button>
+</div>
+<div class="cal__grid">
+<span class="cal__dow" style="color: var(--danger);">일</span><span class="cal__dow">월</span><span class="cal__dow">화</span><span class="cal__dow">수</span><span class="cal__dow">목</span><span class="cal__dow">금</span><span class="cal__dow">토</span>
+<span></span><span></span><span></span><span></span><button class="day day--past" disabled>1</button><button class="day day--past" disabled>2</button><button class="day day--past" disabled>3</button>
+<button class="day day--past" disabled>4</button><button class="day day--past" disabled>5</button><button class="day day--past" disabled>6</button><button class="day day--past" disabled>7</button><button class="day day--today">8<small>2개</small></button><button class="day">9<small>2개</small></button><button class="day day--sel day--start">10<small>시작</small></button>
+<button class="day day--mid">11<small>1개</small></button><button class="day day--sel day--end">12<small>반납</small></button><button class="day">13<small>2개</small></button><button class="day day--full" disabled>14<small>마감</small></button><button class="day day--full" disabled>15<small>마감</small></button><button class="day">16<small>1개</small></button><button class="day">17<small>2개</small></button>
+<button class="day">18<small>2개</small></button><button class="day">19<small>2개</small></button><button class="day">20<small>2개</small></button><button class="day">21<small>2개</small></button><button class="day">22<small>2개</small></button><button class="day">23<small>2개</small></button><button class="day">24<small>1개</small></button>
+<button class="day">25<small>2개</small></button><button class="day">26<small>2개</small></button><button class="day">27<small>2개</small></button><button class="day">28<small>2개</small></button><button class="day">29<small>2개</small></button><button class="day">30<small>2개</small></button><button class="day">31<small>2개</small></button>
+</div>
+</div>
+<div class="legend">
+<span><i style="background: var(--meeple);"></i>선택한 기간</span>
+<span><i style="background: var(--sunken);"></i>예약 마감</span>
+<span><i style="box-shadow: inset 0 0 0 1.5px var(--felt);"></i>오늘</span>
+<span><b style="color: var(--felt); font-size: 11px;">2개</b>남은 수량</span>
+</div>
+</div>
+
+<aside class="tb-card side-card">
+<div style="display: flex; gap: 12px; align-items: center;"><span class="thumb"><span class="ph ph--y">카탄</span></span><div><b style="display: block; font-size: 16px;">카탄</b><span class="small muted">보유 2개 · 오프라인</span></div></div>
+<hr class="divider">
+<span class="small muted" style="font-weight: 600;">선택한 기간</span>
+<div><b class="num" style="display: block; font-size: 20px; line-height: 28px;">10/10(토) ~ 10/12(월)</b><span class="small muted">3일 · 12일에 반납</span></div>
+<ul class="small muted" style="margin: 0; padding-left: 18px; display: flex; flex-direction: column; gap: 2px;">
+<li>관리자가 승인하면 알림으로 알려드려요</li>
+<li>시작일 전날까지 취소할 수 있어요</li>
+</ul>
+<button class="tb-btn tb-btn--primary tb-btn--lg tb-btn--block">예약 신청</button>
+</aside>
+</div>
+</main>
+</div>
+
+</body>
+</html>

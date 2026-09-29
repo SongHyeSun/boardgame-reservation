@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<title>파티 목록 데스크톱</title>
+<link rel="stylesheet" href="ds/boardclub/components/bundle.css">
+<link rel="stylesheet" href="screens.css">
+</head>
+<body>
+
+
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Do+Hyeon&amp;family=IBM+Plex+Sans+KR:wght@400;500;600;700&amp;display=swap">
+<style>
+body{margin:0}
+a{color:inherit}
+</style>
+
+<div class="scr" style="width: 1280px; height: 940px;">
+<header class="hdr hdr--wide">
+<a class="logo" href="Main.html" style="margin-right: 0;"><svg class="logo-mark" viewBox="0 0 26 26" aria-hidden="true"><rect width="26" height="26" rx="7" style="fill:var(--felt)"></rect><circle cx="8" cy="8" r="2.5" style="fill:var(--meeple)"></circle><circle cx="13" cy="13" r="2.5" style="fill:var(--meeple)"></circle><circle cx="18" cy="18" r="2.5" style="fill:var(--meeple)"></circle></svg>보드게임 동아리</a>
+<nav class="nav" aria-label="주 메뉴"><a href="GameList.html">보드게임</a><a class="on" href="PartyListDesktop.html">파티</a><a href="ChatEmpty.html">AI 추천</a><a href="MyReservations.html">내 예약</a></nav>
+<div class="bell-wrap"><button class="tb-icon-btn" aria-label="알림 3개"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"></path><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"></path></svg></button><span class="bell-count">3</span></div>
+<a class="me-btn" href="Me.html" style="text-decoration: none;"><span class="tb-avatar s5">🦉</span>민지님</a>
+<button class="tb-btn tb-btn--ghost tb-btn--sm" style="color: var(--ink-muted);">로그아웃</button>
+</header>
+
+<main class="page page--wide">
+<div class="title-row">
+<div><h1 class="page-title" style="font-size: 32px; line-height: 38px;">파티 모집</h1><p class="lede" style="font-size: 15px;">같이 할 사람을 찾고 있어요</p></div>
+<a class="tb-btn tb-btn--primary" href="PartyNew.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"></path></svg>파티 만들기</a>
+</div>
+
+<div class="filter-bar" role="group" aria-label="필터">
+<button class="tb-chip" aria-pressed="true">모집 중</button><button class="tb-chip">마감</button><button class="tb-chip">취소</button>
+<span class="sep"></span>
+<button class="tb-chip">온라인</button><button class="tb-chip">오프라인</button>
+</div>
+
+<div class="party-grid">
+<a class="tb-card tb-card--link tb-party" href="PartyDetail.html" style="text-decoration: none;">
+<div class="tb-party__top"><span class="tb-badge tb-badge--felt"><span class="tb-live"></span>모집 중</span><span class="tb-badge tb-badge--offline"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M3 8h18M6 8v12M18 8v12"></path></svg>오프라인</span></div>
+<div><h2 class="tb-party__title">토요일 저녁 스플렌더 한 판</h2><p class="tb-party__game">스플렌더 · 10/3(토) 19:00 · 동아리방</p></div>
+<div class="host"><span class="tb-avatar tb-avatar--xs s6">🎩</span>하늘 파티장</div>
+<div class="tb-party__foot"><span class="tb-seats"><i class="tb-seat"></i><i class="tb-seat"></i><i class="tb-seat tb-seat--empty"></i><i class="tb-seat tb-seat--empty"></i><span class="tb-seats__count">2/4</span></span><span class="tb-remain">남은 자리 <b>2</b></span></div>
+</a>
+<a class="tb-card tb-card--link tb-party" href="PartyDetail.html" style="text-decoration: none;">
+<div class="tb-party__top"><span class="tb-badge tb-badge--felt"><span class="tb-live"></span>모집 중</span><span class="tb-badge tb-badge--online"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M5 12.55a11 11 0 0 1 14 0M8.5 16.4a6 6 0 0 1 7 0M12 20h.01"></path></svg>온라인</span><span class="tb-badge tb-badge--custom"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 20h9"></path><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"></path></svg>기타 게임</span></div>
+<div><h2 class="tb-party__title">금요일 밤 구스구스덕 하실 분</h2><p class="tb-party__game">구스구스덕 · 10/2(금) 21:30 · 디스코드</p></div>
+<div class="host"><span class="tb-avatar tb-avatar--xs s2">🐧</span>요셉 파티장</div>
+<div class="tb-party__foot"><span class="tb-seats__count" style="margin-left: 0;">6/10명</span><span class="tb-remain">남은 자리 <b>4</b></span></div>
+</a>
+<a class="tb-card tb-card--link tb-party" href="PartyDetail.html" style="text-decoration: none;">
+<div class="tb-party__top"><span class="tb-badge tb-badge--felt"><span class="tb-live"></span>모집 중</span><span class="tb-badge tb-badge--offline"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M3 8h18M6 8v12M18 8v12"></path></svg>오프라인</span></div>
+<div><h2 class="tb-party__title">예배 끝나고 카탄 입문</h2><p class="tb-party__game">카탄 · 10/4(일) 13:30 · 교육관 2층</p></div>
+<div class="host"><span class="tb-avatar tb-avatar--xs s4">🐻</span>은혜 파티장</div>
+<div class="tb-party__foot"><span class="tb-seats"><i class="tb-seat"></i><i class="tb-seat"></i><i class="tb-seat"></i><i class="tb-seat tb-seat--empty"></i><span class="tb-seats__count">3/4</span></span><span class="tb-remain">남은 자리 <b>1</b></span></div>
+</a>
+<a class="tb-card tb-card--link tb-party" href="PartyDetail.html" style="text-decoration: none;">
+<div class="tb-party__top"><span class="tb-badge tb-badge--felt"><span class="tb-live"></span>모집 중</span><span class="tb-badge tb-badge--offline"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M3 8h18M6 8v12M18 8v12"></path></svg>오프라인</span></div>
+<div><h2 class="tb-party__title">청년부 스컬킹 대회</h2><p class="tb-party__game">스컬킹 · 10/10(토) 18:00 · 동아리방</p></div>
+<div class="host"><span class="tb-avatar tb-avatar--xs s1">🦊</span>다윗 파티장</div>
+<div class="tb-party__foot"><span class="tb-seats"><i class="tb-seat"></i><i class="tb-seat"></i><i class="tb-seat"></i><i class="tb-seat tb-seat--empty"></i><i class="tb-seat tb-seat--empty"></i><i class="tb-seat tb-seat--empty"></i><i class="tb-seat tb-seat--empty"></i><i class="tb-seat tb-seat--empty"></i><span class="tb-seats__count">3/8</span></span><span class="tb-remain">남은 자리 <b>5</b></span></div>
+</a>
+<a class="tb-card tb-card--link tb-party" href="PartyDetail.html" style="text-decoration: none;">
+<div class="tb-party__top"><span class="tb-badge tb-badge--felt"><span class="tb-live"></span>모집 중</span><span class="tb-badge tb-badge--online"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M5 12.55a11 11 0 0 1 14 0M8.5 16.4a6 6 0 0 1 7 0M12 20h.01"></path></svg>온라인</span></div>
+<div><h2 class="tb-party__title">보드게임아레나로 코드네임</h2><p class="tb-party__game">코드네임 · 10/7(수) 22:00 · 보드게임아레나</p></div>
+<div class="host"><span class="tb-avatar tb-avatar--xs s5">🦉</span>민지 파티장</div>
+<div class="tb-party__foot"><span class="tb-seats"><i class="tb-seat"></i><i class="tb-seat"></i><i class="tb-seat tb-seat--empty"></i><i class="tb-seat tb-seat--empty"></i><i class="tb-seat tb-seat--empty"></i><i class="tb-seat tb-seat--empty"></i><span class="tb-seats__count">2/6</span></span><span class="tb-remain">남은 자리 <b>4</b></span></div>
+</a>
+<a class="tb-card tb-card--link tb-party" href="PartyDetail.html" style="text-decoration: none;">
+<div class="tb-party__top"><span class="tb-badge tb-badge--felt"><span class="tb-live"></span>모집 중</span><span class="tb-badge tb-badge--offline"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M3 8h18M6 8v12M18 8v12"></path></svg>오프라인</span></div>
+<div><h2 class="tb-party__title">할리갈리 번개</h2><p class="tb-party__game">할리갈리 · 10/4(일) 15:00 · 카페 그레이스</p></div>
+<div class="host"><span class="tb-avatar tb-avatar--xs s3">🍀</span>한나 파티장</div>
+<div class="tb-party__foot"><span class="tb-seats"><i class="tb-seat"></i><i class="tb-seat"></i><i class="tb-seat"></i><i class="tb-seat"></i><i class="tb-seat tb-seat--empty"></i><i class="tb-seat tb-seat--empty"></i><span class="tb-seats__count">4/6</span></span><span class="tb-remain">남은 자리 <b>2</b></span></div>
+</a>
+</div>
+</main>
+
+<div class="tb-toast-stack" style="--page-action-bar: 0px;">
+<div class="tb-toast" role="status"><span class="tb-toast__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"></path></svg></span><div><p class="tb-toast__msg">'토요일 저녁 스플렌더 한 판' 파티 모집이 마감됐어요</p><p class="tb-toast__time">방금</p></div><button class="tb-icon-btn" aria-label="닫기"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"></path></svg></button><span class="tb-toast__timer"></span></div>
+</div>
+</div>
+
+</body>
+</html>

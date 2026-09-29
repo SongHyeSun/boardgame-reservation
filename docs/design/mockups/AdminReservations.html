@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<title>예약 관리</title>
+<link rel="stylesheet" href="ds/boardclub/components/bundle.css">
+<link rel="stylesheet" href="screens.css">
+</head>
+<body>
+
+
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Do+Hyeon&amp;family=IBM+Plex+Sans+KR:wght@400;500;600;700&amp;display=swap">
+<style>
+body{margin:0}
+a{color:inherit}
+</style>
+
+<div class="scr" style="width: 1280px; height: 820px;">
+<header class="hdr hdr--wide">
+<a class="logo" href="Main.html" style="margin-right: 0;"><svg class="logo-mark" viewBox="0 0 26 26" aria-hidden="true"><rect width="26" height="26" rx="7" style="fill:var(--felt)"></rect><circle cx="8" cy="8" r="2.5" style="fill:var(--meeple)"></circle><circle cx="13" cy="13" r="2.5" style="fill:var(--meeple)"></circle><circle cx="18" cy="18" r="2.5" style="fill:var(--meeple)"></circle></svg>보드게임 동아리</a>
+<nav class="nav" aria-label="주 메뉴"><a href="GameList.html">보드게임</a><a href="PartyListDesktop.html">파티</a><a href="ChatEmpty.html">AI 추천</a><a href="MyReservations.html">내 예약</a><a class="on" href="AdminReservations.html">예약 관리</a></nav>
+<div class="bell-wrap"><button class="tb-icon-btn" aria-label="알림 1개"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"></path><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"></path></svg></button><span class="bell-count">1</span></div>
+<a class="me-btn" href="Me.html" style="text-decoration: none;"><span class="tb-avatar s4">🐻</span>은혜님</a>
+<button class="tb-btn tb-btn--ghost tb-btn--sm" style="color: var(--ink-muted);">로그아웃</button>
+</header>
+
+<main class="page page--wide">
+<div><h1 class="page-title" style="font-size: 32px; line-height: 38px;">예약 관리</h1><p class="lede" style="font-size: 15px;">내가 등록한 게임의 대여 신청이에요</p></div>
+
+<nav class="tabs" aria-label="상태">
+<a class="on" href="AdminReservations.html">승인 대기 <span class="count">3</span></a>
+<a href="AdminReservations.html">승인</a>
+<a href="AdminReservations.html">거절</a>
+<a href="AdminReservations.html">취소</a>
+<a href="AdminReservations.html">전체</a>
+</nav>
+
+<table class="tbl">
+<thead><tr><th style="width: 240px;">신청자</th><th>게임</th><th style="width: 240px;">기간</th><th style="width: 120px;">신청일</th><th style="width: 300px; text-align: right;">처리</th></tr></thead>
+<tbody>
+<tr>
+<td><div class="who"><span class="tb-avatar tb-avatar--md s1">🦊</span><div><b>다윗</b><span>김다윗 · 청년부</span></div></div></td>
+<td><b>카탄</b></td>
+<td class="num">10/10(토) ~ 10/12(월) · 3일</td>
+<td class="num muted">10/1</td>
+<td style="text-align: right;"><div class="tb-row" style="justify-content: flex-end;"><button class="tb-btn tb-btn--secondary tb-btn--sm">거절</button><button class="tb-btn tb-btn--primary tb-btn--sm">승인</button></div></td>
+</tr>
+<tr>
+<td><div class="who"><span class="tb-avatar tb-avatar--md s5">🦉</span><div><b>민지</b><span>이민지 · 찬양팀</span></div></div></td>
+<td><b>카탄</b></td>
+<td class="num">10/17(토) · 당일</td>
+<td class="num muted">10/1</td>
+<td style="text-align: right;">
+<div style="display: flex; gap: 8px; justify-content: flex-end; align-items: center;">
+<input class="tb-input" placeholder="거절 사유 (선택)" value="그날 교회 행사에서 사용해요" aria-label="거절 사유" style="height: 36px; width: 200px; font-size: 14px;">
+<button class="tb-btn tb-btn--danger tb-btn--sm">거절하기</button>
+</div>
+</td>
+</tr>
+<tr>
+<td><div class="who"><span class="tb-avatar tb-avatar--md s6">🔥</span><div><b>사무엘</b><span>박사무엘 · 대학부</span></div></div></td>
+<td><b>테라포밍 마스</b></td>
+<td class="num">10/24(토) ~ 10/25(일) · 2일</td>
+<td class="num muted">9/30</td>
+<td style="text-align: right;"><div class="tb-row" style="justify-content: flex-end;"><button class="tb-btn tb-btn--secondary tb-btn--sm">거절</button><button class="tb-btn tb-btn--primary tb-btn--sm">승인</button></div></td>
+</tr>
+</tbody>
+</table>
+</main>
+</div>
+
+</body>
+</html>

@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<title>파티 개설</title>
+<link rel="stylesheet" href="ds/boardclub/components/bundle.css">
+<link rel="stylesheet" href="screens.css">
+</head>
+<body>
+
+
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Do+Hyeon&amp;family=IBM+Plex+Sans+KR:wght@400;500;600;700&amp;display=swap">
+<style>
+body{margin:0}
+a{color:inherit}
+</style>
+
+<div class="scr" style="width: 390px; height: 1240px; --page-action-bar: 76px;">
+<header class="hdr">
+<a class="logo" href="Main.html"><svg class="logo-mark" viewBox="0 0 26 26" aria-hidden="true"><rect width="26" height="26" rx="7" style="fill:var(--felt)"></rect><circle cx="8" cy="8" r="2.5" style="fill:var(--meeple)"></circle><circle cx="13" cy="13" r="2.5" style="fill:var(--meeple)"></circle><circle cx="18" cy="18" r="2.5" style="fill:var(--meeple)"></circle></svg>보드게임 동아리</a>
+<div class="bell-wrap"><button class="tb-icon-btn" aria-label="알림 3개"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"></path><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"></path></svg></button><span class="bell-count">3</span></div>
+<a class="tb-icon-btn" href="Me.html" aria-label="내 정보"><span class="tb-avatar s3">🎲</span></a>
+<a class="tb-icon-btn" href="MobileMenu.html" aria-label="메뉴"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 6h16M4 12h16M4 18h16"></path></svg></a>
+</header>
+
+<main class="page" style="gap: 20px; padding-bottom: 100px;">
+<a class="back" href="Main.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"></path></svg>파티 목록</a>
+<h1 class="page-title">파티 만들기</h1>
+
+<form class="form">
+<div class="tb-field">
+<span class="tb-field__label">게임<span class="req">*</span></span>
+<div class="tb-card game-pick" style="box-shadow: none;">
+<span class="thumb"><span class="ph ph--g" style="font-size: 12px; padding: 4px;">스플렌더</span></span>
+<div style="flex-grow: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px;">
+<b style="font-size: 16px; line-height: 22px;">스플렌더</b>
+<div class="tb-row" style="gap: 6px;"><span class="small muted num">2~4명</span><span class="tb-badge tb-badge--offline"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M3 8h18M6 8v12M18 8v12"></path></svg>오프라인</span></div>
+</div>
+<a class="tb-btn tb-btn--secondary tb-btn--sm" href="GameSelectModal.html">변경</a>
+</div>
+</div>
+
+<label class="tb-field"><span class="tb-field__label">파티 제목<span class="req">*</span></span><input class="tb-input" value="토요일 저녁 스플렌더 한 판"></label>
+<label class="tb-field"><span class="tb-field__label">설명</span><textarea class="tb-input" rows="3">처음 하시는 분도 환영해요. 규칙은 시작 전에 10분 정도 같이 읽고 시작할게요.</textarea></label>
+
+<div class="two">
+<label class="tb-field"><span class="tb-field__label">날짜<span class="req">*</span></span><input class="tb-input" type="date" value="2026-10-03"></label>
+<label class="tb-field"><span class="tb-field__label">시간<span class="req">*</span></span><input class="tb-input" type="time" value="19:00"></label>
+</div>
+
+<div class="tb-field"><span class="tb-field__label">진행 방식<span class="req">*</span></span>
+<div class="tb-seg" role="group" aria-label="진행 방식" style="width: 100%;"><button aria-pressed="true" style="flex-grow: 1;">오프라인</button><button aria-pressed="false" disabled style="flex-grow: 1; opacity: .5;">온라인</button></div>
+<span class="tb-field__hint">이 게임은 오프라인으로만 할 수 있어요</span>
+</div>
+
+<label class="tb-field"><span class="tb-field__label">장소</span><input class="tb-input" value="동아리방 (본관 지하 1층)"></label>
+
+<div class="tb-field"><span class="tb-field__label">정원<span class="req">*</span></span>
+<div style="display: flex; align-items: center; gap: 12px;">
+<div class="stepper"><button type="button" aria-label="한 명 줄이기"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M5 12h14"></path></svg></button><output class="num">4</output><button type="button" aria-label="한 명 늘리기" disabled style="color: var(--line-strong);"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"></path></svg></button></div>
+<span class="tb-seats" aria-hidden="true"><i class="tb-seat"></i><i class="tb-seat tb-seat--empty"></i><i class="tb-seat tb-seat--empty"></i><i class="tb-seat tb-seat--empty"></i></span>
+</div>
+<span class="tb-field__hint">파티장 포함 2~4명</span>
+</div>
+</form>
+</main>
+
+<div class="action-bar">
+<a class="tb-btn tb-btn--secondary tb-btn--lg" href="Main.html">취소</a>
+<button class="tb-btn tb-btn--primary tb-btn--lg" style="flex-grow: 1; margin-bottom: 0;">파티 만들기</button>
+</div>
+</div>
+
+</body>
+</html>

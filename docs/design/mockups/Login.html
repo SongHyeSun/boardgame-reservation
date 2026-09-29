@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<title>로그인</title>
+<link rel="stylesheet" href="ds/boardclub/components/bundle.css">
+<link rel="stylesheet" href="screens.css">
+</head>
+<body>
+
+
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Do+Hyeon&amp;family=IBM+Plex+Sans+KR:wght@400;500;600;700&amp;display=swap">
+<style>
+body{margin:0}
+a{color:inherit}
+</style>
+
+<div class="scr" style="width: 390px; height: 844px;">
+<div style="height: 200px; background: var(--felt); position: relative; overflow: hidden;">
+<svg viewBox="0 0 390 200" width="390" height="200" aria-hidden="true" style="display: block;">
+<rect x="236" y="-24" width="120" height="120" rx="16" style="fill:var(--meeple)"></rect>
+<circle cx="266" cy="6" r="10" style="fill:var(--ink)"></circle><circle cx="296" cy="36" r="10" style="fill:var(--ink)"></circle><circle cx="326" cy="66" r="10" style="fill:var(--ink)"></circle>
+<rect x="300" y="112" width="96" height="96" rx="16" style="fill:var(--felt-soft)"></rect>
+<circle cx="330" cy="142" r="8" style="fill:var(--felt)"></circle><circle cx="366" cy="178" r="8" style="fill:var(--felt)"></circle>
+</svg>
+</div>
+<main class="auth" style="padding-top: 28px;">
+<div class="auth__brand">
+<h1>보드게임 동아리</h1>
+<p class="lede" style="font-size: 15px; line-height: 22px;">이번 주 같이 할 게임과 사람을 찾아요</p>
+</div>
+<form class="form">
+<label class="tb-field"><span class="tb-field__label">이메일</span><input class="tb-input" type="email" value="hyeseon@example.com" autocomplete="email"></label>
+<label class="tb-field"><span class="tb-field__label">비밀번호</span><input class="tb-input is-error" type="password" value="password" autocomplete="current-password"><span class="tb-field__error">이메일 또는 비밀번호가 일치하지 않습니다</span></label>
+<button class="tb-btn tb-btn--primary tb-btn--lg tb-btn--block" type="submit">로그인</button>
+</form>
+<p class="auth__alt">처음이신가요? <a class="link" href="Signup.html">회원가입</a></p>
+</main>
+</div>
+
+</body>
+</html>

@@ -24,6 +24,9 @@ Java 17, Spring Boot 4.x, Gradle, Spring Security(세션 기반), Spring Data JP
 
 ## 프론트엔드
 - 위치: `frontend/`. 명령은 `frontend/`에서 실행 (`npm run dev | build | lint`). 설계는 docs/frontend-plan.md
+- 디자인: docs/design-system.md 기준. 참고 시안은 docs/design/mockups/ (작업 중인 화면의 시안 파일만 열 것, 전체 탐색 금지)
+  - 보이는 모습(className·CSS·감싸는 마크업)만 변경. 기능·라우트·props·API 호출·쿼리 키는 변경 금지
+  - 시안 HTML·클래스를 복사하지 말고 Tailwind 토큰 클래스와 공용 컴포넌트로 옮길 것
 - 스택(설치 버전): React 19.3.0, Vite 8.3.1, TypeScript 6.0.3, react-router 8.4.0, @tanstack/react-query 5.103.2, axios 1.20.0, Tailwind CSS 4.3.3
 - 린터: oxlint 1.85.0 (Vite 템플릿 기본, ESLint 아님) 그대로 사용
 - TS strict 유지, `any` 사용 금지

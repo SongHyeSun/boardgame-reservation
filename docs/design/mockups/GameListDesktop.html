@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<title>게임 목록 데스크톱</title>
+<link rel="stylesheet" href="ds/boardclub/components/bundle.css">
+<link rel="stylesheet" href="screens.css">
+</head>
+<body>
+
+
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Do+Hyeon&amp;family=IBM+Plex+Sans+KR:wght@400;500;600;700&amp;display=swap">
+<style>
+body{margin:0}
+a{color:inherit}
+</style>
+
+<div class="scr" style="width: 1280px; height: 1000px;">
+<header class="hdr hdr--wide">
+<a class="logo" href="Main.html" style="margin-right: 0;"><svg class="logo-mark" viewBox="0 0 26 26" aria-hidden="true"><rect width="26" height="26" rx="7" style="fill:var(--felt)"></rect><circle cx="8" cy="8" r="2.5" style="fill:var(--meeple)"></circle><circle cx="13" cy="13" r="2.5" style="fill:var(--meeple)"></circle><circle cx="18" cy="18" r="2.5" style="fill:var(--meeple)"></circle></svg>보드게임 동아리</a>
+<nav class="nav" aria-label="주 메뉴"><a class="on" href="GameListDesktop.html">보드게임</a><a href="PartyListDesktop.html">파티</a><a href="ChatDesktop.html">AI 추천</a><a href="MyReservationsDesktop.html">내 예약</a></nav>
+<div class="bell-wrap"><button class="tb-icon-btn" aria-label="알림 1개"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"></path><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"></path></svg></button><span class="bell-count">1</span></div>
+<a class="me-btn" href="MeDesktop.html" style="text-decoration: none;"><span class="tb-avatar s5">🦉</span>민지님</a>
+<button class="tb-btn tb-btn--ghost tb-btn--sm" style="color: var(--ink-muted);">로그아웃</button>
+</header>
+
+<main class="page page--wide">
+<div><h1 class="page-title" style="font-size: 32px; line-height: 38px;">보드게임</h1><p class="lede" style="font-size: 15px;">동아리에 있는 게임 12개</p></div>
+
+<div class="toolbar">
+<div class="search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path></svg><input class="tb-input" placeholder="게임 이름으로 찾기" aria-label="게임 검색"></div>
+<button class="tb-chip">인원 3명</button>
+<span class="filter-bar"><span class="sep"></span></span>
+<button class="tb-chip" aria-pressed="true">쉬움</button><button class="tb-chip">보통</button><button class="tb-chip">어려움</button>
+<span class="filter-bar"><span class="sep"></span></span>
+<button class="tb-chip">온라인</button><button class="tb-chip">오프라인</button>
+</div>
+
+<div class="game-grid game-grid--4">
+<a class="tb-card tb-card--link tb-game" href="GameDetailDesktop.html" style="text-decoration: none;"><div class="tb-game__thumb"><span class="ph ph--y" style="font-size: 30px;">카탄</span><span class="tb-badge tb-badge--offline"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M3 8h18M6 8v12M18 8v12"></path></svg>오프라인</span></div><div class="tb-game__body"><h2 class="tb-game__name">카탄</h2><div class="tb-meta"><span>3~4명</span><span>60분</span></div><div><span class="tb-badge tb-badge--meeple"><span class="tb-pips" aria-hidden="true"><i class="on"></i><i class="on"></i><i></i></span>보통</span></div></div></a>
+<a class="tb-card tb-card--link tb-game" href="GameDetailDesktop.html" style="text-decoration: none;"><div class="tb-game__thumb"><span class="ph ph--g" style="font-size: 28px;">스플렌더</span><span class="tb-badge tb-badge--offline"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M3 8h18M6 8v12M18 8v12"></path></svg>오프라인</span></div><div class="tb-game__body"><h2 class="tb-game__name">스플렌더</h2><div class="tb-meta"><span>2~4명</span><span>30분</span></div><div><span class="tb-badge tb-badge--felt"><span class="tb-pips" aria-hidden="true"><i class="on"></i><i></i><i></i></span>쉬움</span></div></div></a>
+<a class="tb-card tb-card--link tb-game" href="GameDetailDesktop.html" style="text-decoration: none;"><div class="tb-game__thumb"><span class="ph ph--b" style="font-size: 28px;">스컬킹</span><span class="tb-badge tb-badge--offline"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M3 8h18M6 8v12M18 8v12"></path></svg>오프라인</span></div><div class="tb-game__body"><h2 class="tb-game__name">스컬킹</h2><div class="tb-meta"><span>2~8명</span><span>45분</span></div><div><span class="tb-badge tb-badge--felt"><span class="tb-pips" aria-hidden="true"><i class="on"></i><i></i><i></i></span>쉬움</span></div></div></a>
+<a class="tb-card tb-card--link tb-game" href="GameDetailDesktop.html" style="text-decoration: none;"><div class="tb-game__thumb"><span class="ph ph--p" style="font-size: 28px;">코드네임</span><span class="tb-badge tb-badge--online"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M5 12.55a11 11 0 0 1 14 0M8.5 16.4a6 6 0 0 1 7 0M12 20h.01"></path></svg>온라인</span></div><div class="tb-game__body"><h2 class="tb-game__name">코드네임</h2><div class="tb-meta"><span>4~8명</span><span>20분</span></div><div><span class="tb-badge tb-badge--felt"><span class="tb-pips" aria-hidden="true"><i class="on"></i><i></i><i></i></span>쉬움</span></div></div></a>
+<a class="tb-card tb-card--link tb-game" href="GameDetailDesktop.html" style="text-decoration: none;"><div class="tb-game__thumb"><span class="ph ph--r" style="font-size: 26px;">테라포밍 마스</span><span class="tb-badge tb-badge--offline"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M3 8h18M6 8v12M18 8v12"></path></svg>오프라인</span></div><div class="tb-game__body"><h2 class="tb-game__name">테라포밍 마스</h2><div class="tb-meta"><span>1~5명</span><span>120분</span></div><div><span class="tb-badge tb-badge--danger"><span class="tb-pips" aria-hidden="true"><i class="on"></i><i class="on"></i><i class="on"></i></span>어려움</span></div></div></a>
+<a class="tb-card tb-card--link tb-game" href="GameDetailDesktop.html" style="text-decoration: none;"><div class="tb-game__thumb"><span class="ph ph--o" style="font-size: 28px;">할리갈리</span><span class="tb-badge tb-badge--offline"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M3 8h18M6 8v12M18 8v12"></path></svg>오프라인</span></div><div class="tb-game__body"><h2 class="tb-game__name">할리갈리</h2><div class="tb-meta"><span>2~6명</span><span>15분</span></div><div><span class="tb-badge tb-badge--felt"><span class="tb-pips" aria-hidden="true"><i class="on"></i><i></i><i></i></span>쉬움</span></div></div></a>
+<a class="tb-card tb-card--link tb-game" href="GameDetailDesktop.html" style="text-decoration: none;"><div class="tb-game__thumb"><span class="ph ph--g" style="font-size: 28px;">딕싯</span><span class="tb-badge tb-badge--offline"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M3 8h18M6 8v12M18 8v12"></path></svg>오프라인</span></div><div class="tb-game__body"><h2 class="tb-game__name">딕싯</h2><div class="tb-meta"><span>3~8명</span><span>30분</span></div><div><span class="tb-badge tb-badge--felt"><span class="tb-pips" aria-hidden="true"><i class="on"></i><i></i><i></i></span>쉬움</span></div></div></a>
+<a class="tb-card tb-card--link tb-game" href="GameDetailDesktop.html" style="text-decoration: none;"><div class="tb-game__thumb"><span class="ph ph--b" style="font-size: 24px;">스페이스 얼라이언스</span><span class="tb-badge tb-badge--offline"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M3 8h18M6 8v12M18 8v12"></path></svg>오프라인</span></div><div class="tb-game__body"><h2 class="tb-game__name">스페이스 얼라이언스</h2><div class="tb-meta"><span>3~6명</span><span>20분</span></div><div><span class="tb-badge tb-badge--meeple"><span class="tb-pips" aria-hidden="true"><i class="on"></i><i class="on"></i><i></i></span>보통</span></div></div></a>
+</div>
+</main>
+</div>
+
+</body>
+</html>

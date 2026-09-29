@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<title>AI 추천 대화</title>
+<link rel="stylesheet" href="ds/boardclub/components/bundle.css">
+<link rel="stylesheet" href="screens.css">
+</head>
+<body>
+
+
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Do+Hyeon&amp;family=IBM+Plex+Sans+KR:wght@400;500;600;700&amp;display=swap">
+<style>
+body{margin:0}
+a{color:inherit}
+</style>
+
+<div class="scr" style="width: 390px; height: 1500px; --page-action-bar: 90px;">
+<header class="hdr">
+<a class="logo" href="Main.html"><svg class="logo-mark" viewBox="0 0 26 26" aria-hidden="true"><rect width="26" height="26" rx="7" style="fill:var(--felt)"></rect><circle cx="8" cy="8" r="2.5" style="fill:var(--meeple)"></circle><circle cx="13" cy="13" r="2.5" style="fill:var(--meeple)"></circle><circle cx="18" cy="18" r="2.5" style="fill:var(--meeple)"></circle></svg>보드게임 동아리</a>
+<div class="bell-wrap"><button class="tb-icon-btn" aria-label="알림 1개"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"></path><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"></path></svg></button><span class="bell-count">1</span></div>
+<a class="tb-icon-btn" href="Me.html" aria-label="내 정보"><span class="tb-avatar s3">🎲</span></a>
+<a class="tb-icon-btn" href="MobileMenu.html" aria-label="메뉴"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 6h16M4 12h16M4 18h16"></path></svg></a>
+</header>
+<div class="chat-top"><h1>AI 추천</h1><span class="quota">오늘 남은 추천 <b class="num">17</b>회</span></div>
+
+<div class="thread">
+<div class="msg-me">3인용 1시간짜리 보드게임 추천해줘</div>
+
+<div class="msg-ai">
+<span class="ai-mark" aria-hidden="true"><svg viewBox="0 0 20 20"><circle cx="6" cy="6" r="2" style="fill:var(--meeple)"></circle><circle cx="10" cy="10" r="2" style="fill:var(--meeple)"></circle><circle cx="14" cy="14" r="2" style="fill:var(--meeple)"></circle></svg></span>
+<div class="msg-ai__body">
+<div class="bubble">3명이서 1시간 안에 할 수 있는 게임을 동아리 목록에서 두 개 골랐어요.</div>
+
+<article class="tb-card rec">
+<div class="rec__top">
+<span class="rec__img"><span class="ph ph--y">카탄</span></span>
+<div style="display: flex; flex-direction: column; gap: 4px; min-width: 0;">
+<h3 class="rec__name">카탄</h3>
+<div class="tb-meta"><span>3~4명</span><span>60분</span></div>
+<div class="tb-row" style="gap: 4px;"><span class="tb-badge tb-badge--meeple"><span class="tb-pips" aria-hidden="true"><i class="on"></i><i class="on"></i><i></i></span>보통</span><span class="tb-badge tb-badge--offline"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M3 8h18M6 8v12M18 8v12"></path></svg>오프라인</span></div>
+</div>
+</div>
+<p class="rec__why"><b>추천 이유</b>3명일 때 땅이 넉넉해서 처음 하는 사람도 덜 막혀요. 한 판이 딱 1시간 정도예요.</p>
+<div class="rec__actions"><a class="tb-btn tb-btn--secondary tb-btn--sm" href="GameDetail.html">게임 보기</a><a class="tb-btn tb-btn--ghost tb-btn--sm" href="PartyNew.html" style="background: var(--felt-soft);">이 게임으로 파티 만들기</a></div>
+</article>
+
+<article class="tb-card rec">
+<div class="rec__top">
+<span class="rec__img"><span class="ph ph--g">스플렌더</span></span>
+<div style="display: flex; flex-direction: column; gap: 4px; min-width: 0;">
+<h3 class="rec__name">스플렌더</h3>
+<div class="tb-meta"><span>2~4명</span><span>30분</span></div>
+<div class="tb-row" style="gap: 4px;"><span class="tb-badge tb-badge--felt"><span class="tb-pips" aria-hidden="true"><i class="on"></i><i></i><i></i></span>쉬움</span><span class="tb-badge tb-badge--offline"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M3 8h18M6 8v12M18 8v12"></path></svg>오프라인</span></div>
+</div>
+</div>
+<p class="rec__why"><b>추천 이유</b>규칙이 5분이면 끝나서 두 판 돌려도 1시간이에요.</p>
+<div class="rec__actions"><a class="tb-btn tb-btn--secondary tb-btn--sm" href="GameDetail.html">게임 보기</a><a class="tb-btn tb-btn--ghost tb-btn--sm" href="PartyNew.html" style="background: var(--felt-soft);">이 게임으로 파티 만들기</a></div>
+</article>
+</div>
+</div>
+
+<div class="msg-me">카탄 규칙 어려워?</div>
+
+<div class="msg-ai">
+<span class="ai-mark" aria-hidden="true"><svg viewBox="0 0 20 20"><circle cx="6" cy="6" r="2" style="fill:var(--meeple)"></circle><circle cx="10" cy="10" r="2" style="fill:var(--meeple)"></circle><circle cx="14" cy="14" r="2" style="fill:var(--meeple)"></circle></svg></span>
+<div class="msg-ai__body">
+<div class="bubble bubble--error">요청이 많아 잠시 후 다시 시도해주세요</div>
+<button class="tb-btn tb-btn--secondary tb-btn--sm" style="align-self: flex-start;">다시 시도</button>
+</div>
+</div>
+
+<div class="msg-ai">
+<span class="ai-mark" aria-hidden="true"><svg viewBox="0 0 20 20"><circle cx="6" cy="6" r="2" style="fill:var(--meeple)"></circle><circle cx="10" cy="10" r="2" style="fill:var(--meeple)"></circle><circle cx="14" cy="14" r="2" style="fill:var(--meeple)"></circle></svg></span>
+<div class="msg-ai__body">
+<div class="bubble">어렵지 않은 편이에요. 주사위를 굴려 자원을 받고, 자원으로 길·마을·도시를 짓는 게 전부예요. 헷갈리는 건 거래와 도둑 규칙 정도라서 첫 판은 한 사람이 옆에서 알려주면 금방 익숙해져요.</div>
+<div class="sources">
+<span class="sources__label">출처</span>
+<a href="https://boardgamegeek.com/" target="_blank" rel="noopener noreferrer"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h6v6"></path><path d="M10 14 21 3"></path><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path></svg>[출처 제목 1] · boardgamegeek.com</a>
+<a href="https://www.youtube.com/" target="_blank" rel="noopener noreferrer"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h6v6"></path><path d="M10 14 21 3"></path><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path></svg>[출처 제목 2] · youtube.com</a>
+</div>
+</div>
+</div>
+
+<div class="msg-me">온라인으로 할 수 있는 것도 있어?</div>
+
+<div class="msg-ai">
+<span class="ai-mark" aria-hidden="true"><svg viewBox="0 0 20 20"><circle cx="6" cy="6" r="2" style="fill:var(--meeple)"></circle><circle cx="10" cy="10" r="2" style="fill:var(--meeple)"></circle><circle cx="14" cy="14" r="2" style="fill:var(--meeple)"></circle></svg></span>
+<div class="msg-ai__body">
+<div class="bubble bubble--loading"><span class="pips-load" aria-hidden="true"><i></i><i></i><i></i></span>추천을 찾는 중…</div>
+</div>
+</div>
+</div>
+
+<div class="tb-toast-stack">
+<div class="tb-toast" role="status"><span class="tb-toast__icon tb-toast__icon--warn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="4" width="18" height="18" rx="2"></rect><path d="M16 2v4M8 2v4M3 10h18"></path></svg></span><div><p class="tb-toast__msg">'카탄' 대여 예약이 승인됐어요</p><p class="tb-toast__time">방금</p></div><button class="tb-icon-btn" aria-label="닫기"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"></path></svg></button><span class="tb-toast__timer"></span></div>
+</div>
+
+<div class="composer">
+<div class="composer__row"><textarea rows="1" aria-label="메시지" disabled placeholder="답을 기다리는 중…"></textarea><button class="send" aria-label="보내기" disabled><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M5 12l7-7 7 7"></path></svg></button></div>
+<div class="composer__meta"><span>개인정보는 입력하지 마세요</span><span class="num">0/500</span></div>
+</div>
+</div>
+
+</body>
+</html>

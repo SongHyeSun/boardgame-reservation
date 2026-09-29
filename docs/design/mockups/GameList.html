@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<title>게임 목록</title>
+<link rel="stylesheet" href="ds/boardclub/components/bundle.css">
+<link rel="stylesheet" href="screens.css">
+</head>
+<body>
+
+
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Do+Hyeon&amp;family=IBM+Plex+Sans+KR:wght@400;500;600;700&amp;display=swap">
+<style>
+body{margin:0}
+a{color:inherit}
+</style>
+
+<div class="scr" style="width: 390px; height: 1060px;">
+<header class="hdr">
+<a class="logo" href="Main.html"><svg class="logo-mark" viewBox="0 0 26 26" aria-hidden="true"><rect width="26" height="26" rx="7" style="fill:var(--felt)"></rect><circle cx="8" cy="8" r="2.5" style="fill:var(--meeple)"></circle><circle cx="13" cy="13" r="2.5" style="fill:var(--meeple)"></circle><circle cx="18" cy="18" r="2.5" style="fill:var(--meeple)"></circle></svg>보드게임 동아리</a>
+<div class="bell-wrap"><button class="tb-icon-btn" aria-label="알림 3개"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"></path><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"></path></svg></button><span class="bell-count">3</span></div>
+<a class="tb-icon-btn" href="Me.html" aria-label="내 정보"><span class="tb-avatar s3">🎲</span></a>
+<a class="tb-icon-btn" href="MobileMenu.html" aria-label="메뉴"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 6h16M4 12h16M4 18h16"></path></svg></a>
+</header>
+
+<main class="page">
+<div>
+<h1 class="page-title">보드게임</h1>
+<p class="lede">동아리에 있는 게임 12개</p>
+</div>
+
+<div class="search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path></svg><input class="tb-input" placeholder="게임 이름으로 찾기" aria-label="게임 검색"></div>
+
+<div class="chips-scroll" role="group" aria-label="필터">
+<button class="tb-chip">인원 3명</button>
+<button class="tb-chip" aria-pressed="true">쉬움</button>
+<button class="tb-chip">보통</button>
+<button class="tb-chip">어려움</button>
+<button class="tb-chip">오프라인</button>
+</div>
+
+<div class="game-grid">
+<a class="tb-card tb-card--link tb-game" href="GameDetail.html" style="text-decoration: none;">
+<div class="tb-game__thumb"><span class="ph ph--y" style="font-size: 22px;">카탄</span><span class="tb-badge tb-badge--offline"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M3 8h18M6 8v12M18 8v12"></path></svg>오프라인</span></div>
+<div class="tb-game__body"><h2 class="tb-game__name">카탄</h2><div class="tb-meta"><span>3~4명</span><span>60분</span></div><div><span class="tb-badge tb-badge--meeple"><span class="tb-pips" aria-hidden="true"><i class="on"></i><i class="on"></i><i></i></span>보통</span></div></div>
+</a>
+<a class="tb-card tb-card--link tb-game" href="GameDetail.html" style="text-decoration: none;">
+<div class="tb-game__thumb"><span class="ph ph--g" style="font-size: 20px;">스플렌더</span><span class="tb-badge tb-badge--offline"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M3 8h18M6 8v12M18 8v12"></path></svg>오프라인</span></div>
+<div class="tb-game__body"><h2 class="tb-game__name">스플렌더</h2><div class="tb-meta"><span>2~4명</span><span>30분</span></div><div><span class="tb-badge tb-badge--felt"><span class="tb-pips" aria-hidden="true"><i class="on"></i><i></i><i></i></span>쉬움</span></div></div>
+</a>
+<a class="tb-card tb-card--link tb-game" href="GameDetail.html" style="text-decoration: none;">
+<div class="tb-game__thumb"><span class="ph ph--b" style="font-size: 20px;">스컬킹</span><span class="tb-badge tb-badge--offline"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M3 8h18M6 8v12M18 8v12"></path></svg>오프라인</span></div>
+<div class="tb-game__body"><h2 class="tb-game__name">스컬킹</h2><div class="tb-meta"><span>2~8명</span><span>45분</span></div><div><span class="tb-badge tb-badge--felt"><span class="tb-pips" aria-hidden="true"><i class="on"></i><i></i><i></i></span>쉬움</span></div></div>
+</a>
+<a class="tb-card tb-card--link tb-game" href="GameDetail.html" style="text-decoration: none;">
+<div class="tb-game__thumb"><span class="ph ph--p" style="font-size: 20px;">코드네임</span><span class="tb-badge tb-badge--online"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M5 12.55a11 11 0 0 1 14 0M8.5 16.4a6 6 0 0 1 7 0M12 20h.01"></path></svg>온라인</span></div>
+<div class="tb-game__body"><h2 class="tb-game__name">코드네임</h2><div class="tb-meta"><span>4~8명</span><span>20분</span></div><div><span class="tb-badge tb-badge--felt"><span class="tb-pips" aria-hidden="true"><i class="on"></i><i></i><i></i></span>쉬움</span></div></div>
+</a>
+<a class="tb-card tb-card--link tb-game" href="GameDetail.html" style="text-decoration: none;">
+<div class="tb-game__thumb"><span class="ph ph--r" style="font-size: 20px;">테라포밍 마스</span><span class="tb-badge tb-badge--offline"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M3 8h18M6 8v12M18 8v12"></path></svg>오프라인</span></div>
+<div class="tb-game__body"><h2 class="tb-game__name">테라포밍 마스</h2><div class="tb-meta"><span>1~5명</span><span>120분</span></div><div><span class="tb-badge tb-badge--danger"><span class="tb-pips" aria-hidden="true"><i class="on"></i><i class="on"></i><i class="on"></i></span>어려움</span></div></div>
+</a>
+<a class="tb-card tb-card--link tb-game" href="GameDetail.html" style="text-decoration: none;">
+<div class="tb-game__thumb"><span class="ph ph--o" style="font-size: 20px;">할리갈리</span><span class="tb-badge tb-badge--offline"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M3 8h18M6 8v12M18 8v12"></path></svg>오프라인</span></div>
+<div class="tb-game__body"><h2 class="tb-game__name">할리갈리</h2><div class="tb-meta"><span>2~6명</span><span>15분</span></div><div><span class="tb-badge tb-badge--felt"><span class="tb-pips" aria-hidden="true"><i class="on"></i><i></i><i></i></span>쉬움</span></div></div>
+</a>
+</div>
+</main>
+</div>
+
+</body>
+</html>

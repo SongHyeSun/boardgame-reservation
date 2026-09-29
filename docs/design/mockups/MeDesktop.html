@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<title>내 정보 데스크톱</title>
+<link rel="stylesheet" href="ds/boardclub/components/bundle.css">
+<link rel="stylesheet" href="screens.css">
+</head>
+<body>
+
+
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Do+Hyeon&amp;family=IBM+Plex+Sans+KR:wght@400;500;600;700&amp;display=swap">
+<style>
+body{margin:0}
+a{color:inherit}
+</style>
+
+<div class="scr" style="width: 1280px; height: 960px;">
+<header class="hdr hdr--wide">
+<a class="logo" href="Main.html" style="margin-right: 0;"><svg class="logo-mark" viewBox="0 0 26 26" aria-hidden="true"><rect width="26" height="26" rx="7" style="fill:var(--felt)"></rect><circle cx="8" cy="8" r="2.5" style="fill:var(--meeple)"></circle><circle cx="13" cy="13" r="2.5" style="fill:var(--meeple)"></circle><circle cx="18" cy="18" r="2.5" style="fill:var(--meeple)"></circle></svg>보드게임 동아리</a>
+<nav class="nav" aria-label="주 메뉴"><a href="GameListDesktop.html">보드게임</a><a href="PartyListDesktop.html">파티</a><a href="ChatDesktop.html">AI 추천</a><a href="MyReservationsDesktop.html">내 예약</a></nav>
+<div class="bell-wrap"><button class="tb-icon-btn" aria-label="알림 1개"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"></path><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"></path></svg></button><span class="bell-count">1</span></div>
+<a class="me-btn" href="MeDesktop.html" style="text-decoration: none; background: var(--sunken);"><span class="tb-avatar s5">🦉</span>민지님</a>
+<button class="tb-btn tb-btn--ghost tb-btn--sm" style="color: var(--ink-muted);">로그아웃</button>
+</header>
+
+<main class="page page--wide" style="max-width: 960px;">
+<h1 class="page-title" style="font-size: 32px; line-height: 38px;">내 정보</h1>
+<div class="me-grid">
+<aside class="tb-card profile-card">
+<span class="tb-avatar tb-avatar--xl s5">🦉</span>
+<div><b style="display: block; font-size: 22px; line-height: 28px;">민지</b><span class="small muted">찬양팀에서 건반 쳐요. 추리 게임 좋아해요</span></div>
+<span class="tb-badge tb-badge--neutral">일반 회원</span>
+<button class="tb-btn tb-btn--secondary tb-btn--block">프로필 수정</button>
+<a class="link small" href="MyReservationsDesktop.html">내 예약 보기 →</a>
+</aside>
+
+<div style="display: flex; flex-direction: column; gap: 24px; min-width: 0;">
+<section class="section">
+<h2 class="section-title" style="font-size: 17px; line-height: 24px;">기본 정보</h2>
+<div class="panel">
+<dl class="kv" style="grid-template-columns: 120px 1fr;">
+<dt>이메일</dt><dd>minji@example.com</dd>
+<dt>이름</dt><dd>이민지</dd>
+<dt>생년월일</dt><dd class="muted">입력 안 함</dd>
+<dt>소속</dt><dd>찬양팀</dd>
+<dt>직업</dt><dd class="muted">입력 안 함</dd>
+</dl>
+</div>
+</section>
+
+<section class="section">
+<h2 class="section-title" style="font-size: 17px; line-height: 24px;">관리자 권한</h2>
+<div class="panel" style="flex-direction: row; align-items: center; justify-content: space-between; gap: 16px;">
+<span class="small muted">게임을 등록하고 예약을 관리하려면 관리자 권한이 필요해요. 최고 관리자가 승인해요.</span>
+<button class="tb-btn tb-btn--secondary tb-btn--sm">관리자 신청</button>
+</div>
+</section>
+
+<section class="section">
+<h2 class="section-title" style="font-size: 17px; line-height: 24px;">비밀번호 변경</h2>
+<div class="panel form" style="gap: 12px;">
+<div class="two">
+<label class="tb-field"><span class="tb-field__label">현재 비밀번호</span><input class="tb-input" type="password"></label>
+<label class="tb-field"><span class="tb-field__label">새 비밀번호</span><input class="tb-input" type="password"></label>
+</div>
+<button class="tb-btn tb-btn--secondary" style="align-self: flex-end;">변경하기</button>
+</div>
+</section>
+</div>
+</div>
+</main>
+</div>
+
+</body>
+</html>

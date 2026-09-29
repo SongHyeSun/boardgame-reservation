@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<title>AI 추천 첫 화면</title>
+<link rel="stylesheet" href="ds/boardclub/components/bundle.css">
+<link rel="stylesheet" href="screens.css">
+</head>
+<body>
+
+
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Do+Hyeon&amp;family=IBM+Plex+Sans+KR:wght@400;500;600;700&amp;display=swap">
+<style>
+body{margin:0}
+a{color:inherit}
+</style>
+
+<div class="scr" style="width: 390px; height: 844px;">
+<header class="hdr">
+<a class="logo" href="Main.html"><svg class="logo-mark" viewBox="0 0 26 26" aria-hidden="true"><rect width="26" height="26" rx="7" style="fill:var(--felt)"></rect><circle cx="8" cy="8" r="2.5" style="fill:var(--meeple)"></circle><circle cx="13" cy="13" r="2.5" style="fill:var(--meeple)"></circle><circle cx="18" cy="18" r="2.5" style="fill:var(--meeple)"></circle></svg>보드게임 동아리</a>
+<div class="bell-wrap"><button class="tb-icon-btn" aria-label="알림"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"></path><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"></path></svg></button></div>
+<a class="tb-icon-btn" href="Me.html" aria-label="내 정보"><span class="tb-avatar s3">🎲</span></a>
+<a class="tb-icon-btn" href="MobileMenu.html" aria-label="메뉴"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 6h16M4 12h16M4 18h16"></path></svg></a>
+</header>
+<div class="chat-top"><h1>AI 추천</h1><span class="quota">오늘 남은 추천 <b class="num">20</b>회</span></div>
+
+<div class="welcome">
+<svg viewBox="0 0 120 64" width="120" height="64" aria-hidden="true">
+<rect x="0" y="4" width="56" height="56" rx="12" style="fill:var(--felt)"></rect>
+<circle cx="16" cy="20" r="5" style="fill:var(--table)"></circle><circle cx="40" cy="44" r="5" style="fill:var(--table)"></circle>
+<rect x="64" y="4" width="56" height="56" rx="12" style="fill:var(--meeple)"></rect>
+<circle cx="80" cy="20" r="5" style="fill:var(--ink)"></circle><circle cx="92" cy="32" r="5" style="fill:var(--ink)"></circle><circle cx="104" cy="44" r="5" style="fill:var(--ink)"></circle>
+</svg>
+<h1>어떤 게임 할까요?</h1>
+<p class="muted" style="margin: 0; max-width: 300px;">인원, 시간, 난이도를 말해 주면 동아리에 있는 게임 중에서 골라 드려요.</p>
+</div>
+<div class="ask-list">
+<a class="tb-chip tb-chip--ask" href="Chat.html" style="text-decoration: none;">3인용 1시간짜리 추천해줘</a>
+<a class="tb-chip tb-chip--ask" href="Chat.html" style="text-decoration: none;">처음 하는 사람도 쉬운 게임</a>
+<a class="tb-chip tb-chip--ask" href="Chat.html" style="text-decoration: none;">온라인으로 할 수 있는 게임</a>
+</div>
+
+<div class="composer">
+<p class="notice">무료 AI 서비스를 사용하므로 입력 내용이 서비스 개선에 활용될 수 있어요. 개인정보는 입력하지 마세요.</p>
+<div class="composer__row"><textarea rows="1" placeholder="예: 5명이서 30분 안에 끝나는 게임" aria-label="메시지"></textarea><button class="send" aria-label="보내기" disabled><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M5 12l7-7 7 7"></path></svg></button></div>
+<div class="composer__meta"><span>Enter 보내기 · Shift+Enter 줄바꿈</span><span class="num">0/500</span></div>
+</div>
+</div>
+
+</body>
+</html>

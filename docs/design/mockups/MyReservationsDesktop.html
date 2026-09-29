@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<title>내 예약 데스크톱</title>
+<link rel="stylesheet" href="ds/boardclub/components/bundle.css">
+<link rel="stylesheet" href="screens.css">
+</head>
+<body>
+
+
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Do+Hyeon&amp;family=IBM+Plex+Sans+KR:wght@400;500;600;700&amp;display=swap">
+<style>
+body{margin:0}
+a{color:inherit}
+</style>
+
+<div class="scr" style="width: 1280px; height: 900px;">
+<header class="hdr hdr--wide">
+<a class="logo" href="Main.html" style="margin-right: 0;"><svg class="logo-mark" viewBox="0 0 26 26" aria-hidden="true"><rect width="26" height="26" rx="7" style="fill:var(--felt)"></rect><circle cx="8" cy="8" r="2.5" style="fill:var(--meeple)"></circle><circle cx="13" cy="13" r="2.5" style="fill:var(--meeple)"></circle><circle cx="18" cy="18" r="2.5" style="fill:var(--meeple)"></circle></svg>보드게임 동아리</a>
+<nav class="nav" aria-label="주 메뉴"><a href="GameListDesktop.html">보드게임</a><a href="PartyListDesktop.html">파티</a><a href="ChatDesktop.html">AI 추천</a><a class="on" href="MyReservationsDesktop.html">내 예약</a></nav>
+<div class="bell-wrap"><button class="tb-icon-btn" aria-label="알림 1개"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"></path><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"></path></svg></button><span class="bell-count">1</span></div>
+<a class="me-btn" href="MeDesktop.html" style="text-decoration: none;"><span class="tb-avatar s5">🦉</span>민지님</a>
+<button class="tb-btn tb-btn--ghost tb-btn--sm" style="color: var(--ink-muted);">로그아웃</button>
+</header>
+
+<main class="page page--wide" style="max-width: 960px;">
+<h1 class="page-title" style="font-size: 32px; line-height: 38px;">내 예약</h1>
+<nav class="tabs" aria-label="상태">
+<a class="on" href="MyReservationsDesktop.html">전체 <span class="count">5</span></a>
+<a href="MyReservationsDesktop.html">승인 대기</a><a href="MyReservationsDesktop.html">승인</a><a href="MyReservationsDesktop.html">거절</a><a href="MyReservationsDesktop.html">취소</a>
+</nav>
+
+<div class="tb-card" style="padding: 0;">
+<div class="res-row"><span class="thumb"><span class="ph ph--y">카탄</span></span><div><b style="display: block; font-size: 16px;">카탄</b><span class="small muted num">10/10(토) ~ 10/12(월) · 3일</span></div><div><span class="tb-badge tb-badge--meeple">승인 대기</span></div><div style="text-align: right;"><button class="tb-btn tb-btn--secondary tb-btn--sm">예약 취소</button></div></div>
+<hr class="divider">
+<div class="res-row"><span class="thumb"><span class="ph ph--g">스플렌더</span></span><div><b style="display: block; font-size: 16px;">스플렌더</b><span class="small muted num">10/3(토) · 당일</span></div><div><span class="tb-badge tb-badge--felt"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"></path></svg>승인</span></div><div style="text-align: right;"><button class="tb-btn tb-btn--secondary tb-btn--sm">예약 취소</button></div></div>
+<hr class="divider">
+<div class="res-row"><span class="thumb"><span class="ph ph--r" style="font-size: 12px;">테라포밍 마스</span></span><div><b style="display: block; font-size: 16px;">테라포밍 마스</b><span class="small muted num">9/26(토) ~ 9/27(일) · 2일</span></div><div style="display: flex; flex-direction: column; gap: 4px; align-items: flex-start;"><span class="tb-badge tb-badge--danger">거절</span><span class="note-line note-line--danger">수련회에서 쓸 예정이에요</span></div><div></div></div>
+<hr class="divider">
+<div class="res-row"><span class="thumb"><span class="ph ph--p">딕싯</span></span><div><b style="display: block; font-size: 16px;">딕싯</b><span class="small muted num">10/17(토) · 당일</span></div><div style="display: flex; flex-direction: column; gap: 4px; align-items: flex-start;"><span class="tb-row" style="gap: 4px;"><span class="tb-badge tb-badge--suspend"><svg viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="5" width="4" height="14" rx="1"></rect><rect x="14" y="5" width="4" height="14" rx="1"></rect></svg>운영 중지</span><span class="tb-badge tb-badge--neutral">취소</span></span><span class="note-line">게임 운영 중지로 취소됨</span></div><div></div></div>
+<hr class="divider">
+<div class="res-row"><span class="thumb"><span class="ph ph--b">스컬킹</span></span><div><b style="display: block; font-size: 16px;">스컬킹</b><span class="small muted num">9/19(토) ~ 9/20(일) · 2일</span></div><div><span class="tb-badge tb-badge--done">대여 완료</span></div><div></div></div>
+</div>
+</main>
+</div>
+
+</body>
+</html>

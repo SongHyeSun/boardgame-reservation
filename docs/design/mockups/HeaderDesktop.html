@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<title>헤더 알림 드롭다운</title>
+<link rel="stylesheet" href="ds/boardclub/components/bundle.css">
+<link rel="stylesheet" href="screens.css">
+</head>
+<body>
+
+
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Do+Hyeon&amp;family=IBM+Plex+Sans+KR:wght@400;500;600;700&amp;display=swap">
+<style>
+body{margin:0}
+a{color:inherit}
+</style>
+
+<div class="scr" style="width: 1280px; height: 620px;">
+<header class="hdr hdr--wide">
+<a class="logo" href="Main.html" style="margin-right: 0;"><svg class="logo-mark" viewBox="0 0 26 26" aria-hidden="true"><rect width="26" height="26" rx="7" style="fill:var(--felt)"></rect><circle cx="8" cy="8" r="2.5" style="fill:var(--meeple)"></circle><circle cx="13" cy="13" r="2.5" style="fill:var(--meeple)"></circle><circle cx="18" cy="18" r="2.5" style="fill:var(--meeple)"></circle></svg>보드게임 동아리</a>
+<nav class="nav" aria-label="주 메뉴"><a href="GameList.html">보드게임</a><a class="on" href="PartyListDesktop.html">파티</a><a href="ChatEmpty.html">AI 추천</a><a href="MyReservations.html">내 예약</a><a href="AdminReservations.html">예약 관리</a><a href="AdminRequests.html">관리자 승인</a></nav>
+<div class="bell-wrap"><button class="tb-icon-btn" aria-label="알림 3개" aria-expanded="true" style="background: var(--sunken); color: var(--ink);"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"></path><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"></path></svg></button><span class="bell-count">3</span></div>
+<a class="me-btn" href="Me.html" style="text-decoration: none;"><span class="tb-avatar s3">🎲</span>혜선님</a>
+<button class="tb-btn tb-btn--ghost tb-btn--sm" style="color: var(--ink-muted);">로그아웃</button>
+</header>
+
+<main class="page page--wide" style="opacity: .45;">
+<div class="title-row"><h1 class="page-title">파티 모집</h1><span class="tb-btn tb-btn--primary tb-btn--sm">파티 만들기</span></div>
+<div class="party-grid">
+<div class="tb-card" style="height: 180px;"></div><div class="tb-card" style="height: 180px;"></div><div class="tb-card" style="height: 180px;"></div>
+</div>
+</main>
+
+<div class="dropdown" role="dialog" aria-label="알림" style="right: 150px; top: 60px;">
+<div class="dropdown__head"><h2>알림</h2><button class="tb-btn tb-btn--ghost tb-btn--sm">모두 읽음</button></div>
+<a class="noti noti--unread" href="PartyDetail.html"><span class="tb-toast__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M22 21v-2a4 4 0 0 0-3-3.87"></path></svg></span><div><p>민지님이 '토요일 저녁 스플렌더 한 판' 파티에 참여했어요</p><time>3분 전</time></div><span class="dot" aria-label="안 읽음"></span></a>
+<a class="noti noti--unread" href="AdminReservations.html"><span class="tb-toast__icon tb-toast__icon--warn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="4" width="18" height="18" rx="2"></rect><path d="M16 2v4M8 2v4M3 10h18"></path></svg></span><div><p>다윗님이 '카탄' 대여를 신청했어요 (10/10 ~ 10/12)</p><time>1시간 전</time></div><span class="dot" aria-label="안 읽음"></span></a>
+<a class="noti noti--unread" href="PartyDetail.html"><span class="tb-toast__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"></path></svg></span><div><p>'예배 끝나고 카탄 입문' 파티 정원이 모두 찼어요</p><time>어제</time></div><span class="dot" aria-label="안 읽음"></span></a>
+<a class="noti" href="MyReservations.html"><span class="tb-toast__icon tb-toast__icon--danger"><svg viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="5" width="4" height="14" rx="1"></rect><rect x="14" y="5" width="4" height="14" rx="1"></rect></svg></span><div><p>'딕싯' 운영 중지로 예약이 취소됐어요</p><time>9/27</time></div><span></span></a>
+<div class="dropdown__foot">최근 20개까지 보여요</div>
+</div>
+</div>
+
+</body>
+</html>
