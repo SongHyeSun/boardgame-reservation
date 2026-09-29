@@ -37,6 +37,9 @@ function AuthMenu() {
       <NavLink to="/parties/new" className={navLinkClass}>
         파티 만들기
       </NavLink>
+      <NavLink to="/chat" className={navLinkClass}>
+        AI 추천
+      </NavLink>
       <NavLink to="/me/reservations" className={navLinkClass}>
         내 예약
       </NavLink>

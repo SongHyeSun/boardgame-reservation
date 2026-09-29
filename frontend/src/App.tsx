@@ -12,6 +12,7 @@ import SignupPage from './pages/auth/SignupPage.tsx'
 import BoardGameDetailPage from './pages/boardgames/BoardGameDetailPage.tsx'
 import BoardGameFormPage from './pages/boardgames/BoardGameFormPage.tsx'
 import BoardGameListPage from './pages/boardgames/BoardGameListPage.tsx'
+import ChatPage from './pages/chat/ChatPage.tsx'
 import MyPage from './pages/member/MyPage.tsx'
 import PartyCreatePage from './pages/parties/PartyCreatePage.tsx'
 import PartyDetailPage from './pages/parties/PartyDetailPage.tsx'
@@ -43,6 +44,7 @@ export const router = createBrowserRouter([
           { path: 'parties/new', element: <PartyCreatePage /> },
           { path: 'me', element: <MyPage /> },
           { path: 'me/reservations', element: <MyReservationsPage /> },
+          { path: 'chat', element: <ChatPage /> },
           { path: 'boardgames/:id/reserve', element: <ReservePage /> },
           {
             // ADMIN 전용 (SUPER_ADMIN 포함)
