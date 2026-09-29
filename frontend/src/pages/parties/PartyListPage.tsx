@@ -1,17 +1,16 @@
+import { Plus } from 'lucide-react'
 import { Link, useSearchParams } from 'react-router'
-import Avatar from '../../components/Avatar.tsx'
-import CustomGameBadge from '../../components/CustomGameBadge.tsx'
+import { buttonClass } from '../../components/buttonStyle.ts'
 import EmptyMessage from '../../components/EmptyMessage.tsx'
 import ErrorMessage from '../../components/ErrorMessage.tsx'
-import GameStatusBadge from '../../components/GameStatusBadge.tsx'
+import FilterChip from '../../components/FilterChip.tsx'
 import Loading from '../../components/Loading.tsx'
-import PartyStatusBadge from '../../components/PartyStatusBadge.tsx'
-import PlayModeBadge from '../../components/PlayModeBadge.tsx'
+import PageTitle from '../../components/PageTitle.tsx'
 import { useParties } from '../../hooks/useParties.ts'
 import type { PlayMode } from '../../types/boardgame.ts'
 import type { PartyFilter, PartyStatus } from '../../types/party.ts'
+import PartyCard from './PartyCard.tsx'
 import {
-  formatPlayAt,
   isPartyStatus,
   isPlayMode,
   PARTY_STATUS_LABEL,
@@ -89,20 +88,11 @@ interface FilterLinksProps {
 
 function FilterLinks({ label, items }: FilterLinksProps) {
   return (
-    <nav aria-label={label} className="flex flex-wrap gap-2">
+    <nav aria-label={label} className="flex gap-2">
       {items.map((item) => (
-        <Link
-          key={item.key}
-          to={item.to}
-          aria-current={item.current ? 'page' : undefined}
-          className={`rounded border px-3 py-1.5 text-sm ${
-            item.current
-              ? 'border-indigo-600 bg-indigo-600 font-medium text-white'
-              : 'border-gray-300 bg-white text-gray-700 hover:bg-gray-50'
-          }`}
-        >
+        <FilterChip key={item.key} to={item.to} current={item.current}>
           {item.label}
-        </Link>
+        </FilterChip>
       ))}
     </nav>
   )
@@ -125,34 +115,12 @@ function PartyResults({ tab, playMode }: PartyResultsProps) {
   if (parties.length === 0) {
     return <EmptyMessage message={playMode === null ? EMPTY_MESSAGE[tab] : '조건에 맞는 파티가 없습니다.'} />
   }
+  // 모바일 1열 / md 2열 / lg 3열
   return (
-    <ul className="space-y-3">
+    <ul className="grid gap-3 md:grid-cols-2 md:gap-4 lg:grid-cols-3">
       {parties.map((party) => (
-        <li key={party.id}>
-          <Link
-            to={`/parties/${party.id}`}
-            className="block rounded border border-gray-200 bg-white p-4 hover:border-indigo-400"
-          >
-            <div className="flex items-start justify-between gap-2">
-              <h2 className="font-semibold">{party.title}</h2>
-              <PartyStatusBadge status={party.status} />
-            </div>
-            <p className="mt-1 flex flex-wrap items-center gap-1.5 text-sm text-gray-600">
-              {party.gameName}
-              <CustomGameBadge customGame={party.customGame} />
-              <GameStatusBadge visible={party.boardGameVisible} />
-              <PlayModeBadge mode={party.playMode} />
-              · 호스트
-              <Avatar avatar={party.hostAvatar} size="sm" nickname={party.hostNickname} />
-              {party.hostNickname}
-            </p>
-            <div className="mt-2 flex items-center justify-between gap-2 text-sm text-gray-600">
-              <span>{formatPlayAt(party.playAt)}</span>
-              <span className="font-medium text-gray-800">
-                {party.currentCount}/{party.capacity}명
-              </span>
-            </div>
-          </Link>
+        <li key={party.id} className="grid">
+          <PartyCard party={party} />
         </li>
       ))}
     </ul>
@@ -165,35 +133,37 @@ export default function PartyListPage() {
   const playMode = parsePlayMode(searchParams)
 
   return (
-    <section className="space-y-4">
-      <div className="flex items-center justify-between gap-2">
-        <h1 className="text-2xl font-bold">파티</h1>
-        <Link
-          to="/parties/new"
-          className="rounded bg-indigo-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-indigo-700"
-        >
+    <section className="space-y-4 lg:space-y-6">
+      <div className="flex items-end justify-between gap-3">
+        <PageTitle lede="같이 할 사람을 찾고 있어요">파티 모집</PageTitle>
+        <Link to="/parties/new" className={`${buttonClass({ size: 'sm' })} lg:h-11 lg:px-[18px] lg:text-body`}>
+          <Plus aria-hidden className="size-[18px]" />
           파티 만들기
         </Link>
       </div>
 
-      <FilterLinks
-        label="상태 필터"
-        items={TABS.map((item) => ({
-          key: item.value,
-          label: item.label,
-          to: listPath(item.value, playMode),
-          current: item.value === tab,
-        }))}
-      />
-      <FilterLinks
-        label="진행 방식 필터"
-        items={PLAY_MODE_TABS.map((item) => ({
-          key: item.value ?? 'ALL',
-          label: item.label,
-          to: listPath(tab, item.value),
-          current: item.value === playMode,
-        }))}
-      />
+      {/* 모바일: 두 필터 그룹을 한 줄에 놓고 가로 스크롤. lg: 줄바꿈 + 그룹 사이 구분선 */}
+      <div className="-mx-4 flex items-center gap-2 overflow-x-auto px-4 pb-1 [scrollbar-width:none] lg:mx-0 lg:flex-wrap lg:overflow-visible lg:px-0 lg:pb-0 [&::-webkit-scrollbar]:hidden">
+        <FilterLinks
+          label="상태 필터"
+          items={TABS.map((item) => ({
+            key: item.value,
+            label: item.label,
+            to: listPath(item.value, playMode),
+            current: item.value === tab,
+          }))}
+        />
+        <span aria-hidden className="mx-1 hidden h-6 w-px shrink-0 bg-line lg:block" />
+        <FilterLinks
+          label="진행 방식 필터"
+          items={PLAY_MODE_TABS.map((item) => ({
+            key: item.value ?? 'ALL',
+            label: item.label,
+            to: listPath(tab, item.value),
+            current: item.value === playMode,
+          }))}
+        />
+      </div>
 
       <PartyResults tab={tab} playMode={playMode} />
     </section>
