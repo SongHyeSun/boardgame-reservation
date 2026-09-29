@@ -1,5 +1,110 @@
 @import "tailwindcss";
 
+/* 다크 모드: <html data-theme="dark">. OS 설정을 따르려면 앱 시작 때 matchMedia 결과로 data-theme를 넣는다 */
+@custom-variant dark (&:where([data-theme=dark], [data-theme=dark] *));
+
+@theme {
+  --color-table: #F2F4EE;
+  --color-surface: #FFFFFF;
+  --color-sunken: #E8ECE4;
+  --color-line: #DCE1D6;
+  --color-line-strong: #86938A;
+  --color-ink: #17201B;
+  --color-ink-muted: #55615A;
+  --color-felt: #1D5E45;
+  --color-felt-strong: #154A36;
+  --color-felt-edge: #0E3526;
+  --color-felt-soft: #E0EEE6;
+  --color-on-felt: #FFFFFF;
+  --color-meeple: #F2B531;
+  --color-on-meeple: #2B2000;
+  --color-meeple-soft: #FCEFC8;
+  --color-meeple-ink: #7D5500;
+  --color-danger: #B33A2B;
+  --color-danger-soft: #FAE3DE;
+  --color-info: #2656B0;
+  --color-info-soft: #E2EBFA;
+  --color-done: #62479F;
+  --color-done-soft: #ECE6F8;
+  --color-suspend: #2A322D;
+  --color-on-suspend: #FFFFFF;
+  --color-seat-red: #FBDAD5;
+  --color-seat-blue: #D8E5FA;
+  --color-seat-yellow: #FBEBC0;
+  --color-seat-green: #D5EEDC;
+  --color-seat-purple: #E6DDF7;
+  --color-seat-orange: #FCE0CB;
+  --color-scrim: #17201B73;
+
+  --font-display: "Do Hyeon", "IBM Plex Sans KR", system-ui, sans-serif;
+  --font-sans: "IBM Plex Sans KR", "Apple SD Gothic Neo", "Malgun Gothic", system-ui, sans-serif;
+
+  --text-display-lg: 32px;  --text-display-lg--line-height: 38px;
+  --text-display: 26px;     --text-display--line-height: 32px;
+  --text-numeral: 22px;     --text-numeral--line-height: 24px;
+  --text-title-lg: 20px;    --text-title-lg--line-height: 28px;  --text-title-lg--font-weight: 700;
+  --text-title: 17px;       --text-title--line-height: 24px;     --text-title--font-weight: 600;
+  --text-body: 15px;        --text-body--line-height: 24px;
+  --text-small: 13px;       --text-small--line-height: 20px;
+  --text-caption: 12px;     --text-caption--line-height: 16px;   --text-caption--font-weight: 600;
+
+  --spacing: 4px;
+
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 16px;
+  --radius-xl: 24px;
+
+  --shadow-token: 0 3px 0 #0E3526;
+  --shadow-card: 0 1px 2px rgba(23,32,27,0.06), 0 4px 12px -4px rgba(23,32,27,0.10);
+  --shadow-lifted: 0 2px 6px rgba(23,32,27,0.08), 0 16px 32px -8px rgba(23,32,27,0.24);
+}
+
+@layer base {
+  :root {
+    --header-h: 56px; --action-bar-h: 76px; --toast-w: 360px;
+    --z-header: 30; --z-action-bar: 40; --z-dropdown: 50; --z-modal: 70; --z-toast: 80;
+  }
+  [data-theme=dark] {
+    color-scheme: dark;
+    --color-table: #101612;
+    --color-surface: #19211C;
+    --color-sunken: #0B100D;
+    --color-line: #2A332D;
+    --color-line-strong: #66736A;
+    --color-ink: #E6EBE5;
+    --color-ink-muted: #A0ACA4;
+    --color-felt: #5DBE93;
+    --color-felt-strong: #7BD3AC;
+    --color-felt-edge: #2F7F5E;
+    --color-felt-soft: #16352A;
+    --color-on-felt: #08170F;
+    --color-meeple: #F2B531;
+    --color-on-meeple: #2B2000;
+    --color-meeple-soft: #3A2D0C;
+    --color-meeple-ink: #F4C95B;
+    --color-danger: #FF8C7B;
+    --color-danger-soft: #3E1C17;
+    --color-info: #8DB2FF;
+    --color-info-soft: #172748;
+    --color-done: #BDA7F2;
+    --color-done-soft: #2A2242;
+    --color-suspend: #E6EBE5;
+    --color-on-suspend: #101612;
+    --color-seat-red: #4A231E;
+    --color-seat-blue: #1D2F52;
+    --color-seat-yellow: #44360F;
+    --color-seat-green: #1B3D28;
+    --color-seat-purple: #33284F;
+    --color-seat-orange: #4A2D17;
+    --color-scrim: #000000A6;
+    --shadow-token: 0 3px 0 #2F7F5E;
+    --shadow-card: 0 1px 2px rgba(0,0,0,0.4), 0 4px 12px -4px rgba(0,0,0,0.5);
+    --shadow-lifted: 0 2px 6px rgba(0,0,0,0.5), 0 16px 32px -8px rgba(0,0,0,0.7);
+  }
+  body { @apply bg-table text-ink font-sans text-body antialiased; }
+}
+
 /* 모달(<dialog>)이 열려 있는 동안 뒤 화면이 스크롤되지 않게 한다 */
 body:has(dialog[open]) {
   overflow: hidden;
