@@ -44,7 +44,7 @@ class GeminiLlmClientTest {
         server = MockRestServiceServer.bindTo(builder).build();
         RestClient restClient = builder.build();
         ChatProperties properties = new ChatProperties(
-                "gemini", 20, 10, 30, new ChatProperties.Gemini("test-key", "gemini-3.7-flash"));
+                "gemini", 20, 10, 30, 100, new ChatProperties.Gemini("test-key", "gemini-3.7-flash"));
         client = new GeminiLlmClient(restClient, properties, new ObjectMapper());
     }
 

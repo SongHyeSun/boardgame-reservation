@@ -48,6 +48,6 @@ class ChatLlmConfigTest {
     }
 
     private static ChatProperties properties(String provider, String apiKey) {
-        return new ChatProperties(provider, 20, 10, 30, new ChatProperties.Gemini(apiKey, "gemini-3.7-flash"));
+        return new ChatProperties(provider, 20, 10, 30, 100, new ChatProperties.Gemini(apiKey, "gemini-3.7-flash"));
     }
 }

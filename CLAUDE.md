@@ -14,6 +14,14 @@ Java 17, Spring Boot 4.x, Gradle, Spring Security(세션 기반), Spring Data JP
 - 엔티티 직접 반환 금지, DTO는 record
 - 엔티티 생성은 정적 팩토리 메서드, 기본 생성자는 PROTECTED
 - 기능마다 테스트 작성
+- **DB 스키마는 Flyway** (`src/main/resources/db/migration`). 엔티티(컬럼·제약·인덱스)를 바꾸면 `V{n}__*.sql`을 새로 작성 (적용된 V 파일 수정 금지)
+- **enum 값을 추가·변경하면 해당 컬럼의 CHECK 제약(`*_check`)도 같은 마이그레이션에서 함께 변경** (Hibernate가 enum 컬럼마다 CHECK를 만들어 두어 새 값 INSERT가 실패함). `FlywayMigrationPostgresTest`(PG + validate + enum 값 INSERT)가 누락을 잡는다
+
+## 배포 (prod 프로필)
+- `SPRING_PROFILES_ACTIVE=prod` → `application-prod.yml`: ddl-auto validate + Flyway, Redis는 `REDIS_URL`(rediss), 업로드는 R2(`app.storage.type=s3`, `FileStorage` 구현체 S3FileStorage), secure 쿠키
+- 환경 변수 이름은 `.env.example`, 배포 구성·제약은 README. 계획은 docs/deploy-plan.md. 비밀값은 레포·채팅에 넣지 않음
+- 로컬 기본은 `app.storage.type=local`, Flyway `baseline-on-migrate`, `ddl-auto: update` (application.yml)
+- prod 설정 키를 바꿀 땐 이름이 틀려도 조용히 무시되므로 실제 적용을 테스트로 확인 (예: ProdSessionCleanupCronTest)
 
 ## 작업 방식
 - 요청받은 범위만 수정. 관련 없는 파일 리팩터링 금지

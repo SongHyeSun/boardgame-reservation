@@ -20,6 +20,7 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.function.LongSupplier;
 
 /**
  * Google Gemini {@code generateContent} REST 연동(사용자가 확정한 표준 스펙 기준, docs/chatbot-plan.md 계획 2-1a).
@@ -28,6 +29,9 @@ import java.util.Set;
  *
  * 이 클래스는 {@link BusinessException}(CHAT_UNAVAILABLE/CHAT_BUSY) 외에는 아무것도 던지지 않는다 —
  * RestClient 예외·JSON 파싱 예외·그 외 예상 못 한 예외까지 전부 여기서 잡아 변환한다.
+ * 시간 예산: generate 1회(라운드·재시도 포함)는 properties.totalBudgetSeconds 안에 끝나야 한다(Vercel 프록시 120초 대응).
+ * HTTP 호출은 시작 직전에 "남은 시간 ≥ 호출 1회 최악 시간(connect+read)"일 때만 시작하고, 아니면 호출하지 않고 실패로 끝낸다.
+ *
  * 감쌀 때마다 원인을 알 수 있게 log.warn을 남기고(HTTP 상태코드+응답 본문 / 타임아웃·연결 실패 클래스+메시지 /
  * 파싱 실패 단계+원인+본문 앞부분 / 도구 라운드 번호), BusinessException의 cause로도 원본 예외를 유지한다.
  * API 키·요청 헤더·사용자 메시지 원문은 절대 로그에 남기지 않는다(응답 본문·모델이 생성한 텍스트만 남김).
@@ -43,11 +47,26 @@ public class GeminiLlmClient implements LlmClient {
     private final RestClient restClient;
     private final ChatProperties properties;
     private final ObjectMapper objectMapper;
+    private final LongSupplier nanoClock;
+    private final RetrySleeper retrySleeper;
 
     public GeminiLlmClient(RestClient restClient, ChatProperties properties, ObjectMapper objectMapper) {
+        this(restClient, properties, objectMapper, System::nanoTime, Thread::sleep);
+    }
+
+    /** 테스트에서 시간과 재시도 대기를 제어하기 위한 생성자 */
+    GeminiLlmClient(RestClient restClient, ChatProperties properties, ObjectMapper objectMapper,
+                    LongSupplier nanoClock, RetrySleeper retrySleeper) {
         this.restClient = restClient;
         this.properties = properties;
         this.objectMapper = objectMapper;
+        this.nanoClock = nanoClock;
+        this.retrySleeper = retrySleeper;
+    }
+
+    @FunctionalInterface
+    interface RetrySleeper {
+        void sleep(long millis) throws InterruptedException;
     }
 
     @Override
@@ -65,6 +84,7 @@ public class GeminiLlmClient implements LlmClient {
     }
 
     private LlmResult doGenerate(ChatPrompt prompt, ToolExecutor toolExecutor) {
+        long deadlineNanos = nanoClock.getAsLong() + Duration.ofSeconds(properties.totalBudgetSeconds()).toNanos();
         ArrayNode contents = buildInitialContents(prompt);
         ObjectNode toolDeclaration = buildToolDeclaration();
         Set<Long> toolReturnedGameIds = new HashSet<>();
@@ -72,7 +92,7 @@ public class GeminiLlmClient implements LlmClient {
 
         int toolCallCount = 0;
         for (int round = 1; round <= MAX_TOOL_ROUNDS; round++) {
-            lastResponse = callGenerateContent(buildRequestBody(prompt.systemPrompt(), contents, toolDeclaration), round);
+            lastResponse = callGenerateContent(buildRequestBody(prompt.systemPrompt(), contents, toolDeclaration), round, deadlineNanos);
             JsonNode content = extractCandidateContent(lastResponse, round);
             JsonNode functionCall = findFunctionCall(content);
             if (functionCall == null) {
@@ -102,12 +122,15 @@ public class GeminiLlmClient implements LlmClient {
 
     // ───────────── HTTP 호출 ─────────────
 
-    private JsonNode callGenerateContent(ObjectNode requestBody, int round) {
+    private JsonNode callGenerateContent(ObjectNode requestBody, int round, long deadlineNanos) {
+        requireTimeForCall(deadlineNanos, round, ErrorCode.CHAT_UNAVAILABLE);
         try {
             return doCall(requestBody);
         } catch (HttpClientErrorException.TooManyRequests | HttpServerErrorException.ServiceUnavailable firstFailure) {
             // 429(무료 티어 한도)와 503(UNAVAILABLE, high demand) 둘 다 일시적 과부하 신호라 같은 재시도 정책을 쓴다
             sleepBeforeRetry(round);
+            // 첫 실패가 과부하 신호였으므로, 시간이 모자라 재시도를 못 하면 CHAT_BUSY (재시도 끝에 실패한 경우와 같은 응답)
+            requireTimeForCall(deadlineNanos, round, ErrorCode.CHAT_BUSY);
             try {
                 return doCall(requestBody);
             } catch (RuntimeException retryFailure) {
@@ -115,6 +138,18 @@ public class GeminiLlmClient implements LlmClient {
             }
         } catch (RestClientResponseException | ResourceAccessException e) {
             throw translateHttpFailure(e, round);
+        }
+    }
+
+    /** 남은 시간이 호출 1회 최악 시간(connect+read)보다 적으면 호출을 시작하지 않는다 */
+    private void requireTimeForCall(long deadlineNanos, int round, ErrorCode errorCode) {
+        long remainingNanos = deadlineNanos - nanoClock.getAsLong();
+        long neededNanos = Duration.ofSeconds(properties.worstCaseCallSeconds()).toNanos();
+        if (remainingNanos < neededNanos) {
+            log.warn("chat gemini: model={} round={} time budget exhausted remainingMs={} neededMs={} -> not calling",
+                    properties.gemini().model(), round,
+                    Duration.ofNanos(Math.max(remainingNanos, 0)).toMillis(), Duration.ofNanos(neededNanos).toMillis());
+            throw new BusinessException(errorCode);
         }
     }
 
@@ -153,7 +188,7 @@ public class GeminiLlmClient implements LlmClient {
 
     private void sleepBeforeRetry(int round) {
         try {
-            Thread.sleep(RETRY_DELAY.toMillis());
+            retrySleeper.sleep(RETRY_DELAY.toMillis());
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
             log.warn("chat gemini: model={} round={} interrupted while waiting to retry after busy response(429/503)",

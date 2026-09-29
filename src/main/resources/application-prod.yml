@@ -1,0 +1,59 @@
+# 운영(Render) 프로필: SPRING_PROFILES_ACTIVE=prod. application.yml 위에 덮어쓴다.
+# 비밀값·접속 정보는 전부 환경 변수(Render 대시보드)로만 주입한다 — 이 파일에 값을 넣지 말 것. 목록은 .env.example / README.
+server:
+  port: ${PORT:8080}
+  # Render(프록시) 뒤에서 https·클라이언트 주소를 올바르게 인식 (secure 쿠키, 리다이렉트)
+  forward-headers-strategy: framework
+  servlet:
+    session:
+      cookie:
+        secure: true            # same-site: lax, http-only 는 application.yml 유지
+
+spring:
+  datasource:
+    url: ${DB_URL}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+    hikari:
+      maximum-pool-size: 5      # Render 512MB / Neon 무료 연결 수 고려
+      minimum-idle: 0           # 유휴 연결을 남기지 않는다 (Neon 은 5분 무활동이면 일시정지, 연결이 끊겨 있을 수 있음)
+      idle-timeout: 60000       # 1분 유휴 연결 정리 (minimum-idle 0 과 함께 동작)
+      max-lifetime: 240000      # 4분: Neon/프록시가 오래된 연결을 끊기 전에 풀이 먼저 교체 (5분 이하)
+      # keepalive-time 은 일부러 설정하지 않는다: 주기 쿼리가 Neon 을 계속 깨워 CU-hours 를 소모한다
+
+  jpa:
+    hibernate:
+      ddl-auto: validate        # 스키마는 Flyway 가 만든다. 엔티티와 안 맞으면 기동 실패
+
+  flyway:
+    enabled: true
+    baseline-on-migrate: false  # 빈 운영 DB 에 V1 부터 적용. 실수로 baseline 처리되는 일 방지
+
+  data:
+    redis:
+      url: ${REDIS_URL}         # Upstash: rediss://default:<password>@<host>:6379 (TLS). host/port 설정보다 우선
+
+  session:
+    data:
+      redis:
+        # 기본(매분)이면 만료 세션 정리가 Upstash 월 50만 명령 한도를 갉아먹는다. 세션 자체 만료는 Redis TTL 이 처리하고
+        # 이 작업은 principal 인덱스 키 정리뿐이라 10분 지연돼도 무해. (적용 여부는 ProdSessionCleanupCronTest 가 검증)
+        cleanup-cron: "0 */10 * * * *"
+        # Upstash 가 CONFIG SET notify-keyspace-events 를 막으면 아래 주석을 풀고 콘솔에서 직접 설정 (README 배포 절)
+        # configure-action: none
+
+app:
+  storage:
+    type: s3                    # R2_ENDPOINT / R2_BUCKET / R2_ACCESS_KEY_ID / R2_SECRET_ACCESS_KEY 는 application.yml 의 s3.* 가 읽는다
+  notification:
+    # Vercel 프록시는 응답을 최대 120초까지만 기다린다 → 서버가 먼저(110초) 깔끔하게 닫고 EventSource 가 자동 재연결한다.
+    # 하트비트(25초)는 이보다 짧게 유지.
+    sse-timeout-seconds: 110
+  chat:
+    # 전체 상한 100초 < Vercel 120초. 호출은 "남은 시간 ≥ 2 × timeout-seconds(=40초)"일 때만 시작한다.
+    timeout-seconds: 20
+    total-budget-seconds: 100
+
+logging:
+  level:
+    org.hibernate.SQL: info     # application.yml 의 debug 를 끈다 (로그 양·CPU 절약)

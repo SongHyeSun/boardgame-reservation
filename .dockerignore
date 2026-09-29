@@ -1,0 +1,23 @@
+# 이미지 빌드에 필요 없는 것 (빌드 컨텍스트 축소 + 비밀·로컬 데이터 유입 방지)
+frontend/
+uploads/
+.git/
+.gitignore
+.gitattributes
+.idea/
+.vscode/
+.gradle/
+build/
+bin/
+out/
+docs/
+http/
+HELP.md
+docker-compose.yml
+.env
+.env.*
+!.env.example
+
+# 루트의 덤프(schema.sql 등)만 제외한다. 주의: "*.sql" 로 쓰면 src/main/resources/db/migration/V1__init.sql
+# (Flyway 마이그레이션)까지 빠져 운영 DB 에 스키마가 만들어지지 않는다.
+/*.sql

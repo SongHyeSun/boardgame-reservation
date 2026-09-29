@@ -14,11 +14,18 @@ import static org.assertj.core.api.Assertions.assertThatCode;
 /** 스프링 컨텍스트 없이 저장소 자체의 등록/제거/전송 동작만 검증한다 (실제 비동기 서블릿 응답은 없음). */
 class SseEmitterRepositoryTest {
 
-    private final SseEmitterRepository repository = new SseEmitterRepository();
+    private final SseEmitterRepository repository = new SseEmitterRepository(SseEmitterRepository.DEFAULT_TIMEOUT_SECONDS);
 
     @SuppressWarnings("unchecked")
     private Map<Long, List<SseEmitter>> emitters() {
         return (Map<Long, List<SseEmitter>>) ReflectionTestUtils.getField(repository, "emitters");
+    }
+
+    @Test
+    @DisplayName("emitter 타임아웃은 설정값(초)을 따른다 — 기본 30분, prod 110초")
+    void connect_usesConfiguredTimeout() {
+        assertThat(repository.connect(1L).getTimeout()).isEqualTo(30 * 60 * 1000L);
+        assertThat(new SseEmitterRepository(110).connect(2L).getTimeout()).isEqualTo(110_000L);
     }
 
     @Test

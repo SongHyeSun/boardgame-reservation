@@ -20,6 +20,12 @@ spring:
         # (CONFIG 가 막힌 관리형 Redis 에서는 configure-action: none + 파라미터 그룹에서 직접 설정)
         repository-type: indexed
 
+  flyway:
+    # 로컬: Flyway 도입 전부터 있던 개발 DB(히스토리 테이블 없음, 데이터 있음)는 V1 이 적용된 것으로 간주하고 넘어간다.
+    # 빈 DB 면 V1 이 정상 적용된다. prod 는 false 로 덮어쓴다 (application-prod.yml).
+    baseline-on-migrate: true
+    baseline-version: 1
+
   servlet:
     multipart:
       max-file-size: 5MB
@@ -28,7 +34,7 @@ spring:
   jpa:
     open-in-view: false          # 트랜잭션 밖(컨트롤러/뷰)에서 지연로딩 금지 → 커넥션 오래 잡는 문제 방지
     hibernate:
-      ddl-auto: update           # 개발 중에만. 배포 전에는 validate + 스키마 스크립트로 전환
+      ddl-auto: update           # 로컬 개발 전용. prod 는 validate + Flyway (application-prod.yml). 엔티티를 바꾸면 V2 마이그레이션도 작성
     properties:
       hibernate:
         format_sql: true
@@ -48,16 +54,25 @@ app:
   admin:
     email: ${ADMIN_EMAIL:}
     password: ${ADMIN_PASSWORD:}
+  storage:
+    type: local                     # local(LocalFileStorage) | s3(S3FileStorage, Cloudflare R2). prod 는 s3
+    s3:
+      endpoint: ${R2_ENDPOINT:}
+      bucket: ${R2_BUCKET:}
+      access-key-id: ${R2_ACCESS_KEY_ID:}
+      secret-access-key: ${R2_SECRET_ACCESS_KEY:}
   upload:
-    dir: ${UPLOAD_DIR:./uploads}   # LocalFileStorage 저장 위치 (7단계 배포 때 S3 구현체로 교체 예정)
+    dir: ${UPLOAD_DIR:./uploads}   # LocalFileStorage 저장 위치 (storage.type=local 일 때만 사용)
   notification:
+    sse-timeout-seconds: 1800   # SSE 연결 최대 유지 시간. prod 는 프록시(Vercel 120초)보다 짧게 (application-prod.yml)
     pubsub:
       enabled: true   # Redis Pub/Sub 알림 팬아웃. 실제 Redis 가 없는 테스트 컨텍스트에서는 false 로 끈다
   chat:
     provider: gemini            # 나중에 claude 등으로 교체
     daily-limit: 20
     max-history: 10             # 메시지 개수(사용자+AI)
-    timeout-seconds: 30
+    timeout-seconds: 30         # HTTP 호출 1회의 connect·read 각각. 호출 1회 최악 시간 = 2배
+    total-budget-seconds: 100   # generate 1회(라운드·재시도 포함) 전체 상한. 2 × timeout-seconds 이상이어야 함
     gemini:
       api-key: ${GEMINI_API_KEY:}
       model: ${GEMINI_MODEL:gemini-3.7-flash}

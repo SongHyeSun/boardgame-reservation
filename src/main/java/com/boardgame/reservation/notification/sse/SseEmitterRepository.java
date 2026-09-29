@@ -1,6 +1,7 @@
 package com.boardgame.reservation.notification.sse;
 
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
@@ -23,12 +24,19 @@ import java.util.concurrent.CopyOnWriteArrayList;
 @Component
 public class SseEmitterRepository {
 
-    private static final long TIMEOUT_MS = Duration.ofMinutes(30).toMillis();
+    /** app.notification.sse-timeout-seconds 기본값(로컬). prod 는 Vercel 프록시 120초보다 짧게(110초) 줘서 서버가 먼저 닫는다 */
+    static final long DEFAULT_TIMEOUT_SECONDS = 1800; // 30분 (@Value 기본값에 쓰이므로 컴파일 타임 상수여야 함)
 
     private final Map<Long, List<SseEmitter>> emitters = new ConcurrentHashMap<>();
+    private final long timeoutMs;
+
+    public SseEmitterRepository(
+            @Value("${app.notification.sse-timeout-seconds:" + DEFAULT_TIMEOUT_SECONDS + "}") long timeoutSeconds) {
+        this.timeoutMs = Duration.ofSeconds(timeoutSeconds).toMillis();
+    }
 
     public SseEmitter connect(Long memberId) {
-        SseEmitter emitter = new SseEmitter(TIMEOUT_MS);
+        SseEmitter emitter = new SseEmitter(timeoutMs);
         emitters.computeIfAbsent(memberId, id -> new CopyOnWriteArrayList<>()).add(emitter);
 
         emitter.onCompletion(() -> remove(memberId, emitter));

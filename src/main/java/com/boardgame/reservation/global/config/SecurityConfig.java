@@ -64,6 +64,8 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/boardgames/**", "/api/parties/**").permitAll()
                         // 업로드 이미지(아바타 등) 서빙. key 형식 검증은 FileStorage 가 한다
                         .requestMatchers(HttpMethod.GET, "/api/files/**").permitAll()
+                        // 배포 플랫폼 헬스 체크 (DB·Redis 를 건드리지 않는 HealthController)
+                        .requestMatchers(HttpMethod.GET, "/api/health").permitAll()
                         // 관리자 가입 승인은 SUPER_ADMIN 만 (ADMIN 은 403)
                         .requestMatchers("/api/admin/admin-requests/**").hasRole("SUPER_ADMIN")
                         // 예약 승인·거절·목록은 ADMIN (소유 관리자 검사는 서비스). 신청·내 예약·취소는 anyRequest().authenticated()
