@@ -56,6 +56,12 @@ export function useNotificationStream() {
 
     const eventSource = new EventSource('/api/notifications/stream')
 
+    // 서버가 프록시 제한(120초)보다 먼저 연결을 닫고 브라우저가 자동 재연결하는 사이에 놓친 알림은 토스트로는 못 받으므로,
+    // 연결이 (재)성립할 때마다 알림 목록·안읽은 수를 다시 조회해 보정한다 (최초 연결 시 1회 추가 조회는 무해)
+    eventSource.onopen = () => {
+      queryClient.invalidateQueries({ queryKey: notificationsKey })
+    }
+
     eventSource.addEventListener('notification', (event) => {
       const notification: NotificationResponse = JSON.parse((event as MessageEvent<string>).data)
       addToast(notification)
