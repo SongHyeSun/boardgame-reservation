@@ -64,6 +64,13 @@ public final class BoardGameSpecification {
         };
     }
 
+    /** 챗봇 도구(searchBoardGames) 전용 필터. 공개 API(GET /api/boardgames)는 이 조건을 받지 않는다 */
+    public static Specification<BoardGame> maxPlayTime(Integer minutes) {
+        return (root, query, cb) -> minutes == null
+                ? cb.conjunction()
+                : cb.lessThanOrEqualTo(root.get("playTime"), minutes);
+    }
+
     /** 사용자가 입력한 % _ 가 와일드카드로 동작하지 않도록 이스케이프 */
     private static String escapeLike(String value) {
         return value

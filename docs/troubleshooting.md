@@ -96,3 +96,38 @@
 ## 8. D단계: `ddl-auto: update` 는 새 테이블의 FOREIGN KEY 제약 추가도 실패 시 WARN 만 남기고 기동을 계속할 수 있음 (notification)
 
 - 개발 중 재기동을 반복하며 테이블이 먼저 생성된 뒤 제약이 누락된 사례 → `notification` 테이블 재생성으로 해결.
+
+---
+
+## 9. Gemini 무료 티어에서 Google Search grounding 미지원 (챗봇, 계획 단계)
+
+- **확인**: Gemini 3.x 계열 무료 티어에서는 Google Search grounding(웹 검색)을 쓸 수 없음을 확인.
+- **결정**: 챗봇 첫 구현 범위에서 웹 검색 기능(`app.chat.web-search-enabled`, 응답 `sources` 등)을 전부 제외. `searchBoardGames` function calling으로 DB 기반 추천만 남김.
+- **재발 방지**: 나중에 웹 검색을 다시 넣을 땐 그 시점의 유료/무료 티어 지원 여부부터 다시 확인할 것.
+
+---
+
+## 10. Jackson 3에서 `JsonNode.asText()`/`asText(default)` 가 deprecated (챗봇)
+
+- **증상**: `GeminiLlmClient`/`GameSearchTool` 컴파일 시 "Some input files use or override a deprecated API" 경고.
+- **원인**: 이 프로젝트가 쓰는 Jackson 3(`tools.jackson.databind`, jackson-databind 3.1.5)는 `asText()`/`asText(String)`을 `asString()`/`asString(String)`으로 바꾸고 옛 이름은 `@Deprecated`(since 3.0)로만 남겨뒀다.
+- **해결**: 두 클래스의 `asText` 호출을 전부 `asString`으로 교체.
+- **재발 방지**: Jackson 3 코드에서 텍스트 값을 꺼낼 땐 `asString()`/`asString(default)`을 쓴다(`asText`는 옛 API로 남아 있을 뿐).
+
+---
+
+## 11. `RestClient.Builder` 빈이 스프링 컨텍스트에 없어 기존 통합테스트 239개가 연쇄 실패 (챗봇)
+
+- **증상**: `ChatLlmConfig`가 `RestClient.Builder`를 생성자로 주입받게 했더니, 챗봇과 무관한 기존 통합테스트(`MemberProfileIntegrationTest`, `SignupIntegrationTest`, `Party*`, `Reservation*`, `Notification*` 등) 239개가 전부 `IllegalStateException`(`DefaultCacheAwareContextLoaderDelegate`)으로 실패했다. 실제 원인은 `ReservationConcurrencyTest` 쪽에서만 드러난 `NoSuchBeanDefinitionException`(`RestClient$Builder`)이었고, 스프링 테스트 컨텍스트 캐시가 그 실패를 캐싱해 같은 컨텍스트를 쓰는 다른 모든 테스트로 번졌다.
+- **원인**: 이 프로젝트 환경에서 `RestClient.Builder` 빈이 자동 등록되지 않는다(`RestClientAutoConfiguration` 미동작 — 정확한 이유는 확인하지 못함).
+- **해결**: 빈 주입 대신 `ChatLlmConfig.geminiRestClient()` 안에서 `RestClient.builder()`를 직접 호출하도록 변경. 타임아웃(`SimpleClientHttpRequestFactory.setConnectTimeout`/`setReadTimeout`)은 그대로 직접 설정.
+- **재발 방지**: 이 환경에서 `RestClient.Builder`를 주입받는 새 코드를 짤 땐 먼저 `RestClient.builder()` 직접 호출로 되는지부터 확인한다. 스프링 컨텍스트를 쓰는 새 빈을 추가한 뒤에는 그 기능의 테스트만이 아니라 전체 테스트(`.\gradlew test`)를 한 번 돌려봐야 이런 연쇄 실패를 바로 잡을 수 있다.
+
+---
+
+## 12. 실제 키로 호출 시 503(UNAVAILABLE, high demand) — 원인 로그로 구글 서버 문제임을 분리 (챗봇)
+
+- **증상**: 실제 `GEMINI_API_KEY`로 `/api/chat/recommend`를 호출하면 약 8초 후 503 CHAT_UNAVAILABLE.
+- **1차 조사**: 처음엔 `GeminiLlmClient`가 예외를 `BusinessException`으로 감싸기만 하고 로그를 남기지 않아 애플리케이션 로그만으로는 원인을 알 수 없었다 → 실패 지점(HTTP 에러/타임아웃/파싱 단계/도구 라운드)마다 `log.warn`을 추가(모델명, 상태코드+응답 본문, 도구 라운드 번호 등. API 키·요청 헤더·사용자 메시지 원문은 남기지 않음).
+- **분리**: 추가한 로그로 Gemini가 응답 본문에 직접 503 UNAVAILABLE(high demand)을 돌려주는 걸 확인한 뒤, 애플리케이션을 거치지 않고 PowerShell에서 같은 엔드포인트로 직접 호출해도 같은 503이 나는 것으로 우리 코드 문제가 아니라 구글 서버 쪽 일시적 과부하임을 확인했다.
+- **대응**: 429(무료 티어 한도)와 동일하게 503도 1초 대기 후 1회 재시도, 그래도 실패하면 CHAT_BUSY로 매핑(둘 다 "일시적으로 붐빔" 신호로 취급).

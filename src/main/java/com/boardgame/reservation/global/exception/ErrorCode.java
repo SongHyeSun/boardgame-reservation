@@ -68,7 +68,12 @@ public enum ErrorCode {
     RESERVATION_NOT_SUPPORTED(HttpStatus.CONFLICT, "온라인 전용 게임은 대여할 수 없습니다."),
 
     // 알림
-    NOTIFICATION_NOT_FOUND(HttpStatus.NOT_FOUND, "알림을 찾을 수 없습니다.");
+    NOTIFICATION_NOT_FOUND(HttpStatus.NOT_FOUND, "알림을 찾을 수 없습니다."),
+
+    // 챗봇
+    CHAT_LIMIT_EXCEEDED(HttpStatus.TOO_MANY_REQUESTS, "오늘 사용할 수 있는 AI 추천 횟수를 모두 사용했어요"),
+    CHAT_UNAVAILABLE(HttpStatus.SERVICE_UNAVAILABLE, "AI 추천을 지금은 사용할 수 없습니다. 잠시 후 다시 시도해주세요"),
+    CHAT_BUSY(HttpStatus.TOO_MANY_REQUESTS, "요청이 많아 잠시 후 다시 시도해주세요");
 
     private final HttpStatus status;
     private final String message;

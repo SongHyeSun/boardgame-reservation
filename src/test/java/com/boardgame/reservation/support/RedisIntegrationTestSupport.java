@@ -40,7 +40,7 @@ public abstract class RedisIntegrationTestSupport extends DatabaseTestSupport {
 
     @AfterEach
     protected void cleanUpRedis() {
-        for (String pattern : new String[]{"party:*", "spring:session:*"}) {
+        for (String pattern : new String[]{"party:*", "chat:*", "spring:session:*"}) {
             Set<String> keys = redisTemplate.keys(pattern);
             if (keys != null && !keys.isEmpty()) {
                 redisTemplate.delete(keys);

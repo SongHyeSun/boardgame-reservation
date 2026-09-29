@@ -53,6 +53,14 @@ app:
   notification:
     pubsub:
       enabled: true   # Redis Pub/Sub 알림 팬아웃. 실제 Redis 가 없는 테스트 컨텍스트에서는 false 로 끈다
+  chat:
+    provider: gemini            # 나중에 claude 등으로 교체
+    daily-limit: 20
+    max-history: 10             # 메시지 개수(사용자+AI)
+    timeout-seconds: 30
+    gemini:
+      api-key: ${GEMINI_API_KEY:}
+      model: ${GEMINI_MODEL:gemini-3.7-flash}
 
 logging:
   level:

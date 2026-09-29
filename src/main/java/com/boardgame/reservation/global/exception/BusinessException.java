@@ -21,4 +21,10 @@ public class BusinessException extends RuntimeException {
         super(message);
         this.errorCode = errorCode;
     }
+
+    /** 외부 예외(HTTP·파싱 등)를 감싸 던질 때. cause를 유지해야 로그 스택트레이스에 원인이 남는다 */
+    public BusinessException(ErrorCode errorCode, Throwable cause) {
+        super(errorCode.getMessage(), cause);
+        this.errorCode = errorCode;
+    }
 }

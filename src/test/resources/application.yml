@@ -34,3 +34,11 @@ app:
       # 진짜 Redis 가 없는 테스트(PostgresIntegrationTestSupport 등)에서 컨텍스트가 깨지지 않도록 기본은 꺼둔다.
       # 진짜 Redis 가 있는 RedisIntegrationTestSupport 가 다시 켠다.
       enabled: false
+  chat:
+    provider: gemini
+    daily-limit: 20
+    max-history: 10
+    timeout-seconds: 30
+    gemini:
+      api-key:
+      model:

@@ -1,0 +1,69 @@
+### IntelliJ HTTP Client — 위에서부터 순서대로 ▶ 실행 (쿠키 자동 저장)
+### 사전 준비: GEMINI_API_KEY 환경 변수를 설정하고 서버를 띄워야 실제 추천이 동작합니다(설정 없으면 503 CHAT_UNAVAILABLE).
+### 하루 20회 제한(Redis, Asia/Seoul 자정 기준). history는 최대 10개, 각 content 1000자, message는 1~500자.
+
+### 1. 로그인
+POST http://localhost:8080/api/auth/login
+Content-Type: application/json
+
+{ "email": "admin@test.com", "password": "admin1234!" }
+
+### 2. 오늘 남은 추천 횟수
+GET http://localhost:8080/api/chat/usage
+
+### 3. 추천 요청 (첫 메시지, history 없음)
+POST http://localhost:8080/api/chat/recommend
+Content-Type: application/json
+
+{ "message": "3인용 1시간짜리 추천해줘" }
+
+### 3-1. 대화 이어가기 (history 포함)
+POST http://localhost:8080/api/chat/recommend
+Content-Type: application/json
+
+{ "message": "그중에 제일 쉬운 건 뭐야?",
+  "history": [
+    { "role": "USER", "content": "3인용 1시간짜리 추천해줘" },
+    { "role": "ASSISTANT", "content": "카탄과 스플렌더를 추천드려요." }
+  ] }
+
+### 4. 빈 메시지 → 400
+POST http://localhost:8080/api/chat/recommend
+Content-Type: application/json
+
+{ "message": "" }
+
+### 4-1. 500자 초과 → 400
+POST http://localhost:8080/api/chat/recommend
+Content-Type: application/json
+
+{ "message": "가나다라마바사아자차카타파하퍼거너더러머버서어저처커터퍼허가나다라마바사아자차카타파하퍼거너더러머버서어저처커터퍼허가나다라마바사아자차카타파하퍼거너더러머버서어저처커터퍼허가나다라마바사아자차카타파하퍼거너더러머버서어저처커터퍼허가나다라마바사아자차카타파하퍼거너더러머버서어저처커터퍼허가나다라마바사아자차카타파하퍼거너더러머버서어저처커터퍼허가나다라마바사아자차카타파하퍼거너더러머버서어저처커터퍼허가나다라마바사아자차카타파하퍼거너더러머버서어저처커터퍼허가나다라마바사아자차카타파하퍼거너더러머버서어저처커터퍼허가나다라마바사아자차카타파하퍼거너더러머버서어저처커터퍼허가나다라마바사아자차카타파하퍼거너더러머버서어저처커터퍼허가나다라마바사아자차카타파하퍼거너더러머버서어저처커터퍼허가나다라마바사아자차카타파하퍼거너더러머버서어저처커터퍼허가나다라마바사아자차카타파하퍼거너더러머버서어저처커터퍼허가나다라마바사아자차카타파하퍼거너더러머버서어저처커터퍼허가나다라마바사아자차카타파하퍼거너더러머버서어저처커터퍼허가나다라마바사아자차카타파하퍼거너더러머버서어저처커터퍼허가나다라마바사아자차카타파하퍼거너더러머버서어저처커터퍼허1" }
+
+### 4-2. history 11개 → 400
+POST http://localhost:8080/api/chat/recommend
+Content-Type: application/json
+
+{ "message": "추천해줘",
+  "history": [
+    { "role": "USER", "content": "1" }, { "role": "ASSISTANT", "content": "1" },
+    { "role": "USER", "content": "2" }, { "role": "ASSISTANT", "content": "2" },
+    { "role": "USER", "content": "3" }, { "role": "ASSISTANT", "content": "3" },
+    { "role": "USER", "content": "4" }, { "role": "ASSISTANT", "content": "4" },
+    { "role": "USER", "content": "5" }, { "role": "ASSISTANT", "content": "5" },
+    { "role": "USER", "content": "6" }
+  ] }
+
+### 4-3. 잘못된 role → 400
+POST http://localhost:8080/api/chat/recommend
+Content-Type: application/json
+
+{ "message": "추천해줘", "history": [ { "role": "SYSTEM", "content": "안녕" } ] }
+
+### 5. 비로그인 → 401 (로그아웃 후 실행)
+POST http://localhost:8080/api/auth/logout
+
+###
+POST http://localhost:8080/api/chat/recommend
+Content-Type: application/json
+
+{ "message": "추천해줘" }
