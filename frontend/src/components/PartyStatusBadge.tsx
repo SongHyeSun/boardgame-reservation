@@ -2,9 +2,9 @@ import type { PartyStatus } from '../types/party.ts'
 import { PARTY_STATUS_LABEL } from '../utils/format.ts'
 
 const BADGE_CLASS: Record<PartyStatus, string> = {
-  RECRUITING: 'bg-green-100 text-green-700',
-  CLOSED: 'bg-gray-200 text-gray-700',
-  CANCELLED: 'bg-red-100 text-red-700',
+  RECRUITING: 'bg-felt-soft text-felt',
+  CLOSED: 'bg-sunken text-ink-muted',
+  CANCELLED: 'bg-danger-soft text-danger',
 }
 
 interface PartyStatusBadgeProps {
@@ -13,7 +13,8 @@ interface PartyStatusBadgeProps {
 
 export default function PartyStatusBadge({ status }: PartyStatusBadgeProps) {
   return (
-    <span className={`inline-block rounded px-2 py-0.5 text-xs font-medium ${BADGE_CLASS[status]}`}>
+    <span className={`inline-flex h-6 items-center gap-1 whitespace-nowrap rounded-sm border px-2 text-caption border-transparent ${BADGE_CLASS[status]}`}>
+      {status === 'RECRUITING' && <i aria-hidden className="size-1.5 rounded-full bg-current" />}
       {PARTY_STATUS_LABEL[status]}
     </span>
   )

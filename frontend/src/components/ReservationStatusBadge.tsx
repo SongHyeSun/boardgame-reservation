@@ -1,13 +1,14 @@
+import { Check } from 'lucide-react'
 import type { ReservationStatus } from '../types/reservation.ts'
 import { RESERVATION_COMPLETED_LABEL, RESERVATION_STATUS_LABEL } from '../utils/format.ts'
 import { displayStatus, type ReservationDisplayStatus } from '../utils/reservation.ts'
 
 const BADGE_CLASS: Record<ReservationDisplayStatus, string> = {
-  PENDING: 'bg-yellow-100 text-yellow-800',
-  APPROVED: 'bg-green-100 text-green-700',
-  REJECTED: 'bg-red-100 text-red-700',
-  CANCELLED: 'bg-gray-200 text-gray-700',
-  COMPLETED: 'bg-blue-100 text-blue-700',
+  PENDING: 'bg-meeple-soft text-meeple-ink',
+  APPROVED: 'bg-felt-soft text-felt',
+  REJECTED: 'bg-danger-soft text-danger',
+  CANCELLED: 'bg-sunken text-ink-muted',
+  COMPLETED: 'bg-done-soft text-done',
 }
 
 interface ReservationStatusBadgeProps {
@@ -19,5 +20,10 @@ interface ReservationStatusBadgeProps {
 export default function ReservationStatusBadge({ reservation, today }: ReservationStatusBadgeProps) {
   const status = displayStatus(reservation, today)
   const label = status === 'COMPLETED' ? RESERVATION_COMPLETED_LABEL : RESERVATION_STATUS_LABEL[status]
-  return <span className={`inline-block rounded px-2 py-0.5 text-xs font-medium ${BADGE_CLASS[status]}`}>{label}</span>
+  return (
+    <span className={`inline-flex h-6 items-center gap-1 whitespace-nowrap rounded-sm border px-2 text-caption border-transparent ${BADGE_CLASS[status]}`}>
+      {status === 'APPROVED' && <Check aria-hidden className="size-3" />}
+      {label}
+    </span>
+  )
 }

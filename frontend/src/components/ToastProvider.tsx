@@ -1,9 +1,11 @@
+import { Bell, X } from 'lucide-react'
 import { useCallback, useRef, useState, type ReactNode } from 'react'
 import { useNavigate } from 'react-router'
 import { useMarkRead } from '../hooks/useNotifications.ts'
 import { ToastContext } from '../hooks/useToast.ts'
 import type { NotificationResponse } from '../types/notification.ts'
 import { formatDateTime } from '../utils/format.ts'
+import Button from './Button.tsx'
 
 const MAX_TOASTS = 5
 const AUTO_DISMISS_MS = 10_000
@@ -34,23 +36,25 @@ function ToastCard({ notification, onClose }: ToastCardProps) {
       tabIndex={0}
       onClick={handleClick}
       onKeyDown={(event) => event.key === 'Enter' && handleClick()}
-      className="w-80 cursor-pointer rounded-lg border border-gray-200 bg-white p-3 shadow-lg"
+      className="pointer-events-auto grid cursor-pointer grid-cols-[36px_1fr_auto] items-start gap-2.5 rounded-lg border border-line bg-surface py-3 pl-3 pr-2 shadow-lifted"
     >
-      <div className="flex items-start justify-between gap-2">
-        <p className="text-sm text-gray-900">{notification.message}</p>
-        <button
-          type="button"
-          onClick={(event) => {
-            event.stopPropagation()
-            onClose(notification.id)
-          }}
-          aria-label="닫기"
-          className="shrink-0 rounded px-1 text-gray-400 hover:bg-gray-100 hover:text-gray-700"
-        >
-          ✕
-        </button>
+      <span aria-hidden className="grid size-9 place-items-center rounded-full bg-felt-soft text-felt">
+        <Bell className="size-[18px]" />
+      </span>
+      <div>
+        <p className="text-[14px]/5 text-ink">{notification.message}</p>
+        <p className="mt-0.5 text-caption text-ink-muted">{formatDateTime(notification.createdAt)}</p>
       </div>
-      <p className="mt-1 text-xs text-gray-500">{formatDateTime(notification.createdAt)}</p>
+      <Button
+        variant="icon"
+        onClick={(event) => {
+          event.stopPropagation()
+          onClose(notification.id)
+        }}
+        aria-label="닫기"
+      >
+        <X aria-hidden className="size-4" />
+      </Button>
     </div>
   )
 }
@@ -90,7 +94,7 @@ export default function ToastProvider({ children }: ToastProviderProps) {
   return (
     <ToastContext value={{ addToast, removeToast }}>
       {children}
-      <div className="fixed bottom-4 right-4 z-50 flex flex-col-reverse gap-2">
+      <div className="pointer-events-none fixed inset-x-4 bottom-[calc(16px+var(--page-action-bar,0px)+env(safe-area-inset-bottom))] z-(--z-toast) flex flex-col-reverse gap-2 sm:inset-x-auto sm:right-6 sm:w-(--toast-w)">
         {toasts.map((toast) => (
           <ToastCard key={toast.id} notification={toast} onClose={removeToast} />
         ))}

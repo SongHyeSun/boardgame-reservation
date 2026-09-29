@@ -1,3 +1,5 @@
+import { Pencil } from 'lucide-react'
+
 interface CustomGameBadgeProps {
   customGame: boolean
 }
@@ -8,6 +10,9 @@ export default function CustomGameBadge({ customGame }: CustomGameBadgeProps) {
     return null
   }
   return (
-    <span className="inline-block rounded bg-violet-100 px-2 py-0.5 text-xs font-medium text-violet-700">기타 게임</span>
+    <span className="inline-flex h-6 items-center gap-1 whitespace-nowrap rounded-sm border px-2 text-caption border-dashed border-line-strong bg-transparent text-ink-muted">
+      <Pencil aria-hidden className="size-3" />
+      기타 게임
+    </span>
   )
 }

@@ -1,3 +1,5 @@
+import { Pause } from 'lucide-react'
+
 interface GameStatusBadgeProps {
   visible: boolean
 }
@@ -8,6 +10,9 @@ export default function GameStatusBadge({ visible }: GameStatusBadgeProps) {
     return null
   }
   return (
-    <span className="inline-block rounded bg-orange-100 px-2 py-0.5 text-xs font-medium text-orange-700">운영 중지</span>
+    <span className="inline-flex h-6 items-center gap-1 whitespace-nowrap rounded-sm border px-2 text-caption border-transparent bg-suspend text-on-suspend">
+      <Pause aria-hidden className="size-3" />
+      운영 중지
+    </span>
   )
 }

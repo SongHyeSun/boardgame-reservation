@@ -11,7 +11,7 @@ export default function SelectField({ id, label, error, children, ...selectProps
 
   return (
     <div>
-      <label htmlFor={id} className="mb-1 block text-sm font-medium text-gray-700">
+      <label htmlFor={id} className="mb-1.5 block text-small font-semibold text-ink">
         {label}
       </label>
       <select
@@ -19,14 +19,14 @@ export default function SelectField({ id, label, error, children, ...selectProps
         id={id}
         aria-invalid={error ? true : undefined}
         aria-describedby={error ? errorId : undefined}
-        className={`w-full rounded border bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 ${
-          error ? 'border-red-400' : 'border-gray-300'
+        className={`h-11 w-full rounded-md border bg-surface px-3 text-body text-ink placeholder:text-ink-muted focus:border-felt focus:outline-2 focus:outline-offset-1 focus:outline-felt disabled:bg-sunken disabled:text-ink-muted ${
+          error ? 'border-danger' : 'border-line-strong'
         }`}
       >
         {children}
       </select>
       {error && (
-        <p id={errorId} className="mt-1 text-sm text-red-600">
+        <p id={errorId} className="mt-1.5 text-small font-medium text-danger">
           {error}
         </p>
       )}

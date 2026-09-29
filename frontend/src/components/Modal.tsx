@@ -1,4 +1,6 @@
+import { X } from 'lucide-react'
 import { useEffect, useId, useRef, type MouseEvent, type ReactNode, type SyntheticEvent } from 'react'
+import Button from './Button.tsx'
 
 interface ModalProps {
   title: string
@@ -47,21 +49,17 @@ export default function Modal({ title, onClose, children }: ModalProps) {
       aria-labelledby={titleId}
       onCancel={handleCancel}
       onClick={handleClick}
-      className="m-auto max-h-[85vh] w-[calc(100%-2rem)] max-w-lg overflow-hidden rounded-lg bg-white p-0 shadow-xl backdrop:bg-black/40 open:flex open:flex-col"
+      className="mx-auto mb-0 mt-auto max-h-[85vh] w-full max-w-none overflow-hidden rounded-b-none rounded-t-xl bg-surface p-0 text-ink shadow-lifted backdrop:bg-scrim open:flex open:flex-col sm:m-auto sm:max-w-[520px] sm:rounded-xl"
     >
       <div className="flex min-h-0 flex-1 flex-col">
-        <div className="flex items-center justify-between gap-2 border-b border-gray-200 px-4 py-3">
-          <h2 id={titleId} className="text-lg font-semibold">
+        <div aria-hidden className="mx-auto mt-2 h-1 w-9 shrink-0 rounded-sm bg-line sm:hidden" />
+        <div className="flex items-center justify-between gap-2 border-b border-line py-2 pl-5 pr-2">
+          <h2 id={titleId} className="text-title">
             {title}
           </h2>
-          <button
-            type="button"
-            onClick={onClose}
-            aria-label="닫기"
-            className="rounded px-2 py-1 text-gray-500 hover:bg-gray-100 hover:text-gray-700"
-          >
-            ✕
-          </button>
+          <Button variant="icon" onClick={onClose} aria-label="닫기">
+            <X aria-hidden className="size-5" />
+          </Button>
         </div>
         {children}
       </div>

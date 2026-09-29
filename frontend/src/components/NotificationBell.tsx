@@ -1,8 +1,10 @@
+import { Bell } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router'
 import { useMarkAllRead, useMarkRead, useNotifications, useUnreadCount } from '../hooks/useNotifications.ts'
 import type { NotificationResponse } from '../types/notification.ts'
 import { formatDateTime } from '../utils/format.ts'
+import Button from './Button.tsx'
 import EmptyMessage from './EmptyMessage.tsx'
 import Loading from './Loading.tsx'
 
@@ -54,29 +56,26 @@ export default function NotificationBell() {
 
   return (
     <div ref={containerRef} className="relative">
-      <button
-        type="button"
-        onClick={() => setOpen((current) => !current)}
-        aria-label="알림"
-        className="relative rounded px-1 text-lg leading-none hover:bg-gray-100"
-      >
-        🔔
+      <div className="relative">
+        <Button variant="icon" onClick={() => setOpen((current) => !current)} aria-label="알림">
+          <Bell aria-hidden className="size-5" />
+        </Button>
         {unreadCount > 0 && (
-          <span className="absolute -right-1 -top-1 rounded-full bg-red-600 px-1 text-[10px] leading-tight text-white">
+          <span className="pointer-events-none absolute right-0 top-0 min-w-4 rounded-full bg-danger px-1 text-center text-[10px] leading-4 font-semibold text-on-felt">
             {unreadCount > 99 ? '99+' : unreadCount}
           </span>
         )}
-      </button>
+      </div>
       {open && (
-        <div className="absolute right-0 top-full z-10 mt-2 w-80 rounded-lg border border-gray-200 bg-white shadow-lg">
-          <div className="flex items-center justify-between border-b border-gray-200 px-3 py-2">
-            <span className="text-sm font-semibold">알림</span>
+        <div className="absolute right-0 top-full z-(--z-dropdown) mt-2 w-80 rounded-lg border border-line bg-surface shadow-lifted">
+          <div className="flex items-center justify-between border-b border-line px-3 py-2">
+            <span className="text-small font-semibold">알림</span>
             {unreadCount > 0 && (
               <button
                 type="button"
                 onClick={() => markAllRead.mutate()}
                 disabled={markAllRead.isPending}
-                className="text-xs text-indigo-600 hover:underline disabled:opacity-50"
+                className="text-caption text-felt hover:underline disabled:opacity-50"
               >
                 모두 읽음
               </button>
@@ -90,12 +89,12 @@ export default function NotificationBell() {
                 key={notification.id}
                 type="button"
                 onClick={() => handleSelect(notification)}
-                className={`block w-full border-b border-gray-100 px-3 py-2 text-left text-sm last:border-b-0 hover:bg-gray-50 ${
-                  notification.read ? 'text-gray-600' : 'bg-indigo-50 font-medium text-gray-900'
+                className={`block w-full border-b border-line px-3 py-2 text-left text-small last:border-b-0 hover:bg-sunken ${
+                  notification.read ? 'text-ink-muted' : 'bg-felt-soft font-medium text-ink'
                 }`}
               >
                 <p>{notification.message}</p>
-                <p className="mt-0.5 text-xs text-gray-500">{formatDateTime(notification.createdAt)}</p>
+                <p className="mt-0.5 text-caption font-normal text-ink-muted">{formatDateTime(notification.createdAt)}</p>
               </button>
             ))}
           </div>
