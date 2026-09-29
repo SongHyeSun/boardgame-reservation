@@ -1,99 +1,111 @@
+import { Menu } from 'lucide-react'
+import { useCallback, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { Link, NavLink } from 'react-router'
 import { useLogout } from '../hooks/useAuth.ts'
 import { useMe } from '../hooks/useMe.ts'
-import { isAdmin, isSuperAdmin } from '../utils/role.ts'
 import Avatar from './Avatar.tsx'
+import Button from './Button.tsx'
+import { buttonClass } from './buttonStyle.ts'
 import ErrorMessage from './ErrorMessage.tsx'
+import Logo from './Logo.tsx'
+import MobileMenu from './MobileMenu.tsx'
+import { getNavItems } from './navItems.ts'
 import NotificationBell from './NotificationBell.tsx'
 
-const navLinkClass = ({ isActive }: { isActive: boolean }) =>
-  isActive ? 'font-semibold text-indigo-600' : 'text-gray-700 hover:text-indigo-600'
+const desktopNavClass = ({ isActive }: { isActive: boolean }) =>
+  `relative inline-flex h-(--header-h) items-center px-3 text-body after:absolute after:inset-x-3 after:bottom-0 after:h-[3px] after:rounded-t-[3px] ${
+    isActive ? 'font-semibold text-ink after:bg-meeple' : 'font-medium text-ink-muted hover:text-ink'
+  }`
 
-function AuthMenu() {
+/**
+ * 모바일(lg 미만): 로고 · 알림 · 아바타 · 햄버거 → 전체 화면 메뉴. lg 이상: 로고 · 가로 메뉴 · 알림 · 닉네임님 · 로그아웃.
+ * 메뉴 항목은 navItems 하나를 두 곳이 나눠 쓴다.
+ */
+export default function Header() {
   const { data: me, isPending, isError, error } = useMe()
   const logout = useLogout()
+  const [menuOpen, setMenuOpen] = useState(false)
+  const closeMenu = useCallback(() => setMenuOpen(false), [])
 
-  // 로딩 중엔 비워 둔다 (로그인/회원가입 → 닉네임 깜빡임 방지)
-  if (isPending) {
-    return null
-  }
-  if (isError) {
-    return <ErrorMessage message={error.message} />
-  }
-  if (me === null) {
-    return (
-      <>
-        <NavLink to="/login" className={navLinkClass}>
-          로그인
-        </NavLink>
-        <NavLink to="/signup" className={navLinkClass}>
-          회원가입
-        </NavLink>
-      </>
-    )
-  }
-  return (
-    <>
-      <NavLink to="/parties/new" className={navLinkClass}>
-        파티 만들기
-      </NavLink>
-      <NavLink to="/chat" className={navLinkClass}>
-        AI 추천
-      </NavLink>
-      <NavLink to="/me/reservations" className={navLinkClass}>
-        내 예약
-      </NavLink>
-      {isAdmin(me.role) && (
-        <>
-          <NavLink to="/boardgames/new" className={navLinkClass}>
-            게임 등록
-          </NavLink>
-          <NavLink to="/admin/reservations" className={navLinkClass}>
-            예약 관리
-          </NavLink>
-        </>
-      )}
-      {isSuperAdmin(me.role) && (
-        <NavLink to="/admin/admin-requests" className={navLinkClass}>
-          관리자 승인
-        </NavLink>
-      )}
-      {/* end: /me/reservations(내 예약)에서 닉네임 링크까지 활성으로 보이지 않게 */}
-      <NavLink to="/me" end className={(state) => `flex items-center gap-2 ${navLinkClass(state)}`}>
-        <Avatar avatar={me.avatar} size="sm" nickname={me.nickname} />
-        {me.nickname}님
-      </NavLink>
-      <NotificationBell />
-      <button
-        type="button"
-        onClick={() => logout.mutate()}
-        disabled={logout.isPending}
-        className="text-gray-700 hover:text-indigo-600 disabled:opacity-50"
-      >
-        {logout.isPending ? '로그아웃 중…' : '로그아웃'}
-      </button>
-      {logout.isError && <ErrorMessage message={logout.error.message} />}
-    </>
-  )
-}
+  // 로딩 중엔 오른쪽을 비워 둔다 (로그인/회원가입 → 닉네임 깜빡임 방지)
+  const resolved = !isPending && !isError
+  const { main, admin } = getNavItems(me ?? null)
 
-export default function Header() {
   return (
-    <header className="border-b border-gray-200 bg-white">
-      <nav className="mx-auto flex max-w-5xl flex-wrap items-center gap-x-5 gap-y-2 px-4 py-3">
-        <Link to="/" className="mr-2 text-lg font-bold text-indigo-600">
-          보드게임 예약
-        </Link>
-        <NavLink to="/boardgames" end className={navLinkClass}>
-          게임
-        </NavLink>
-        <NavLink to="/parties" end className={navLinkClass}>
-          파티
-        </NavLink>
-        <div className="ml-auto flex items-center gap-x-5">
-          <AuthMenu />
+    <header className="sticky top-0 z-(--z-header) border-b border-line bg-surface">
+      <div className="flex h-(--header-h) items-center gap-0.5 pl-4 pr-2 lg:gap-2 lg:px-8">
+        <Logo />
+
+        {/* 가로 메뉴 (lg 이상) */}
+        <nav aria-label="주 메뉴" className="ml-6 mr-auto hidden items-center gap-1 lg:flex">
+          {[...main, ...admin].map(({ to, label, end }) => (
+            <NavLink key={to} to={to} end={end} className={desktopNavClass}>
+              {label}
+            </NavLink>
+          ))}
+        </nav>
+        <span className="mr-auto lg:hidden" />
+
+        {isError && <ErrorMessage message={error.message} />}
+
+        {resolved && me != null && (
+          <>
+            <NotificationBell />
+            {/* 모바일은 아바타만, lg 는 닉네임님까지 */}
+            <Link
+              to="/me"
+              aria-label={`${me.nickname}님 내 정보`}
+              className="inline-flex h-10 items-center gap-2 rounded-full pl-1 pr-1 text-[14px] font-semibold text-ink hover:bg-sunken lg:pr-2.5"
+            >
+              <Avatar avatar={me.avatar} size="sm" nickname={me.nickname} seat={me.id} />
+              <span className="hidden lg:inline">{me.nickname}님</span>
+            </Link>
+            <span className="hidden lg:block">
+              <Button variant="ghost" size="sm" onClick={() => logout.mutate()} disabled={logout.isPending}>
+                {logout.isPending ? '로그아웃 중…' : '로그아웃'}
+              </Button>
+            </span>
+          </>
+        )}
+        {resolved && me === null && (
+          <>
+            <Link to="/login" className={buttonClass({ variant: 'ghost', size: 'sm' })}>
+              로그인
+            </Link>
+            <span className="hidden lg:block">
+              <Link to="/signup" className={buttonClass({ size: 'sm' })}>
+                회원가입
+              </Link>
+            </span>
+          </>
+        )}
+
+        <span className="lg:hidden">
+          <Button variant="icon" onClick={() => setMenuOpen(true)} aria-label="메뉴 열기" aria-expanded={menuOpen}>
+            <Menu aria-hidden className="size-5" />
+          </Button>
+        </span>
+      </div>
+      {logout.isError && (
+        <div className="px-4 pb-2 lg:px-8">
+          <ErrorMessage message={logout.error.message} />
         </div>
-      </nav>
+      )}
+
+      {/* 헤더(z-30) 안에 두면 하단 고정 바(z-40) 아래로 깔리므로 body 로 뺀다 */}
+      {menuOpen &&
+        createPortal(
+          <MobileMenu
+            me={me ?? null}
+            main={main}
+            admin={admin}
+            loggingOut={logout.isPending}
+            onLogout={() => logout.mutate()}
+            onClose={closeMenu}
+          />,
+          document.body,
+        )}
     </header>
   )
 }

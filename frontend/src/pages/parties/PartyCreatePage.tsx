@@ -1,6 +1,9 @@
 import { useState, type FormEvent } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router'
+import ActionBar from '../../components/ActionBar.tsx'
 import BoardGameSelectModal from '../../components/BoardGameSelectModal.tsx'
+import Button from '../../components/Button.tsx'
+import { buttonClass } from '../../components/buttonStyle.ts'
 import ErrorMessage from '../../components/ErrorMessage.tsx'
 import FormField from '../../components/FormField.tsx'
 import Loading from '../../components/Loading.tsx'
@@ -221,18 +224,15 @@ function PartyFormView({ initialBoardGame }: PartyFormViewProps) {
             onChange={(event) => handleChange('playAt', event.target.value)}
           />
 
-          <div className="flex gap-2">
-            <button
-              type="submit"
-              disabled={create.isPending}
-              className="rounded bg-indigo-600 px-4 py-2 font-medium text-white hover:bg-indigo-700 disabled:opacity-50"
-            >
-              {create.isPending ? '개설 중…' : '파티 개설'}
-            </button>
-            <Link to="/parties" className="rounded border border-gray-300 bg-white px-4 py-2 text-gray-700 hover:bg-gray-50">
+          {/* 모바일: 하단 고정 바. lg: 폼 맨 아래 오른쪽 [취소][파티 개설] */}
+          <ActionBar variant="inline">
+            <Link to="/parties" className={buttonClass({ variant: 'secondary', size: 'lg' })}>
               취소
             </Link>
-          </div>
+            <Button type="submit" size="lg" disabled={create.isPending}>
+              {create.isPending ? '개설 중…' : '파티 개설'}
+            </Button>
+          </ActionBar>
         </form>
       </section>
 

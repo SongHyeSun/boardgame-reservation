@@ -103,6 +103,11 @@
     --shadow-lifted: 0 2px 6px rgba(0,0,0,0.5), 0 16px 32px -8px rgba(0,0,0,0.7);
   }
   body { @apply bg-table text-ink font-sans text-body antialiased; }
+  /* 하단 고정 바(ActionBar)가 떠 있는 동안 토스트·본문 여백이 바 높이만큼 비켜난다. lg 이상은 바를 쓰지 않는다 */
+  html[data-action-bar] { --page-action-bar: var(--action-bar-h); }
+  @media (min-width: 1024px) {
+    html[data-action-bar] { --page-action-bar: 0px; }
+  }
 }
 
 /* 모달(<dialog>)이 열려 있는 동안 뒤 화면이 스크롤되지 않게 한다 */

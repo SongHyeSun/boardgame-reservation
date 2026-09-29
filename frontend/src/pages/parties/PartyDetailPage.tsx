@@ -1,12 +1,17 @@
 import { Link, useLocation, useParams } from 'react-router'
+import ActionBar from '../../components/ActionBar.tsx'
 import Avatar from '../../components/Avatar.tsx'
 import BackLink from '../../components/BackLink.tsx'
+import Button from '../../components/Button.tsx'
+import { buttonClass } from '../../components/buttonStyle.ts'
 import CustomGameBadge from '../../components/CustomGameBadge.tsx'
 import ErrorMessage from '../../components/ErrorMessage.tsx'
 import GameStatusBadge from '../../components/GameStatusBadge.tsx'
 import Loading from '../../components/Loading.tsx'
 import PartyStatusBadge from '../../components/PartyStatusBadge.tsx'
 import PlayModeBadge from '../../components/PlayModeBadge.tsx'
+import RemainChip from '../../components/RemainChip.tsx'
+import Seats from '../../components/Seats.tsx'
 import { useCloseParty, useJoinParty, useKickPartyMember, useLeaveParty, useParty } from '../../hooks/useParties.ts'
 import { useMe } from '../../hooks/useMe.ts'
 import type { PartyDetailResponse, PartyMemberInfo } from '../../types/party.ts'
@@ -14,10 +19,6 @@ import { formatDateTime, formatPlayAt } from '../../utils/format.ts'
 import { getPartyAction, isPartyMember } from '../../utils/partyAction.ts'
 import { parsePositiveInteger } from '../../utils/validation.ts'
 
-const PRIMARY_BUTTON = 'rounded bg-indigo-600 px-4 py-2 font-medium text-white hover:bg-indigo-700 disabled:opacity-50'
-const SECONDARY_BUTTON =
-  'rounded border border-gray-300 bg-white px-4 py-2 text-gray-700 hover:bg-gray-50 disabled:opacity-50'
-const DANGER_BUTTON = 'rounded border border-red-300 bg-white px-4 py-2 text-red-600 hover:bg-red-50 disabled:opacity-50'
 const SMALL_DANGER_BUTTON =
   'rounded border border-red-300 bg-white px-2 py-1 text-xs text-red-600 hover:bg-red-50 disabled:opacity-50'
 
@@ -85,39 +86,64 @@ function PartyActions({ party }: PartyProps) {
 
   const redirect = encodeURIComponent(location.pathname + location.search)
 
-  return (
-    <div className="mt-6 space-y-2">
-      {errorMessage && <ErrorMessage message={errorMessage} />}
+  // 취소·마감된 파티처럼 할 수 있는 동작이 없으면 고정 바도 그리지 않는다
+  if (action === 'NONE') {
+    return errorMessage ? <ErrorMessage message={errorMessage} /> : null
+  }
 
-      {action === 'LOGIN' && (
-        <Link to={`/login?redirect=${redirect}`} className={`inline-block ${PRIMARY_BUTTON}`}>
-          로그인하고 참여하기
-        </Link>
+  const seated = party.capacity - party.remaining
+  const filledPercent = party.capacity > 0 ? Math.round((seated / party.capacity) * 100) : 0
+  // 모바일: 좌석 점 + 남은 자리 칩(바 한 줄). lg: 사이드 카드의 "남은 자리" 큰 숫자 + 진행 막대
+  const summary = (
+    <div className="flex flex-wrap items-center gap-x-3 gap-y-1 lg:block">
+      <div className="hidden lg:block">
+        <p className="text-small text-ink-muted">남은 자리</p>
+        <p className="font-display text-[48px] leading-[1.1]">{party.remaining}</p>
+        <div aria-hidden className="mt-2 mb-3 h-2 overflow-hidden rounded-full bg-sunken">
+          <div className="h-full rounded-full bg-felt" style={{ width: `${filledPercent}%` }} />
+        </div>
+      </div>
+      <Seats current={seated} capacity={party.capacity} />
+      <span className="lg:hidden">
+        <RemainChip remaining={party.remaining} />
+      </span>
+    </div>
+  )
+
+  return (
+    <div>
+      {errorMessage && (
+        <div className="mb-3">
+          <ErrorMessage message={errorMessage} />
+        </div>
       )}
-      {action === 'JOIN' && (
-        <button type="button" onClick={handleJoin} disabled={busy} className={PRIMARY_BUTTON}>
-          {join.isPending ? '참여 중…' : '참여하기'}
-        </button>
-      )}
-      {action === 'FULL' && (
-        <button
-          type="button"
-          disabled
-          className="rounded bg-gray-200 px-4 py-2 font-medium text-gray-500 disabled:cursor-not-allowed"
-        >
-          정원 마감
-        </button>
-      )}
-      {action === 'LEAVE' && (
-        <button type="button" onClick={handleLeave} disabled={busy} className={SECONDARY_BUTTON}>
-          {leave.isPending ? '취소 중…' : '참여 취소'}
-        </button>
-      )}
-      {action === 'CLOSE' && (
-        <button type="button" onClick={handleClose} disabled={busy} className={DANGER_BUTTON}>
-          {close.isPending ? '마감 중…' : '모집 마감'}
-        </button>
-      )}
+      <ActionBar summary={summary}>
+        {action === 'LOGIN' && (
+          <Link to={`/login?redirect=${redirect}`} className={buttonClass({ size: 'lg' })}>
+            로그인하고 참여하기
+          </Link>
+        )}
+        {action === 'JOIN' && (
+          <Button size="lg" onClick={handleJoin} disabled={busy}>
+            {join.isPending ? '참여 중…' : '참여하기'}
+          </Button>
+        )}
+        {action === 'FULL' && (
+          <Button size="lg" disabled>
+            정원 마감
+          </Button>
+        )}
+        {action === 'LEAVE' && (
+          <Button variant="secondary" size="lg" onClick={handleLeave} disabled={busy}>
+            {leave.isPending ? '취소 중…' : '참여 취소'}
+          </Button>
+        )}
+        {action === 'CLOSE' && (
+          <Button variant="danger" size="lg" onClick={handleClose} disabled={busy}>
+            {close.isPending ? '마감 중…' : '모집 마감'}
+          </Button>
+        )}
+      </ActionBar>
     </div>
   )
 }
@@ -243,8 +269,6 @@ function PartyInfo({ party }: PartyProps) {
       <PartyPlayInfo party={party} />
 
       {party.description && <p className="mt-4 whitespace-pre-wrap text-gray-700">{party.description}</p>}
-
-      <PartyActions party={party} />
     </div>
   )
 }
@@ -321,10 +345,14 @@ function PartyDetail({ id }: { id: number }) {
   if (party === undefined) {
     return isError ? <ErrorMessage message={error.message} /> : <Loading />
   }
+  // lg: 왼쪽 본문 + 오른쪽 sticky 사이드 카드(PartyActions 의 ActionBar). 그 미만은 하단 고정 바
   return (
-    <div>
-      <PartyInfo party={party} />
-      <PartyMembers party={party} />
+    <div className="lg:grid lg:grid-cols-[1fr_360px] lg:gap-8">
+      <div>
+        <PartyInfo party={party} />
+        <PartyMembers party={party} />
+      </div>
+      <PartyActions party={party} />
     </div>
   )
 }

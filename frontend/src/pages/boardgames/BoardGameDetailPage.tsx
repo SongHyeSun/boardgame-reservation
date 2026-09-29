@@ -1,5 +1,7 @@
 import { Link, useParams } from 'react-router'
+import ActionBar from '../../components/ActionBar.tsx'
 import BackLink from '../../components/BackLink.tsx'
+import { buttonClass } from '../../components/buttonStyle.ts'
 import DifficultyBadge from '../../components/DifficultyBadge.tsx'
 import EmptyMessage from '../../components/EmptyMessage.tsx'
 import ErrorMessage from '../../components/ErrorMessage.tsx'
@@ -78,31 +80,48 @@ function OwnerActions({ boardGame }: BoardGameProps) {
   )
 }
 
-const RESERVE_BUTTON = 'inline-block rounded bg-indigo-600 px-4 py-2 font-medium text-white hover:bg-indigo-700'
+interface GameActionsProps {
+  boardGameId: number
+  /** 운영 중이고 오프라인 가능한 게임일 때만 대여 예약 버튼을 그린다. (온라인 전용은 대여 불가라 버튼이 없다) */
+  canReserve: boolean
+  /** 운영 중지된 게임은 파티를 만들 수 없다(서버 409) */
+  canCreateParty: boolean
+}
 
 /**
- * 대여 예약 진입 버튼. 호출부가 "운영 중이고 오프라인 가능한 게임"일 때만 그린다. (온라인 전용은 대여 불가라 버튼이 없다)
+ * 하단 고정 바(lg 는 제자리 버튼 줄): 대여 예약 진입 + 이 게임으로 파티 만들기.
  * 비로그인은 로그인 뒤 예약 페이지로 바로 돌아오게 redirect 를 붙인다.
  */
-function ReserveAction({ boardGameId }: { boardGameId: number }) {
+function GameActions({ boardGameId, canReserve, canCreateParty }: GameActionsProps) {
   const { data: me, isPending } = useMe()
 
   // 로딩 중엔 비워 둔다 (로그인 버튼 깜빡임 방지)
-  if (isPending) {
+  if (isPending || (!canReserve && !canCreateParty)) {
     return null
   }
   const reservePath = `/boardgames/${boardGameId}/reserve`
   return (
     <div className="mt-4">
-      {me ? (
-        <Link to={reservePath} className={RESERVE_BUTTON}>
-          예약하기
-        </Link>
-      ) : (
-        <Link to={`/login?redirect=${encodeURIComponent(reservePath)}`} className={RESERVE_BUTTON}>
-          로그인하고 예약하기
-        </Link>
-      )}
+      <ActionBar variant="inline">
+        {canCreateParty && (
+          <Link
+            to={`/parties/new?boardGameId=${boardGameId}`}
+            className={buttonClass({ variant: 'secondary', size: 'lg' })}
+          >
+            이 게임으로 파티 만들기
+          </Link>
+        )}
+        {canReserve &&
+          (me ? (
+            <Link to={reservePath} className={buttonClass({ size: 'lg' })}>
+              예약하기
+            </Link>
+          ) : (
+            <Link to={`/login?redirect=${encodeURIComponent(reservePath)}`} className={buttonClass({ size: 'lg' })}>
+              로그인하고 예약하기
+            </Link>
+          ))}
+      </ActionBar>
     </div>
   )
 }
@@ -142,7 +161,11 @@ function BoardGameInfo({ boardGame }: BoardGameProps) {
         <InfoItem label="등록 관리자" value={boardGame.owner?.nickname ?? '-'} />
       </dl>
 
-      {boardGame.visible && boardGame.offlineAvailable && <ReserveAction boardGameId={boardGame.id} />}
+      <GameActions
+        boardGameId={boardGame.id}
+        canReserve={boardGame.visible && boardGame.offlineAvailable}
+        canCreateParty={boardGame.visible}
+      />
 
       {boardGame.youtubeVideoId && (
         <div className="mt-4">
@@ -156,28 +179,14 @@ function BoardGameInfo({ boardGame }: BoardGameProps) {
   )
 }
 
-interface RecruitingPartiesProps {
-  boardGameId: number
-  /** 운영 중지된 게임은 파티를 만들 수 없다(서버 409) */
-  canCreateParty: boolean
-}
-
 /** 이 게임의 모집 중 파티. status 를 안 주면 서버가 전 상태를 돌려주므로 RECRUITING 을 명시한다. */
-function RecruitingParties({ boardGameId, canCreateParty }: RecruitingPartiesProps) {
+function RecruitingParties({ boardGameId }: { boardGameId: number }) {
   const { data: parties, isPending, isError, error } = useParties({ boardGameId, status: 'RECRUITING' })
 
   return (
     <section className="mt-8">
       <div className="flex items-center justify-between gap-2">
         <h2 className="text-lg font-semibold">모집 중인 파티</h2>
-        {canCreateParty && (
-          <Link
-            to={`/parties/new?boardGameId=${boardGameId}`}
-            className="rounded bg-indigo-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-indigo-700"
-          >
-            이 게임으로 파티 만들기
-          </Link>
-        )}
       </div>
 
       <div className="mt-3">
@@ -223,7 +232,7 @@ function BoardGameDetail({ id }: { id: number }) {
   return (
     <div>
       <BoardGameInfo boardGame={boardGame} />
-      <RecruitingParties boardGameId={boardGame.id} canCreateParty={boardGame.visible} />
+      <RecruitingParties boardGameId={boardGame.id} />
     </div>
   )
 }

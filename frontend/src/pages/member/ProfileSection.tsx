@@ -32,7 +32,7 @@ function ProfileView({ me, onEdit }: MeProps & { onEdit: () => void }) {
   return (
     <div className={CARD}>
       <div className="flex items-center gap-4">
-        <Avatar avatar={me.avatar} size="lg" nickname={me.nickname} />
+        <Avatar avatar={me.avatar} size="xl" nickname={me.nickname} />
         <div className="min-w-0">
           <p className="truncate text-xl font-bold">{me.nickname}</p>
           <p className="truncate text-sm text-gray-500">{me.email}</p>

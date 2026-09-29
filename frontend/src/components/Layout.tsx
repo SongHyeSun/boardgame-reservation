@@ -19,9 +19,10 @@ export default function Layout() {
 function LayoutContent() {
   useNotificationStream()
   return (
-    <div className="min-h-screen bg-gray-50 text-gray-900">
+    <div className="min-h-screen bg-table text-ink">
       <Header />
-      <main className="mx-auto max-w-5xl px-4 py-6">
+      {/* 하단 고정 바가 떠 있으면(--page-action-bar) 그 높이만큼 아래 여백을 더 둔다 */}
+      <main className="mx-auto max-w-[1080px] px-4 pt-5 pb-[calc(var(--page-action-bar,0px)+24px+env(safe-area-inset-bottom))] lg:pt-8 lg:pb-[calc(var(--page-action-bar,0px)+40px)]">
         <Outlet />
       </main>
     </div>

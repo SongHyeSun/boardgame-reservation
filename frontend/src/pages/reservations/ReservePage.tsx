@@ -1,6 +1,8 @@
 import { useMemo, useState } from 'react'
 import { useNavigate, useParams } from 'react-router'
+import ActionBar from '../../components/ActionBar.tsx'
 import BackLink from '../../components/BackLink.tsx'
+import Button from '../../components/Button.tsx'
 import ErrorMessage from '../../components/ErrorMessage.tsx'
 import GameImage from '../../components/GameImage.tsx'
 import GameStatusBadge from '../../components/GameStatusBadge.tsx'
@@ -149,8 +151,10 @@ function ReservationForm({ boardGame }: BoardGameProps) {
 
   const message = periodError ?? notice
 
+  // lg: 왼쪽 달력 + 오른쪽 sticky 사이드 카드(선택한 기간 + 신청). 그 미만은 하단 고정 바
   return (
-    <div className="space-y-4">
+    <div className="lg:grid lg:grid-cols-[1fr_360px] lg:gap-8">
+      <div className="space-y-4">
       <div role="group" aria-label="대여 방식" className="flex gap-2">
         {MODES.map((item) => (
           <button
@@ -189,17 +193,24 @@ function ReservationForm({ boardGame }: BoardGameProps) {
         </p>
       </div>
 
-      <div className="space-y-2">
-        <p className="font-medium">{selectionSummary(selection)}</p>
-        {message !== null && (
-          <p role="alert" className="rounded border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-800">
-            {message}
-          </p>
-        )}
-        {create.isError && <ErrorMessage message={create.error.message} />}
-        <button type="button" onClick={() => setConfirming(true)} disabled={!canSubmit} className={PRIMARY_BUTTON}>
-          대여 신청
-        </button>
+      {(message !== null || create.isError) && (
+        <div className="space-y-2">
+          {message !== null && (
+            <p role="alert" className="rounded border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-800">
+              {message}
+            </p>
+          )}
+          {create.isError && <ErrorMessage message={create.error.message} />}
+        </div>
+      )}
+      </div>
+
+      <div>
+        <ActionBar summary={<p className="text-small font-semibold lg:text-body">{selectionSummary(selection)}</p>}>
+          <Button size="lg" onClick={() => setConfirming(true)} disabled={!canSubmit}>
+            대여 신청
+          </Button>
+        </ActionBar>
       </div>
 
       {confirming && period !== null && (
