@@ -9,6 +9,8 @@ interface ActionBarProps {
    * 640~1023px 까지는 둘 다 화면 아래 고정 바.
    */
   variant?: 'side' | 'inline'
+  /** lg 사이드 카드의 버튼 아래 작은 안내. 모바일 바에서는 숨긴다 */
+  note?: string
   children: ReactNode
 }
 
@@ -27,7 +29,7 @@ const BUTTONS_CLASS = {
  * 하단 고정 바(z-40). 마운트되는 동안 토스트가 바 위로 올라간다(usePageActionBar).
  * 안의 버튼은 호출부가 그대로 넘긴다. 폼 제출 버튼이면 form 안에 두고 type="submit" 을 명시한다.
  */
-export default function ActionBar({ summary, variant = 'side', children }: ActionBarProps) {
+export default function ActionBar({ summary, variant = 'side', note, children }: ActionBarProps) {
   usePageActionBar()
   return (
     <div
@@ -39,6 +41,7 @@ export default function ActionBar({ summary, variant = 'side', children }: Actio
       >
         {children}
       </div>
+      {note && <p className="hidden text-center text-small text-ink-muted lg:block">{note}</p>}
     </div>
   )
 }

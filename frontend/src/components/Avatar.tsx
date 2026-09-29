@@ -1,9 +1,10 @@
 import { useState } from 'react'
 import type { Avatar as AvatarData } from '../types/auth.ts'
 
-type AvatarSize = 'sm' | 'md' | 'lg' | 'xl'
+type AvatarSize = 'xs' | 'sm' | 'md' | 'lg' | 'xl'
 
 const SIZE_CLASS: Record<AvatarSize, string> = {
+  xs: 'size-6 text-[13px]',
   sm: 'size-8 text-[18px]',
   md: 'size-10 text-[22px]',
   lg: 'size-14 text-[31px]',
@@ -22,13 +23,15 @@ interface AvatarProps {
   host?: boolean
   /** 바탕색을 고르는 값(보통 memberId). 없으면 초록 */
   seat?: number
+  /** 반응형 크기 덮어쓰기 등 배치용 추가 클래스 (예: 'lg:size-16 lg:text-[35px]') */
+  className?: string
 }
 
 /**
  * 이모지 또는 이미지 아바타. 그릴 때는 type 으로 판단한다. (imageUrl 은 EMOJI 여도 저장된 이미지가 있으면 내려온다)
  * 이미지를 불러오지 못하면(삭제·네트워크 오류) 이모지로 대체한다.
  */
-export default function Avatar({ avatar, size = 'md', nickname, host = false, seat }: AvatarProps) {
+export default function Avatar({ avatar, size = 'md', nickname, host = false, seat, className = '' }: AvatarProps) {
   // 실패한 URL 을 기억한다. 새로 업로드해 URL 이 바뀌면 다시 이미지를 시도한다.
   const [failedUrl, setFailedUrl] = useState<string | null>(null)
   const label = nickname ? `${nickname} 프로필 이미지` : '프로필 이미지'
@@ -37,7 +40,7 @@ export default function Avatar({ avatar, size = 'md', nickname, host = false, se
   const circleClass = `inline-flex size-full select-none items-center justify-center overflow-hidden rounded-full leading-none ${seatBg}`
 
   // 파티장 점이 원 밖으로 나오므로 바깥 래퍼는 overflow 를 자르지 않는다
-  const wrapperClass = `relative inline-flex shrink-0 ${SIZE_CLASS[size]}`
+  const wrapperClass = `relative inline-flex shrink-0 ${SIZE_CLASS[size]} ${className}`
   const hostDot = host && (
     <span aria-hidden className="absolute -bottom-0.5 -right-0.5 size-3.5 rounded-full bg-meeple ring-2 ring-surface" />
   )

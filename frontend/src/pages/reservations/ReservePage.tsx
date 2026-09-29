@@ -275,13 +275,13 @@ export default function ReservePage() {
     return (
       <div className="space-y-4">
         <ErrorMessage message="잘못된 게임 번호입니다." />
-        <BackLink to="/boardgames">← 게임 목록</BackLink>
+        <BackLink to="/boardgames">게임 목록</BackLink>
       </div>
     )
   }
   return (
     <div className="space-y-4">
-      <BackLink to={`/boardgames/${id}`}>← 게임 상세</BackLink>
+      <BackLink to={`/boardgames/${id}`}>게임 상세</BackLink>
       <ReserveGame id={id} />
     </div>
   )

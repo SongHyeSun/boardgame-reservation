@@ -393,15 +393,15 @@ function EditBoardGame({ id }: { id: number }) {
     return <Loading />
   }
   if (gameQuery.isError) {
-    return <EditBlocked message={gameQuery.error.message} backTo="/boardgames" backLabel="← 게임 목록" />
+    return <EditBlocked message={gameQuery.error.message} backTo="/boardgames" backLabel="게임 목록" />
   }
   if (meQuery.isError) {
-    return <EditBlocked message={meQuery.error.message} backTo={`/boardgames/${id}`} backLabel="← 게임 상세" />
+    return <EditBlocked message={meQuery.error.message} backTo={`/boardgames/${id}`} backLabel="게임 상세" />
   }
   const boardGame = gameQuery.data
   const me = meQuery.data
   if (me === null || boardGame.owner === null || me.id !== boardGame.owner.id) {
-    return <EditBlocked message={NOT_OWNER_MESSAGE} backTo={`/boardgames/${id}`} backLabel="← 게임 상세" />
+    return <EditBlocked message={NOT_OWNER_MESSAGE} backTo={`/boardgames/${id}`} backLabel="게임 상세" />
   }
   return <EditBoardGameForm key={boardGame.id} boardGame={boardGame} />
 }
@@ -418,7 +418,7 @@ export default function BoardGameFormPage() {
     return (
       <div className="space-y-4">
         <ErrorMessage message="잘못된 게임 번호입니다." />
-        <BackLink to="/boardgames">← 게임 목록</BackLink>
+        <BackLink to="/boardgames">게임 목록</BackLink>
       </div>
     )
   }
